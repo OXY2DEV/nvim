@@ -17,6 +17,9 @@ vim.opt.rtp:prepend(lazypath)
 
 
 require("lazy").setup({
+	---------------------------------
+	-------------Theme---------------
+	---------------------------------
 	{ 
 		"catppuccin/nvim", 
 		name = "catppuccin", 
@@ -25,21 +28,42 @@ require("lazy").setup({
 			require("plugins/catppuccin")
 		end
 	},
+	---------------------------------
+	----------Theme Picker------------
+	---------------------------------
+	{
+		"zaldih/themery.nvim",
+		config = function()
+			require("plugins/themery")
+		end
+	},
+	---------------------------------
+	-------------CmdLine-------------
+	---------------------------------
 	{
 		"windwp/windline.nvim",
 		config = function()
 			require("plugins/windline")
 		end
 	},
+	---------------------------------
+	---------Notifications-----------
+	---------------------------------
 	{
 		'rcarriga/nvim-notify',
 		config = function()
 			require("plugins/notify")
 		end
 	},
+	---------------------------------
+	---------Key Suggestions---------
+	---------------------------------
 	{
 		"folke/which-key.nvim"
 	},
+	---------------------------------
+	-----------Better UI-------------
+	---------------------------------
 	{
 		"folke/noice.nvim",
 		event = "VeryLazy",
@@ -55,7 +79,26 @@ require("lazy").setup({
 			require("plugins/noice")
 		end
 	},
+	---------------------------------
+	-------------Mini+---------------
+	---------------------------------
 	{
-		"echasnovski/mini.nvim", version = "*"
+		"echasnovski/mini.nvim", version = "*",
+		config = function()
+			require("plugins/mini")
+		end
+	},
+	---------------------------------
+	----------Start scdeen+-----------
+	---------------------------------
+	{
+		'glepnir/dashboard-nvim',
+		event = 'VimEnter',
+		config = function()
+			require('dashboard').setup {
+      -- config
+			}
+		end,
+		dependencies = { {'nvim-tree/nvim-web-devicons'}}
 	}
 })

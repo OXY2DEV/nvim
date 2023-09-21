@@ -9,4 +9,5 @@ require "lua/main"
 EOF
 
 source ~/.config/nvim/lua/plugins/coc.vim
+source ~/.config/nvim/lua/plugins/emmet.vim
 

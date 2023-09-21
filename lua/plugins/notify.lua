@@ -4,5 +4,3 @@ require("notify").setup({
 })
 
 
-require("notify")("Hello Oxy2dev")
-

@@ -24,6 +24,9 @@ require("lazy").setup({
 		"neoclide/coc.nvim",
 		branch = "release",
 	},
+	{
+		"mattn/emmet-vim",
+	},
 	---------------------------------
 	-------------Theme---------------
 	---------------------------------
@@ -44,6 +47,9 @@ require("lazy").setup({
 	{
 		"rebelot/kanagawa.nvim"
 	},
+	{ 
+		"EdenEast/nightfox.nvim" 
+	},
 	---------------------------------
 	----------Theme Picker------------
 	---------------------------------
@@ -63,6 +69,16 @@ require("lazy").setup({
 			require("plugins/windline")
 		end
 	},
+	
+	{
+		"akinsho/bufferline.nvim",
+		version = "*", 
+		dependencies = "nvim-tree/nvim-web-devicons",
+		config = function()
+			require("plugins/bufferline")
+		end
+	},
+
 	---------------------------------
 	---------Notifications-----------
 	---------------------------------
@@ -138,5 +154,26 @@ require("lazy").setup({
 	{
 		"nvim-telescope/telescope-file-browser.nvim",
 		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
-	}
+	},
+
+	{
+		"arnamak/stay-centered.nvim",
+		config = function()
+			require("plugins/centered")
+		end
+	},
+
+	{ 
+		"anuvyklack/windows.nvim",
+    dependencies = {
+			"anuvyklack/middleclass",
+      "anuvyklack/animation.nvim"
+    },
+    config = function()
+      vim.o.winwidth = 10
+      vim.o.winminwidth = 10
+      vim.o.equalalways = false
+      require('windows').setup()
+    end
+  }
 })

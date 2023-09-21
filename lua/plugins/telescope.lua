@@ -1,3 +1,5 @@
+local fb_actions = require("telescope._extensions.file_browser.actions")
+
 require("telescope").setup {
   extensions = {
     file_browser = {
@@ -6,7 +8,14 @@ require("telescope").setup {
       hijack_netrw = true,
       mappings = {
         ["i"] = {
-          -- your custom insert mode mappings
+					["<leader>c"] = fb_actions.create,
+					["<leader>r"] = fb_actions.rename,
+					["<leader>m"] = fb_actions.move,
+					["<leader>y"] = fb_actions.copy,
+					["<leader>d"] = fb_actions.remove,
+					["<leader>c"] = fb_actions.create,
+					["<leader>b"] = fb_actions.toggle_browser,
+					["<leader>h"] = fb_actions.toggle_hidden,
         },
         ["n"] = {
           -- your custom normal mode mappings

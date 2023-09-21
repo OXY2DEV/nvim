@@ -23,10 +23,17 @@ map("n", "<leader>q", ":q<CR>")
 map("n", "<leader>wq", ":wq<CR>")
 map("n", "<leader>qq", ":q!<CR>")
 
+map("n", "<leader>sv", ":vsp<CR>")
+map("n", "<leader>sh", ":sp<CR>")
 
-map("n", "<leader>fb", ":Telescope file_browser<CR>")
+map("n", "<leader>fb", ":Telescope file_browser path=%:p:h select_buffer=true<CR>")
 map("n", "<leader>t", ":Telescope<CR>")
 
 map("n", "<leader>th", ":Themery<CR>")
+map("n", "<leader>mn", ":lua MiniMap.toggle()<CR>")
 
+
+map("n", "<leader>1", ":WindowsMaximize<CR>")
+map("n", "<leader>5", ":WindowsEqualize<CR>")
+map("n", "<leader>0", ":res 0<CR>")
 

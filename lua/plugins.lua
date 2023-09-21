@@ -20,6 +20,13 @@ require("lazy").setup({
 	---------------------------------
 	-------------Theme---------------
 	---------------------------------
+	{
+		"neoclide/coc.nvim",
+		branch = "release",
+	},
+	---------------------------------
+	-------------Theme---------------
+	---------------------------------
 	{ 
 		"catppuccin/nvim", 
 		name = "catppuccin", 
@@ -27,6 +34,15 @@ require("lazy").setup({
 		config = function()
 			require("plugins/catppuccin")
 		end
+	},
+	{
+		"folke/tokyonight.nvim",
+		lazy = false,
+		priority = 1000,
+		opts = {},
+	},
+	{
+		"rebelot/kanagawa.nvim"
 	},
 	---------------------------------
 	----------Theme Picker------------
@@ -37,6 +53,7 @@ require("lazy").setup({
 			require("plugins/themery")
 		end
 	},
+
 	---------------------------------
 	-------------CmdLine-------------
 	---------------------------------
@@ -59,7 +76,10 @@ require("lazy").setup({
 	---------Key Suggestions---------
 	---------------------------------
 	{
-		"folke/which-key.nvim"
+		"folke/which-key.nvim",
+		config = function()
+			require("plugins/which")
+		end
 	},
 	---------------------------------
 	-----------Better UI-------------
@@ -80,7 +100,7 @@ require("lazy").setup({
 		end
 	},
 	---------------------------------
-	-------------Mini+---------------
+	-------------Mini----------------
 	---------------------------------
 	{
 		"echasnovski/mini.nvim", version = "*",
@@ -100,5 +120,23 @@ require("lazy").setup({
 			}
 		end,
 		dependencies = { {'nvim-tree/nvim-web-devicons'}}
+	},
+	---------------------------------
+	----------Telescope--------------
+	---------------------------------
+  {
+		'nvim-telescope/telescope.nvim', tag = '0.1.3',
+		-- or                              , branch = '0.1.x',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+		config = function()
+			require("plugins/telescope")
+		end
+  },
+	---------------------------------
+	----------Telescope--------------
+	---------------------------------
+	{
+		"nvim-telescope/telescope-file-browser.nvim",
+		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
 	}
 })

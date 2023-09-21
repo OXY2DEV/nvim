@@ -1,7 +1,10 @@
 local O = vim.o
 
+vim.g.theme_id = 1
+
 O.termguicolors = true
 O.mouse = "a"                     -- Use Mouse(In this case Touch) gestures in All modes
+O.timeoutlen = 300								-- Wait 300ms for next keystroke
 
 O.wrap = false                    -- Do not wrap long text
 

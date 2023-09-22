@@ -2,14 +2,22 @@ local O = vim.o
 
 vim.g.theme_id = 1
 
+O.foldenable = true								-- Enables folding. Used by nvim-ufo
+O.foldcolumn = "2"
+O.foldlevel = 99
+O.foldlevelstart = 99
+O.fillchars = [[eob: ,fold: ,foldopen:↓,foldsep: ,foldclose:→]]
+
 O.termguicolors = true
 O.mouse = "a"                     -- Use Mouse(In this case Touch) gestures in All modes
+
+O.timeout = true									-- keystroke times out
 O.timeoutlen = 300								-- Wait 300ms for next keystroke
 
 O.wrap = false                    -- Do not wrap long text
 
 O.number = true                   -- Show lins number
---O.numberwidth = 5
+O.numberwidth = 1
 O.relativenumber = true           -- Show relative line numbers
 O.signcolumn = "no"
 

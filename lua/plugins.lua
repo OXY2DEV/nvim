@@ -32,6 +32,17 @@ require("lazy").setup({
 			require("plugins/treesitter")
 		end
 	},
+	
+
+	-----------------------------------
+	---------Window Resizer------------
+	-----------------------------------
+	{
+		"ziontee113/syntax-tree-surfer",
+		config = function()
+			require("plugins/surfer")
+		end
+	},
 
 
 	-----------------------------------
@@ -195,6 +206,18 @@ require("lazy").setup({
 	},
 
 
+	-----------------------------------
+	-------------Terminal--------------
+	-----------------------------------
+	{
+		"windwp/nvim-autopairs",
+		event = "InsertEnter",
+		config = function()
+			require("plugins/autopairs")
+		end
+	},
+
+
 
 
 	-----------------------------------
@@ -321,4 +344,47 @@ require("lazy").setup({
 			},
 		},
 	},
+
+
+
+
+	-----------------------------------
+	------------Git signs--------------
+	-----------------------------------
+	{
+		"lewis6991/gitsigns.nvim",
+		config = function()
+			require("plugins/gitsigns")
+		end
+	},
+	
+
+
+
+	-----------------------------------
+	------------Git signs--------------
+	-----------------------------------
+	{
+		"kevinhwang91/nvim-ufo", 
+		dependencies = {
+			'kevinhwang91/promise-async'
+		},
+		config = function()
+			require("plugins/ufo")
+		end
+	},
+
+
+
+
+	-----------------------------------
+	-------------Terminal--------------
+	-----------------------------------
+	{
+		"akinsho/toggleterm.nvim", 
+		version = "*",
+		config = function()
+			require("plugins/toggleterm")
+		end
+	}
 })

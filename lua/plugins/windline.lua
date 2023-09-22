@@ -1,5 +1,6 @@
 local windline = require('windline')
 
+
 local helper = require('windline.helpers')
 local sep = helper.separators
 
@@ -120,16 +121,16 @@ local change_color = function()
     }
     if status_color == 'blue' then
         anim_colors = {
-            '#F9FBE7',
-            '#F0F4C3',
-            '#E6EE9C',
-            '#DCE775',
-            '#D4E157',
-            '#CDDC39',
-            '#C0CA33',
-            '#AFB42B',
+            '#03c03c',
+            '#03ad36',
+            '#02862a',
+            '#027324',
+            '#02601e',
+            '#014d18',
+            '#013a12',
+            '#01260c',
         }
-        status_color = 'yellow'
+        status_color = 'green'
     else
         status_color = 'blue'
     end
@@ -232,19 +233,64 @@ custom.file_name = {
     hl_colors = { 'FilenameFg', 'wavedefault' },
 }
 custom.divider = { '%=', { "wavedefault", "FilenameBg" } }
+custom.vi_mode_sep = {
+    name = 'vi_mode_sep',
+    hl_colors = {
+        Normal = { 'black', 'waveleft1' },
+        Insert = { 'white', 'waveleft1' },
+        Visual = { 'green', 'waveleft1' },
+        Replace = { 'cyan', 'waveleft1' },
+        Command = { 'yellow', 'waveleft1' },
+    },
+    text = function()
+        return sep.slant_right_2
+    end,
+    hl = function()
+        return state.mode[2]
+    end,
+}
+
+
+
+local wave_left_2 = {
+   text = function()
+     return {
+	 			 { sep.slant_right_2 .. " ", { "waveleft1", 'waveleft1' } },
+         { sep.slant_right_2 .. " ", { 'waveleft1', 'waveleft2' } },
+         { sep.slant_right_2 .. " ", { 'waveleft2', 'waveleft3' } },
+         { sep.slant_right_2 .. " ", { 'waveleft3', 'waveleft4' } },
+         { sep.slant_right_2 .. " ", { 'waveleft4', 'waveleft5' } },
+         { sep.slant_right_2 .. " ", { 'waveleft5', 'waveleft5' } },
+       }
+   end,
+   click = change_color,
+}
+local wave_left_2_infinte = {
+   text = function()
+     return {
+	 			 { sep.slant_right_2 .. " ", { "waveleft5", 'waveleft1' } },
+         { sep.slant_right_2 .. " ", { 'waveleft1', 'waveleft2' } },
+         { sep.slant_right_2 .. " ", { 'waveleft2', 'waveleft3' } },
+         { sep.slant_right_2 .. " ", { 'waveleft3', 'waveleft4' } },
+         { sep.slant_right_2 .. " ", { 'waveleft4', 'waveleft5' } },
+         { sep.slant_right_2 .. " ", { 'waveleft5', 'FilenameBg' } },
+       }
+   end,
+   click = change_color,
+}
 
 local wave_right_2 = {
-    text = function()
-        return {
-            { sep.slant_right_2 .. " ", { 'wavedefault', 'waveright1' } },
-            { sep.slant_right_2 .. " ", { 'waveright1', 'waveright2' } },
-            { sep.slant_right_2 .. " ", { 'waveright2', 'waveright3' } },
-            { sep.slant_right_2 .. " ", { 'waveright3', 'waveright4' } },
-            { sep.slant_right_2 .. " ", { 'waveright4', 'waveright5' } },
-            { sep.slant_right_2 .. " ", { 'waveright5', 'FilenameBg' } },
-        }
-    end,
-    click = change_color,
+   text = function()
+     return {
+	 			{ sep.slant_right_2 .. " ", { 'wavedefault', 'waveright1' } },
+         { sep.slant_right_2 .. " ", { 'waveright1', 'waveright2' } },
+         { sep.slant_right_2 .. " ", { 'waveright2', 'waveright3' } },
+         { sep.slant_right_2 .. " ", { 'waveright3', 'waveright4' } },
+         { sep.slant_right_2 .. " ", { 'waveright4', 'waveright5' } },
+         { sep.slant_right_2 .. " ", { 'waveright5', 'FilenameBg' } },
+       }
+   end,
+   click = change_color,
 }
 
 local readme = {
@@ -257,6 +303,19 @@ local readme = {
 		{ " ", "" },
 		wave_right_2,
 		custom.divider,
+	}
+}
+
+local terminal = {
+	filetypes = { "toggleterm" },
+	active = {
+		basic.vi_mode,
+		custom.vi_mode_sep,
+
+		wave_left_2,
+		wave_left_2_infinte,
+
+		basic.divider
 	}
 }
 
@@ -282,7 +341,8 @@ windline.setup({
     end,
     statuslines = {
         default,
-				readme
+				readme,
+				terminal
     },
 })
 

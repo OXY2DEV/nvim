@@ -207,14 +207,15 @@ require("lazy").setup({
 
 
 	-----------------------------------
-	-----------Auto close ()------------
+	-----------Auto close ()-----------
 	-----------------------------------
 	{
 		"windwp/nvim-autopairs",
 		event = "InsertEnter",
 		config = function()
 			require("plugins/autopairs")
-		end
+		end,
+		enabled = true
 	},
 
 
@@ -386,5 +387,23 @@ require("lazy").setup({
 		config = function()
 			require("plugins/toggleterm")
 		end
-	}
+	},
+
+
+
+
+	-----------------------------------
+	----------Documentation------------
+	-----------------------------------
+	{
+		"luckasRanarison/nvim-devdocs",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope.nvim",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		config = function()
+			require("plugins/devdocs")
+		end
+	},
 })

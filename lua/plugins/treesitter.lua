@@ -7,6 +7,10 @@ config.setup({
 		"lua",
 		"html",
 		"css",
-		"javascript"
+		"javascript",
+
+		"regex",
+		"markdown",
+		"bash",
 	},
 })

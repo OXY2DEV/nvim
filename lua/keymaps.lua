@@ -28,9 +28,12 @@ map("n", "<leader>sh", ":sp<CR>")
 
 map("n", "<leader>fb", ":Telescope file_browser path=%:p:h select_buffer=true<CR>")
 map("n", "<leader>t", ":Telescope<CR>")
+map("n", "<leader>c", ":CompilerOpen<CR>")
 
 map("n", "<leader>th", ":Themery<CR>")
 map("n", "<leader>mn", ":lua MiniMap.toggle()<CR>")
+
+map("n", "<leader>p", ":PickColor<CR>")
 
 
 map("n", "<leader>1", ":WindowsMaximize<CR>")

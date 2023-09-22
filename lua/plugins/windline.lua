@@ -143,7 +143,7 @@ local change_color = function()
             { 'waveleft4', efffects.list_color(anim_colors, 5) },
             { 'waveleft5', efffects.list_color(anim_colors, 6) },
         },
-        timeout = 100,
+        timeout = 50,
         delay = 200,
         interval = 200,
     })
@@ -156,7 +156,7 @@ local change_color = function()
             { 'waveright4', efffects.list_color(anim_colors, 3) },
             { 'waveright5', efffects.list_color(anim_colors, 2) },
         },
-        timeout = 10000,
+        timeout = 50,
         delay = 200,
         interval = 200,
     })
@@ -215,6 +215,52 @@ local default = {
 }
 
 
+
+
+
+
+local custom = {}
+
+custom.file_name = {
+    text = function()
+        local name = vim.fn.expand('%:p:t')
+        if name == '' then
+            name = '[No Name]'
+        end
+        return name .. ' '
+    end,
+    hl_colors = { 'FilenameFg', 'wavedefault' },
+}
+custom.divider = { '%=', { "wavedefault", "FilenameBg" } }
+
+local wave_right_2 = {
+    text = function()
+        return {
+            { sep.slant_right_2 .. " ", { 'wavedefault', 'waveright1' } },
+            { sep.slant_right_2 .. " ", { 'waveright1', 'waveright2' } },
+            { sep.slant_right_2 .. " ", { 'waveright2', 'waveright3' } },
+            { sep.slant_right_2 .. " ", { 'waveright3', 'waveright4' } },
+            { sep.slant_right_2 .. " ", { 'waveright4', 'waveright5' } },
+            { sep.slant_right_2 .. " ", { 'waveright5', 'FilenameBg' } },
+        }
+    end,
+    click = change_color,
+}
+
+local readme = {
+	filetypes = { "markdown", "help" },
+	active = {
+		custom.divider,
+		wave_left,
+		{ " ", "" },
+		custom.file_name,
+		{ " ", "" },
+		wave_right_2,
+		custom.divider,
+	}
+}
+
+
 windline.setup({
     colors_name = function(colors)
         colors.FilenameFg = colors.white
@@ -236,7 +282,7 @@ windline.setup({
     end,
     statuslines = {
         default,
-				telescope
+				readme
     },
 })
 

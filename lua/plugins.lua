@@ -13,23 +13,48 @@ vim.opt.rtp:prepend(lazypath)
 
 
 
+--[[
+
+List of Plugins goes here.
+
+]]
 
 
 
 require("lazy").setup({
-	---------------------------------
-	-------------Theme---------------
-	---------------------------------
-	{
+	-----------------------------------
+	----------- Treesitter ------------
+	-----------------------------------
+	{ -- is used by "Indent-Blankline" for underlined scope highlighting(That line under (, {, [ )
+		"nvim-treesitter/nvim-treesitter",
+		build = ":TSUpdate",
+		config = function()
+			require("plugins/treesitter")
+		end
+	},
+
+
+	-----------------------------------
+	----------------CoC-----------------
+	------------------------------------
+	{ -- is used for Auto Suggestions and a few more things
 		"neoclide/coc.nvim",
 		branch = "release",
 	},
-	{
+
+	-----------------------------------
+	---------------Emmet---------------
+	-----------------------------------
+	{ -- is used for HTML snippet. Use <space>m on Normal mode to make a snippet from the given input
 		"mattn/emmet-vim",
 	},
-	---------------------------------
-	-------------Theme---------------
-	---------------------------------
+
+
+
+
+	-----------------------------------
+	---------------Theme---------------
+	-----------------------------------
 	{ 
 		"catppuccin/nvim", 
 		name = "catppuccin", 
@@ -38,38 +63,61 @@ require("lazy").setup({
 			require("plugins/catppuccin")
 		end
 	},
+	
+	-----------------------------------
+	------------Tokyonight-------------
+	-----------------------------------
 	{
 		"folke/tokyonight.nvim",
 		lazy = false,
 		priority = 1000,
 		opts = {},
 	},
+
+
+	-----------------------------------
+	-------------Kanagawa--------------
+	-----------------------------------
 	{
 		"rebelot/kanagawa.nvim"
 	},
+
+
+	-----------------------------------
+	-------------Nightfox--------------
+	-----------------------------------
 	{ 
 		"EdenEast/nightfox.nvim" 
 	},
-	---------------------------------
-	----------Theme Picker------------
-	---------------------------------
-	{
+
+
+	-----------------------------------
+	-----------Theme Switcher----------
+	-----------------------------------
+	{ -- is used by <space>th in Normal mode for easy theme switching. Currently has a few bugs with Windline.
 		"zaldih/themery.nvim",
 		config = function()
 			require("plugins/themery")
 		end
 	},
 
-	---------------------------------
-	-------------CmdLine-------------
-	---------------------------------
+
+
+
+	-----------------------------------
+	--------------CmdLine--------------
+	-----------------------------------
 	{
 		"windwp/windline.nvim",
 		config = function()
 			require("plugins/windline")
 		end
 	},
-	
+
+
+	-----------------------------------
+	-------------Tab Bar---------------
+	-----------------------------------
 	{
 		"akinsho/bufferline.nvim",
 		version = "*", 
@@ -79,54 +127,79 @@ require("lazy").setup({
 		end
 	},
 
-	---------------------------------
-	---------Notifications-----------
-	---------------------------------
+
+
+
+
+	-----------------------------------
+	----------Notifications------------
+	-----------------------------------
 	{
 		'rcarriga/nvim-notify',
 		config = function()
 			require("plugins/notify")
 		end
 	},
-	---------------------------------
-	---------Key Suggestions---------
-	---------------------------------
+
+
+
+
+	-----------------------------------
+	----------Key Suggestions----------
+	-----------------------------------
 	{
 		"folke/which-key.nvim",
 		config = function()
 			require("plugins/which")
 		end
 	},
-	---------------------------------
-	-----------Better UI-------------
-	---------------------------------
-	{
+
+
+
+
+	-----------------------------------
+	-------------Better UI-------------
+	-----------------------------------
+	{ -- is used for the PopUp CmdLine, Floating Menus and Notifications.
 		"folke/noice.nvim",
 		event = "VeryLazy",
  		dependencies = {
- 			-- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
  			"MunifTanjim/nui.nvim",
- 			-- OPTIONAL:
- 			--   `nvim-notify` is only needed, if you want to use the notification view.
- 			--   If not available, we use `mini` as the fallback
  			"rcarriga/nvim-notify",
     },
 		config = function()
 			require("plugins/noice")
 		end
 	},
-	---------------------------------
-	-------------Mini----------------
-	---------------------------------
-	{
+
+
+	-----------------------------------
+	---------------Mini----------------
+	-----------------------------------
+	{ -- used in <space>mn in Normal mode. Is also used in animated Window resize and cursor transitions.
 		"echasnovski/mini.nvim", version = "*",
 		config = function()
 			require("plugins/mini")
 		end
 	},
-	---------------------------------
-	----------Start scdeen+-----------
-	---------------------------------
+	
+	
+	-----------------------------------
+	-------Advance Indentations--------
+	-----------------------------------
+	{ 
+		"lukas-reineke/indent-blankline.nvim",
+		config = function()
+			require("plugins/blankline")
+		end
+	},
+
+
+
+
+	-----------------------------------
+	------------Start screen-----------
+	-----------------------------------
 	{
 		'glepnir/dashboard-nvim',
 		event = 'VimEnter',
@@ -137,10 +210,14 @@ require("lazy").setup({
 		end,
 		dependencies = { {'nvim-tree/nvim-web-devicons'}}
 	},
-	---------------------------------
-	----------Telescope--------------
-	---------------------------------
-  {
+
+
+
+
+	-----------------------------------
+	-------------Telescope-------------
+	-----------------------------------
+  { -- used by <space>t in Normal mode. Search anything easily!
 		'nvim-telescope/telescope.nvim', tag = '0.1.3',
 		-- or                              , branch = '0.1.x',
     dependencies = { 'nvim-lua/plenary.nvim' },
@@ -148,22 +225,34 @@ require("lazy").setup({
 			require("plugins/telescope")
 		end
   },
-	---------------------------------
-	----------Telescope--------------
-	---------------------------------
-	{
+
+
+	-----------------------------------
+	-----------File Browser------------
+	-----------------------------------
+	{ -- uses by <space>fb in Normal mode.
 		"nvim-telescope/telescope-file-browser.nvim",
 		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
 	},
 
-	{
+	
+
+
+	-----------------------------------
+	---------Cursor Centerer-----------
+	-----------------------------------
+	{ -- used for centering current line.
 		"arnamak/stay-centered.nvim",
 		config = function()
 			require("plugins/centered")
 		end
 	},
 
-	{ 
+
+	-----------------------------------
+	---------Window Resizer------------
+	-----------------------------------
+	{ -- auto window resizer
 		"anuvyklack/windows.nvim",
     dependencies = {
 			"anuvyklack/middleclass",
@@ -175,5 +264,61 @@ require("lazy").setup({
       vim.o.equalalways = false
       require('windows').setup()
     end
-  }
+  },
+
+
+	
+
+	-----------------------------------
+	-----------Color Picker------------
+	-----------------------------------
+	{ -- used in <space>p in Normal mode.
+		"ziontee113/color-picker.nvim",
+    config = function()
+        require("plugins/colorpicker")
+    end,
+	},
+	
+
+	-----------------------------------
+	----------Color Preview------------
+	-----------------------------------
+	{ -- auto previews colors as Background.
+		"NvChad/nvim-colorizer.lua",
+		config = function()
+			require("plugins/colorizer")
+		end
+	},
+
+
+
+
+	-----------------------------------
+	--------------Compiler------------
+	-----------------------------------
+	{ -- used by <leader>c in Normal mode. C compiler.
+		"Zeioth/compiler.nvim",
+		cmd = {"CompilerOpen", "CompilerToggleResults", "CompilerRedo"},
+		dependencies = { "stevearc/overseer.nvim" },
+		opts = {},
+	},
+
+
+	-----------------------------------
+	--------Compiler(2nd part)---------
+	-----------------------------------
+	{
+		"stevearc/overseer.nvim",
+		commit = "19aac0426710c8fc0510e54b7a6466a03a1a7377",
+		cmd = { "CompilerOpen", "CompilerToggleResults", "CompilerRedo" },
+		opts = {
+			task_list = {
+				direction = "bottom",
+				min_height = 30,
+				max_height = 30,
+				default_detail = 1,
+				bindings = { ["q"] = function() vim.cmd("OverseerClose") end },
+			},
+		},
+	},
 })

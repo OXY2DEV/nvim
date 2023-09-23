@@ -1,8 +1,6 @@
---print("Hello from lua")
+require("settings")										-- Vim options
+require("keymaps")										-- Mapoed Keys
+require("plugins")										-- Plugin Information
 
-require("settings")
-require("keymaps")
-require("plugins")
-
-require("plugins/theme")
+require("current-theme")							-- Current theme 
 

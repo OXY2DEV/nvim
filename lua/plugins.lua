@@ -105,11 +105,9 @@ require("lazy").setup({
 	-----------------------------------
 	-----------Theme Switcher----------
 	-----------------------------------
-	{ -- is used by <space>th in Normal mode for easy theme switching. Currently has a few bugs with Windline.
-		"zaldih/themery.nvim",
-		config = function()
-			require("plugins/themery")
-		end
+	{ -- used by <space>th in Normal mode
+		"andrew-george/telescope-themes",
+		lazy = true
 	},
 
 

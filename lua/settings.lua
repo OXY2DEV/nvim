@@ -1,7 +1,5 @@
 local O = vim.o
 
-vim.g.theme_id = 1
-
 O.foldenable = true								-- Enables folding. Used by nvim-ufo
 O.foldcolumn = "2"
 O.foldlevel = 99

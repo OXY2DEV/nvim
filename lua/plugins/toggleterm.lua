@@ -1,3 +1,3 @@
 require("toggleterm").setup({
-	direction = "tab"
+	direction = "tab",
 })

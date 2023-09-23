@@ -160,7 +160,7 @@ local change_color = function()
       { 'waveleft4', efffects.list_color(anim_colors, 5) },
       { 'waveleft5', efffects.list_color(anim_colors, 6) },
     },
-    timeout = 50,
+    timeout = 500,
     delay = 200,
     interval = 200,
   })
@@ -173,7 +173,7 @@ local change_color = function()
       { 'waveright4', efffects.list_color(anim_colors, 3) },
       { 'waveright5', efffects.list_color(anim_colors, 2) },
     },
-    timeout = 50,
+    timeout = 500,
     delay = 200,
     interval = 200,
   })
@@ -319,13 +319,13 @@ local default = { -- the regular statusline
 local readme = { -- statusline for markdown and help
 	filetypes = { "markdown", "help" },
 	active = {
-		custom.divider,
+		custom.file_name_divider,
 		wave_left,
 		{ " ", "" },
 		custom.file_name,
 		{ " ", "" },
 		wave_right_2,
-		custom.divider,
+		custom.file_name_divider,
 	}
 }
 

@@ -28,9 +28,9 @@ map("n", "<leader>sh", ":sp<CR>")
 
 map("n", "<leader>fb", ":Telescope file_browser path=%:p:h select_buffer=true<CR>")
 map("n", "<leader>t", ":Telescope<CR>")
+map("n", "<leader>th", ":Telescope themes<CR>")
 map("n", "<leader>c", ":CompilerOpen<CR>")
 
-map("n", "<leader>th", ":Themery<CR>")
 map("n", "<leader>mn", ":lua MiniMap.toggle()<CR>")
 
 map("n", "<leader>p", ":PickColor<CR>")
@@ -38,8 +38,12 @@ map("n", "<leader>p", ":PickColor<CR>")
 map("n", "<leader>tr", ":ToggleTerm<CR>")
 map("n", "<leader>tf", ":ToggleTerm direction=horizontal<CR>")
 
-map("n", "<leader>h", ":TermExec cmd='npm run dev'<CR>")
-map("n", "<leader>g", ":TermExec cmd='lazygit'<CR>")
+map("n", "<leader>td", ":TermExec cmd='npm run dev'<CR>")
+map("n", "<leader>tg", ":TermExec cmd='lazygit'<CR>")
+
+map("n", "<leader>bp", ":BufferLinePick<CR>")
+map("n", "<leader>b,", ":BufferLineCyclePrev<CR>")
+map("n", "<leader>b.", ":BufferLineCycleNext<CR>")
 
 map("n", "<leader>1", ":WindowsMaximize<CR>")
 map("n", "<leader>5", ":WindowsEqualize<CR>")

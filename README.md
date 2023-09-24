@@ -1,4 +1,4 @@
-<img style="background: black" src="./assets/logo.png"/>
+<img src="/assets/logo.png"/>
 Nvim *v1.0.0*
 > A Neovim configuration made on *Mobile* for *Mobile*
 
@@ -49,23 +49,23 @@ For higher resolution ones go to the **assets** directory.
 \
 Centered lines and cursor movement animations
 
-![[/assets/movement.gif]]
+<img src="/assets/movement.gif"/>
 
 Animated Statusline
 
-![[/assets/windline.gif]]
+<img src="/assets/windline.gif"/>
 
 Auto window resizing and Window minimising and maximizing
 
-![[/assets/windows.gif]]
+<img src="/assets/windows.gif"/>
 
 Compiler for C
 
-![[/assets/compiler.gif]]
+<img src="/assets/compiler.gif"/>
 
 Code completion
 
-![[/assets/completion.gif]]
+<img src="/assets/completion.gif"/>
 
 And much more
 

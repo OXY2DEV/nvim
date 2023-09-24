@@ -1,4 +1,7 @@
 local O = vim.o
+local G = vim.g
+
+G.indent_blankline_filetype_exclude = { "dashboard" }			-- Disable indents in the Startup screen
 
 O.foldenable = true								-- Enables folding. Used by nvim-ufo
 O.foldcolumn = "2"

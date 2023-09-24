@@ -103,6 +103,22 @@ require("lazy").setup({
 
 
 	-----------------------------------
+	--------------VScode---------------
+	-----------------------------------
+	{
+		"Mofiqul/vscode.nvim"
+	},
+
+
+	-----------------------------------
+	-------------Nightfox--------------
+	-----------------------------------
+	{
+		"projekt0n/github-nvim-theme"
+	},
+
+
+	-----------------------------------
 	-----------Theme Switcher----------
 	-----------------------------------
 	{ -- used by <space>th in Normal mode
@@ -151,6 +167,17 @@ require("lazy").setup({
 	},
 
 
+	-----------------------------------
+	------------Ui Dresser-------------
+	-----------------------------------
+	{ -- used by Icon Picker
+		"stevearc/dressing.nvim",
+		config = function()
+			require("plugins/dressing")
+		end
+	},
+
+
 
 
 	-----------------------------------
@@ -160,6 +187,20 @@ require("lazy").setup({
 		"folke/which-key.nvim",
 		config = function()
 			require("plugins/which")
+		end
+	},
+
+
+	-----------------------------------
+	------------Icon Picker------------
+	-----------------------------------
+	{
+		"ziontee113/icon-picker.nvim",
+		dependencies = {
+			"stevearc/dressing.nvim"
+		},
+		config = function()
+			require("plugins/iconPicker")
 		end
 	},
 
@@ -214,6 +255,17 @@ require("lazy").setup({
 			require("plugins/autopairs")
 		end,
 		enabled = true
+	},
+	
+
+	-----------------------------------
+	-------------Dims Code-------------
+	-----------------------------------
+	{ -- used by <space>z
+		"folke/twilight.nvim",
+		config = function()
+			require("plugins/twilight")
+		end
 	},
 
 
@@ -384,24 +436,6 @@ require("lazy").setup({
 		version = "*",
 		config = function()
 			require("plugins/toggleterm")
-		end
-	},
-
-
-
-
-	-----------------------------------
-	----------Documentation------------
-	-----------------------------------
-	{
-		"luckasRanarison/nvim-devdocs",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			"nvim-telescope/telescope.nvim",
-			"nvim-treesitter/nvim-treesitter",
-		},
-		config = function()
-			require("plugins/devdocs")
 		end
 	},
 })

@@ -1,3 +1,25 @@
 {
-  "snippets.ultisnips.pythonPrompt": false
+  "snippets.ultisnips.pythonPrompt": false,
+	"cursors.nextKey": "<leader>",	
+
+	"dialog.rounded": true,
+	"dialog.maxWidth": 70,
+
+	"suggest.floatConfig": {
+		"border": true,
+		"rounded": true,
+		"shadow": true,
+		"winblend": 25
+	},
+
+	"emmet.showExpandedAbbreviation": "inMarkupAndStylesheetFilesOnly",
+	"hover.target": "float",
+	"suggest.virtualText": true,
+
+	"htmlhint.options": {
+		"tagname_lowercase": false
+	},
+
+	"snippet.highlight": true,
+	"snippets.shortcut": "i"
 }

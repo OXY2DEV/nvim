@@ -317,7 +317,7 @@ local default = { -- the regular statusline
 }
 
 local readme = { -- statusline for markdown and help
-	filetypes = { "markdown", "help" },
+	filetypes = { "markdown", "json", "help" },
 	active = {
 		custom.file_name_divider,
 		wave_left,

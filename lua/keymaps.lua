@@ -49,7 +49,7 @@ map("n", "<leader>1", ":WindowsMaximize<CR>")
 map("n", "<leader>5", ":WindowsEqualize<CR>")
 map("n", "<leader>0", ":res 0<CR>")
 
-
+map("n", "<leader>z", ":Twilight<CR>")
 
 
 

@@ -1,4 +1,4 @@
-![[/assets/logo.png]]
+<img style="background: black" src="./assets/logo.png"/>
 Nvim *v1.0.0*
 > A Neovim configuration made on *Mobile* for *Mobile*
 

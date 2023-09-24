@@ -1,5 +1,6 @@
 <img src="/assets/logo.png"/>
-Nvim *v1.0.0*
+Nvim **v1.0.0**
+
 > A Neovim configuration made on *Mobile* for *Mobile*
 
 

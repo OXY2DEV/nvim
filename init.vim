@@ -1,8 +1,6 @@
 lua << EOF
 
--- lua code here
---package.searchpath = "~/.config/nvim/lua/?.lua"
-
+-- Set the path where to search for config files
 package.path = "/data/data/com.termux/files/home/.config/nvim/?.lua"
 require "lua/main"
 

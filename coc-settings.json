@@ -1,25 +1,52 @@
 {
-  "snippets.ultisnips.pythonPrompt": false,
-	"cursors.nextKey": "<leader>",	
+	"clangd.enabled": true, // enable clangd. Completion for C
+	
+	"coc.preferences.bracketEnterImprove": true, // using <enter> inside brakets auto indents next line
+	
+	"cursors.cancelKey": "<esc>", // use <ESC> to cancel completion
+	"cursors.nextKey": "<c-n>", // use <CTRL>m to select next completion
+	"cursors.previousKey": "<c-p>", // use <space>, to go select previous completion
+	
+	"diagnostic.errorSign": "", // icon for showing ERRORS
+	"diagnostic.floatConfig": { // configuration for floating Diagnostic windows
+		"border": true, // floating windows use a border
+		"close": true, // show a close button
+		"maxWidth": 0, // auto max width
+		"rounded": true, // borders are rounded
+		"shadow": true, // window casts shadow
+		"title": " Tooltip", // use this title if possible
+		"winblend": 25 // 75% opacity of thw window
+	},
+	"diagnostic.hintSign": "", // icon for showing HINTS
+	"diagnostic.refreshOnInsertMode": true,
+	"diagnostic.virtualText": true, // use virtual text to show Diagnostic Informations
+	"diagnostic.virtualTextAlign": "below", // virtual text's postion(currently behind the line)
+	"diagnostic.virtualTextPrefix": "   ", // what to show before the Diagnostic Information. Currently a logo.
+	"diagnostic.warningSign": "", // icon for showing WARNINGS
+	
+	"eslint.enable": true,
+	
+	"floatFactory.floatConfig": { // general settings for floating windows
+		"border": false,
+		"maxHeight": 5,
+		"maxWidth": 20,
+		"rounded": true,
+		"shadow": true,
+		"winblend": 25
+	},
 
-	"dialog.rounded": true,
-	"dialog.maxWidth": 70,
-
-	"suggest.floatConfig": {
+	"snippet.highlight": true, // highlight snippets in preview(I think)
+	
+	"suggest.detailField": "preview", // where to show suggestions detail
+	"suggest.labelMaxLength": 25, // width of suggestions floating window
+	"suggest.pumFloatConfig": { // settings for the suggestions floating window
 		"border": true,
 		"rounded": true,
 		"shadow": true,
 		"winblend": 25
 	},
 
-	"emmet.showExpandedAbbreviation": "inMarkupAndStylesheetFilesOnly",
-	"hover.target": "float",
-	"suggest.virtualText": true,
-
-	"htmlhint.options": {
-		"tagname_lowercase": false
-	},
-
-	"snippet.highlight": true,
-	"snippets.shortcut": "i"
+	"suggest.removeDuplicateItems": true, // don't show duplicate suggestions
+	"suggest.snippetIndicator": " •", // snippets are marked with a •
+	"suggest.virtualText": true // show current auto completion as a virtual text
 }

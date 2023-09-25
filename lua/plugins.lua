@@ -59,6 +59,12 @@ require("lazy").setup({
 	{ -- is used for HTML snippet. Use <space>m on Normal mode to make a snippet from the given input
 		"mattn/emmet-vim",
 	},
+	-----------------------------------
+	---------------Emmet---------------
+	-----------------------------------
+	{
+		"preservim/nerdcommenter"
+	},
 
 
 
@@ -418,7 +424,13 @@ require("lazy").setup({
 	{
 		"kevinhwang91/nvim-ufo", 
 		dependencies = {
-			'kevinhwang91/promise-async'
+			"kevinhwang91/promise-async",
+			{
+				"luukvbaal/statuscol.nvim",
+				config = function()
+					require("plugins/statuscol")
+				end
+			}
 		},
 		config = function()
 			require("plugins/ufo")

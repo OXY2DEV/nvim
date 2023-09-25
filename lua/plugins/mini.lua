@@ -10,7 +10,14 @@ require("mini.map").setup({
 	},
 	window = {
 		width = 30
+	},
+
+	integrations = {
+		MiniMap.gen_integration.gitsigns(),
+		MiniMap.gen_integration.diagnostic()
 	}
 })
 require("mini.indentscope").setup()
+
+--MiniMap.gen_integration.gitsigns()
 

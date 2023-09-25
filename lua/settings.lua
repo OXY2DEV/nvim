@@ -1,13 +1,14 @@
 local O = vim.o
 local G = vim.g
+local A = vim.api
 
 G.indent_blankline_filetype_exclude = { "dashboard" }			-- Disable indents in the Startup screen
 
 O.foldenable = true								-- Enables folding. Used by nvim-ufo
-O.foldcolumn = "2"
+O.foldcolumn = "1"
 O.foldlevel = 99
 O.foldlevelstart = 99
-O.fillchars = [[eob: ,fold: ,foldopen:↓,foldsep: ,foldclose:→]]
+O.fillchars = "foldsep: ,foldopen:,foldclose:"
 
 O.termguicolors = true
 O.mouse = "a"                     -- Use Mouse(In this case Touch) gestures in All modes

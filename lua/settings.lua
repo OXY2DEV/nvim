@@ -4,11 +4,14 @@ local A = vim.api
 
 G.indent_blankline_filetype_exclude = { "dashboard" }			-- Disable indents in the Startup screen
 
+O.spell = true
+O.spelllang = "en_us"
+
 O.foldenable = true								-- Enables folding. Used by nvim-ufo
 O.foldcolumn = "1"
 O.foldlevel = 99
 O.foldlevelstart = 99
-O.fillchars = "foldsep: ,foldopen:,foldclose:"
+O.fillchars = "foldsep: ,foldopen:,foldclose:"
 
 O.termguicolors = true
 O.mouse = "a"                     -- Use Mouse(In this case Touch) gestures in All modes
@@ -34,7 +37,10 @@ O.tabstop = 2                     -- Tab size is 2 spaces
 O.shiftwidth = 0                  -- ┠ 
 O.softtabstop = -1                -- ┠ Needed to set tab size
 
+local w = vim.fn.winwidth("%")		-- Get the window size
+O.sidescrolloff = (w - w%2) / 2		-- shoulx be half of thw width
 --O.list = true
 --O.listchars = 'trail:·,nbsp:◇,tab:→ ,extends:▸,precedes:◂'
+
 
 

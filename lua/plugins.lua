@@ -60,7 +60,7 @@ require("lazy").setup({
 		"mattn/emmet-vim",
 	},
 	-----------------------------------
-	---------------Emmet---------------
+	---------Advance Commenting--------
 	-----------------------------------
 	{
 		"preservim/nerdcommenter"
@@ -284,11 +284,18 @@ require("lazy").setup({
 		'glepnir/dashboard-nvim',
 		event = 'VimEnter',
 		config = function()
-			require('dashboard').setup {
-      -- config
-			}
+			require("plugins/dashboard")
 		end,
 		dependencies = { {'nvim-tree/nvim-web-devicons'}}
+	},
+	-----------------------------------
+	-------------ASCII arts-----------
+	-----------------------------------
+	{
+		"MaximilianLloyd/ascii.nvim",
+		dependencies = {
+			"MunifTanjim/nui.nvim"
+		}
 	},
 
 
@@ -370,6 +377,13 @@ require("lazy").setup({
 		end
 	},
 
+	-----------------------------------
+	----------Color Preview------------
+	-----------------------------------
+	{
+		"ap/vim-css-color"
+	},
+
 
 
 
@@ -429,7 +443,7 @@ require("lazy").setup({
 				"luukvbaal/statuscol.nvim",
 				config = function()
 					require("plugins/statuscol")
-				end
+				end,
 			}
 		},
 		config = function()

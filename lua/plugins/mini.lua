@@ -1,6 +1,14 @@
 local MiniMap = require("mini.map")
 
-require("mini.animate").setup()
+require("mini.animate").setup({
+	cursor = {
+		enable = false
+	},
+
+	scroll = {
+		enable = true
+	}
+})
 require("mini.map").setup({
 	symbols = {
 		encode = MiniMap.gen_encode_symbols.dot("4x2"),
@@ -9,12 +17,14 @@ require("mini.map").setup({
 		scroll_view = "┊"
 	},
 	window = {
-		width = 30
+		width = 30,
+		focusable = false
 	},
 
 	integrations = {
 		MiniMap.gen_integration.gitsigns(),
-		MiniMap.gen_integration.diagnostic()
+		MiniMap.gen_integration.diagnostic(),
+		MiniMap.gen_integration.builtin_search()
 	}
 })
 require("mini.indentscope").setup()

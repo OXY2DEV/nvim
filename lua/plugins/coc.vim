@@ -31,7 +31,8 @@ function! CheckBackspace() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-let g:coc_snippet_next = '<leader>' "use <psace> to move to next snippet part
+let g:coc_snippet_next = '<right>' "use → to move to next snippet part
+let g:coc_snippet_prev = '<left>' "use → to move to next snippet part
 
 
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"

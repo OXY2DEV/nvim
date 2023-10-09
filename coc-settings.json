@@ -2,6 +2,7 @@
 	"clangd.enabled": true, // enable clangd. Completion for C
 	
 	"coc.preferences.bracketEnterImprove": true, // using <enter> inside brakets auto indents next line
+	"coc.preferences.enableMessageDialog": true,
 	
 	"cursors.cancelKey": "<esc>", // use <ESC> to cancel completion
 	"cursors.nextKey": "<c-n>", // use <CTRL>m to select next completion
@@ -19,7 +20,7 @@
 	},
 	"diagnostic.hintSign": "", // icon for showing HINTS
 	"diagnostic.refreshOnInsertMode": false,
-	"diagnostic.virtualText": false, // use virtual text to show Diagnostic Informations
+	"diagnostic.virtualText": true, // use virtual text to show Diagnostic Informations
 	"diagnostic.virtualTextAlign": "below", // virtual text's postion(currently behind the line)
 	"diagnostic.virtualTextPrefix": " └  ", // what to show before the Diagnostic Information. Currently a logo.
 	"diagnostic.warningSign": "", // icon for showing WARNINGS

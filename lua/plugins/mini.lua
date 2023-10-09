@@ -2,7 +2,7 @@ local MiniMap = require("mini.map")
 
 require("mini.animate").setup({
 	cursor = {
-		enable = false
+		enable = true
 	},
 
 	scroll = {
@@ -29,5 +29,5 @@ require("mini.map").setup({
 })
 require("mini.indentscope").setup()
 
---MiniMap.gen_integration.gitsigns()
+MiniMap.gen_integration.gitsigns()
 

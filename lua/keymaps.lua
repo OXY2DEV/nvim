@@ -31,6 +31,7 @@ map("n", "<leader>t", ":Telescope<CR>")
 map("n", "<leader>th", ":Telescope themes<CR>")
 map("n", "<leader>c", ":CompilerOpen<CR>")
 
+map("n", "<leader>m", ":Emmet ", { silent = false })
 map("n", "<leader>mn", ":lua MiniMap.toggle()<CR>")
 
 map("n", "<leader>p", ":PickColor<CR>")
@@ -51,5 +52,6 @@ map("n", "<leader>0", ":res 0<CR>")
 
 map("n", "<leader>z", ":Twilight<CR>")
 
+map("n", "<leader>r", ":SearchReplaceSingleBufferSelections<CR>")
 
 

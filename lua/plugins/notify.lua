@@ -4,8 +4,13 @@
 require("notify").setup({
 	icons = {},
 	fps = 45,
-	top_down = true										-- if enabked show notifications on top right
+	top_down = false										-- if enabked show notifications on top right
 })
+
+local client_notifs = {}
+
+local spinner_frames = { "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷" }
+
 
 
 

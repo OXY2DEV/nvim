@@ -21,6 +21,8 @@ List of Plugins goes here.
 
 
 
+-- {{{
+-- Plugins
 require("lazy").setup({
 	-----------------------------------
 	----------- Treesitter ------------
@@ -59,12 +61,29 @@ require("lazy").setup({
 	{ -- is used for HTML snippet. Use <space>m on Normal mode to make a snippet from the given input
 		"mattn/emmet-vim",
 	},
+
+
 	-----------------------------------
 	---------Advance Commenting--------
 	-----------------------------------
 	{
 		"preservim/nerdcommenter"
 	},
+
+
+	-----------------------------------
+	--------Search and Replace---------
+	-----------------------------------
+	{
+    "roobert/search-replace.nvim",
+    config = function()
+      require("search-replace").setup({
+        -- optionally override defaults
+        default_replace_single_buffer_options = "gcI",
+        default_replace_multi_buffer_options = "egcI",
+    })
+    end,
+  },
 
 
 
@@ -332,7 +351,8 @@ require("lazy").setup({
 		"arnamak/stay-centered.nvim",
 		config = function()
 			require("plugins/centered")
-		end
+		end,
+		enabled = false
 	},
 
 
@@ -433,22 +453,24 @@ require("lazy").setup({
 
 
 	-----------------------------------
-	------------Git signs--------------
+	----------Status Column------------
 	-----------------------------------
 	{
-		"kevinhwang91/nvim-ufo", 
-		dependencies = {
-			"kevinhwang91/promise-async",
-			{
-				"luukvbaal/statuscol.nvim",
-				config = function()
-					require("plugins/statuscol")
-				end,
-			}
-		},
+		"luukvbaal/statuscol.nvim",
 		config = function()
-			require("plugins/ufo")
+			require("plugins/statuscol")
 		end
+	},
+
+	-----------------------------------
+	--------Custom Fold Text-----------
+	-----------------------------------
+	{
+		"anuvyklack/pretty-fold.nvim",
+		config = function()
+			require("plugins/prettyFold")
+		end,
+		enabled = true
 	},
 
 
@@ -464,4 +486,13 @@ require("lazy").setup({
 			require("plugins/toggleterm")
 		end
 	},
+
+
+	-----------------------------------
+	--------Session Restore------------
+	-----------------------------------
+	{ -- for tmux resurrect 
+		"tpope/vim-obsession"
+	}
 })
+-- }}}

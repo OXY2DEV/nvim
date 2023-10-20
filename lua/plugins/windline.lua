@@ -6,6 +6,8 @@ local helpers = require("windline.helpers");
 local anim = require("wlanimation");
 local effe = require("wlanimation.effects");
 
+local t = require("wlanimation.animation");
+
 local sep = helpers.separators;
 local wlState = _G.WindLine.state;
 
@@ -26,12 +28,10 @@ utils.change_mode_name({
 
 local barCol = 1;
 local moon = "";
-local shuttle = "";
+local signal = "  ";
 
 local c_col = function()
 	local cls = {};
-	local phases = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
-	local ship	 = { "  ", "   ─", "  ──", "  ───", " ────", "─────󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "────", "──── ", "── ", "─  ", "   ", "   ", "   ", "   ", "   ─", "  ──", "  ───", " ───󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "──────", "──────", "────", "─── ", "───  ", "──  ", "─  ", "  ", "  " };
 
 	if (barCol == 1) then
 		cls = {
@@ -73,6 +73,10 @@ local c_col = function()
 		interval = 150
 	})
 
+
+	local phases = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+	local ship	 = { "  ", "   ─", "  ──", "  ───", " ────", "─────󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "────", "──── ", "── ", "─  ", "   ", "   ", "   ", "   ", "   ─", "  ──", "  ───", " ───󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "──────", "──────", "────", "─── ", "───  ", "──  ", "─  ", "  ", "  " };
+	
 	anim.basic_animation({
 		timeout = nil,
 		effect = effe.list_text(phases),
@@ -82,21 +86,21 @@ local c_col = function()
 			vim.cmd.redrawstatus()
 		end
 	})
-	
+
 	anim.basic_animation({
 		timeout = nil,
 		effect = effe.list_text(ship),
-		interval = 200,
+		interval = 200, delay = 100,
 		
 		on_tick = function(val)
-			shuttle = val;
+			signal = val;
 			vim.cmd.redrawstatus()
 		end
 	})
 end
 
 vim.defer_fn(function()
-	c_col()
+	c_col();
 end, 100)
 
 
@@ -108,7 +112,6 @@ components.gap					= { " ", "" };
 
 components.bg						= { " ", "StatusLine" };
 
---components.ruler				= { [[ %3l:%-2c ]], { "fg2", "bg2" } };
 components.progress			= { [[%3p%% ]],			{ "white", "black" } };
 
 components.fileName_off	= { [[ %f ]],				{ "fg2", "bg2" }};
@@ -274,7 +277,7 @@ components.ruler_sep = {
 	end
 }
 
-components.credits = {
+components.idle = {
 	width = 9,
 	hl_colors = {
 		Normal	= { "fg", "bg" },
@@ -288,7 +291,7 @@ components.credits = {
 	end,
 
 	text = function()
-		return "  " .. shuttle;
+		return "  " .. signal;
 	end
 }
 
@@ -332,7 +335,7 @@ wl.setup({
 				components.ripple,
 				components.ruler,
 				components.ruler_sep,
-				components.credits
+				components.idle
 			},
 			inactive = {
 				components.mode

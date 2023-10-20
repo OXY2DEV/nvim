@@ -1,383 +1,344 @@
-----------------------------------------------
------------------ Variables ------------------
-----------------------------------------------
-local windline = require('windline')
+local wl = require("windline");
 
-local helper = require('windline.helpers')
-local sep = helper.separators
+local utils = require("windline.utils");
+local helpers = require("windline.helpers");
 
-local utils = require('windline.utils')
+local anim = require("wlanimation");
+local effe = require("wlanimation.effects");
 
-local animation = require('wlanimation')
-local efffects = require('wlanimation.effects')
+local sep = helpers.separators;
+local wlState = _G.WindLine.state;
 
-local state = _G.WindLine.state
-
-
-
--- color list for basic
-local hl_list = {
-    Black = { 'white', 'black' },
-    Inactive = { 'InactiveFg', 'InactiveBg' },
-    Active = { 'ActiveFg', 'ActiveBg' },
-}
-
-
-
---- The basic Statusline and it's components
-local basic = {}
-basic.divider = { '%=', '' }
-basic.space = { ' ', '' }
-basic.line_col = { [[ %3l:%-2c ]], hl_list.Black }
-basic.progress = { [[%3p%% ]], hl_list.Black }
-basic.bg = { ' ',  'StatusLine' }
-basic.file_name_inactive = { '%f', hl_list.Inactive }
-basic.line_col_inactive = { [[ %3l:%-2c ]], hl_list.Inactive }
-basic.progress_inactive = { [[%3p%% ]], hl_list.Inactive }
-
--- Custom Text & Icons for each mode are declared HERE!
 utils.change_mode_name({
-	['n'] = { ' NORMAL', 'Normal' },
-  ['no'] = { ' O-PENDING', 'Visual' },
-  ['nov'] = { ' O-PENDING', 'Visual' },
-  ['noV'] = { ' O-PENDING', 'Visual' },
-  ['no'] = { ' O-PENDING', 'Visual' },
-  ['niI'] = { ' NORMAL', 'Normal' },
-  ['niR'] = { ' NORMAL', 'Normal' },
-  ['niV'] = { ' NORMAL', 'Normal' },
-  ['v'] = { '󰨞 VISUAL', 'Visual' },
-  ['V'] = { '󰨞 V-LINE', 'Visual' },
-  [''] = { '󰨞 V-BLOCK', 'Visual' },
-  ['s'] = { ' SELECT', 'Visual' },
-  ['S'] = { ' S-LINE', 'Visual' },
-  [''] = { ' S-BLOCK', 'Visual' },
-  ['i'] = { ' INSERT', 'Insert' },
-  ['ic'] = { ' INSERT', 'Insert' },
-  ['ix'] = { ' INSERT', 'Insert' },
-  ['R'] = { '󰛔 REPLACE', 'Replace' },
-  ['Rc'] = { '󰛔 REPLACE', 'Replace' },
-  ['Rv'] = { 'V-REPLACE', 'Normal' },
-  ['Rx'] = { '󰛔 REPLACE', 'Normal' },
-  ['c'] = { ' COMMAND', 'Command' },
-  ['cv'] = { ' COMMAND', 'Command' },
-  ['ce'] = { ' COMMAND', 'Command' },
-  ['r'] = { '󰛔 REPLACE', 'Replace' },
-  ['rm'] = { ' MORE', 'Normal' },
-  ['r?'] = { ' CONFIRM', 'Normal' },
-  ['!'] = { ' SHELL', 'Normal' },
-  ['t'] = { ' TERMINAL', 'Command' },
+	["n"]		= { "   Normal", "Normal" },
+
+	["v"]		= { "   Visual", "Visual" },
+	["V"]		= { "   V-Line", "Visual" },
+	[""]	= { "   V-Block", "Visual" },
+
+	["i"]		= { "   Insert", "Insert" },
+
+	["r?"]	= { "  Replace", "Replace" },
+
+	["c"]		= { "   Command", "Command" },
+	["t"]		= { "   Terminal", "Command" },
 })
 
+local barCol = 1;
+local moon = "";
+local shuttle = "";
 
+local c_col = function()
+	local cls = {};
+	local phases = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
+	local ship	 = { "  ", "   ─", "  ──", "  ───", " ────", "─────󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "────", "──── ", "── ", "─  ", "   ", "   ", "   ", "   ", "   ─", "  ──", "  ───", " ───󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "──────", "──────", "────", "─── ", "───  ", "──  ", "─  ", "  ", "  " };
 
+	if (barCol == 1) then
+		cls = {
+			"#d1effa", "#9fdff8", "#71cff3", "#42c0f0", "#12b0ed", "#42c0f0", "#71cff3", "#9fdff8", "#d1effa",
+		}
 
-----------------------------------------------
------------------ Components -----------------
-----------------------------------------------
-basic.vi_mode = { -- refers to the right component
-  name = 'vi_mode',
-  hl_colors = {
-    Normal = { 'white', 'black' },
-    Insert = { 'black', 'white' },
-    Visual = { 'black', 'green' },
-    Replace = { 'black', 'cyan' },
-    Command = { 'black', 'yellow' },
-  },
-  text = function()
-    return ' ' .. state.mode[1] .. ' ' -- Empty " " spaces are used to increase component width
-  end,
-  hl = function()
-    return state.mode[2]
-  end,
-}
+		barCol = 2;
+	elseif (barCol == 2) then
+		cls = {
+			"#aaa8f1", "#bab9f3", "#cccbf5", "#ddddf9", "#cccbf5", "#bab9f3", "#aaa8f1"
+		}
 
-basic.vi_mode_sep = { -- refers to the separator between the right and the 2nd right components
-  name = 'vi_mode_sep',
-  hl_colors = {
-    Normal = { 'black', 'FilenameBg' },
-    Insert = { 'white', 'FilenameBg' },
-    Visual = { 'green', 'FilenameBg' },
-    Replace = { 'cyan', 'FilenameBg' },
-    Command = { 'yellow', 'FilenameBg' },
-  },
-  text = function()
-    return sep.slant_right_2 -- separators can be "slant", "padded_slant", "fill" etc.
-  end,
-  hl = function()
-    return state.mode[2]
-  end,
-}
+		barCol = 1;
+	end
 
-basic.file_name = { -- refers to the 2nd right component
-  text = function()
-    local name = vim.fn.expand('%:p:t')
-    if name == '' then
-        name = '[No Name]'
-    end
-    return name .. ' '
-  end,
-  hl_colors = { 'FilenameFg', 'FilenameBg' }, -- background color is File names background and foreground is File name foreground
-}
+	anim.stop_all();
 
+	anim.animation({
+		data = {
+			{ "gradL1", effe.list_color(cls, 1) },
+			{ "gradL2", effe.list_color(cls, 2) },
+			{ "gradL3", effe.list_color(cls, 3) },
+			{ "gradL4", effe.list_color(cls, 4) },
+			{ "gradL5", effe.list_color(cls, 5) },
+		},
+		timeout = 100,
+		interval = 150
+	})
+	
+	anim.animation({
+		data = {
+			{ "gradR1", effe.list_color(cls, 5) },
+			{ "gradR2", effe.list_color(cls, 4) },
+			{ "gradR3", effe.list_color(cls, 3) },
+			{ "gradR4", effe.list_color(cls, 2) },
+			{ "gradR5", effe.list_color(cls, 1) },
+		},
+		timeout = 100,
+		interval = 150
+	})
 
-----------------------------------------------
----------------- Animations ------------------
-----------------------------------------------
-local status_color = '' -- controls the color of the waves
-local change_color = function()
-  local anim_colors = {
-    '#90CAF9',
-    '#64B5F6',
-    '#42A5F5',
-    '#2196F3',
-    '#1E88E5',
-    '#1976D2',
-    '#1565C0',
-    '#0D47A1',
-  }
-  if status_color == 'blue' then
-    anim_colors = {
-      '#03c03c',
-      '#03ad36',
-      '#02862a',
-      '#027324',
-      '#02601e',
-      '#014d18',
-      '#013a12',
-      '#01260c',
-    }
-    status_color = 'green'
-  else
-    status_color = 'blue'
-  end
-
-  animation.stop_all()
-  animation.animation({
-    data = { -- numbers are definig the direction. Here is for right to left
-      { 'waveleft1', efffects.list_color(anim_colors, 2) },
-      { 'waveleft2', efffects.list_color(anim_colors, 3) },
-      { 'waveleft3', efffects.list_color(anim_colors, 4) },
-      { 'waveleft4', efffects.list_color(anim_colors, 5) },
-      { 'waveleft5', efffects.list_color(anim_colors, 6) },
-    },
-    timeout = 500,
-    delay = 200,
-    interval = 200,
-  })
-
-  animation.animation({
-    data = { -- Here is for left to right
-      { 'waveright1', efffects.list_color(anim_colors, 6) },
-      { 'waveright2', efffects.list_color(anim_colors, 5) },
-      { 'waveright3', efffects.list_color(anim_colors, 4) },
-      { 'waveright4', efffects.list_color(anim_colors, 3) },
-      { 'waveright5', efffects.list_color(anim_colors, 2) },
-    },
-    timeout = 500,
-    delay = 200,
-    interval = 200,
-  })
+	anim.basic_animation({
+		timeout = nil,
+		effect = effe.list_text(phases),
+		
+		on_tick = function(val)
+			moon = val;
+			vim.cmd.redrawstatus()
+		end
+	})
+	
+	anim.basic_animation({
+		timeout = nil,
+		effect = effe.list_text(ship),
+		interval = 200,
+		
+		on_tick = function(val)
+			shuttle = val;
+			vim.cmd.redrawstatus()
+		end
+	})
 end
 
-local wave_left = {
-  text = function()
-    return { -- the left wave
-      { sep.slant_right_2 .. ' ', { 'FilenameBg', 'waveleft1' } },
-      { sep.slant_right_2 .. ' ', { 'waveleft1', 'waveleft2' } },
-      { sep.slant_right_2 .. ' ', { 'waveleft2', 'waveleft3' } },
-      { sep.slant_right_2 .. ' ', { 'waveleft3', 'waveleft4' } },
-      { sep.slant_right_2 .. ' ', { 'waveleft4', 'waveleft5' } },
-      { sep.slant_right_2 .. ' ', { 'waveleft5', 'wavedefault' } },
-    }
-  end,
-  click = change_color,
-}
-
-local wave_right = {
-  text = function()
-    return { -- the right wave
-      { sep.slant_right_2 .. " ", { 'wavedefault', 'waveright1' } },
-      { sep.slant_right_2 .. " ", { 'waveright1', 'waveright2' } },
-      { sep.slant_right_2 .. " ", { 'waveright2', 'waveright3' } },
-      { sep.slant_right_2 .. " ", { 'waveright3', 'waveright4' } },
-      { sep.slant_right_2 .. " ", { 'waveright4', 'waveright5' } },
-      { sep.slant_right_2 .. " ", { 'waveright5', 'ActiveBg' } },
-    }
-  end,
-  click = change_color,
-}
-
-local wave_left_2 = { -- 2nd version of wave
-   text = function()
-     return {
-	 			 { sep.slant_right_2 .. " ", { "waveleft1", 'waveleft1' } },
-         { sep.slant_right_2 .. " ", { 'waveleft1', 'waveleft2' } },
-         { sep.slant_right_2 .. " ", { 'waveleft2', 'waveleft3' } },
-         { sep.slant_right_2 .. " ", { 'waveleft3', 'waveleft4' } },
-         { sep.slant_right_2 .. " ", { 'waveleft4', 'waveleft5' } },
-         { sep.slant_right_2 .. " ", { 'waveleft5', 'waveleft5' } },
-       }
-   end,
-   click = change_color,
-}
-local wave_left_2_infinte = { -- used in terminal to make infinite wave
-   text = function()
-     return {
-	 			 { sep.slant_right_2 .. " ", { "waveleft5", 'waveleft1' } },
-         { sep.slant_right_2 .. " ", { 'waveleft1', 'waveleft2' } },
-         { sep.slant_right_2 .. " ", { 'waveleft2', 'waveleft3' } },
-         { sep.slant_right_2 .. " ", { 'waveleft3', 'waveleft4' } },
-         { sep.slant_right_2 .. " ", { 'waveleft4', 'waveleft5' } },
-         { sep.slant_right_2 .. " ", { 'waveleft5', 'FilenameBg' } },
-       }
-   end,
-   click = change_color,
-}
-
-local wave_right_2 = { -- 2nd version of wave
-   text = function()
-     return {
-	 			{ sep.slant_right_2 .. " ", { 'wavedefault', 'waveright1' } },
-         { sep.slant_right_2 .. " ", { 'waveright1', 'waveright2' } },
-         { sep.slant_right_2 .. " ", { 'waveright2', 'waveright3' } },
-         { sep.slant_right_2 .. " ", { 'waveright3', 'waveright4' } },
-         { sep.slant_right_2 .. " ", { 'waveright4', 'waveright5' } },
-         { sep.slant_right_2 .. " ", { 'waveright5', 'FilenameBg' } },
-       }
-   end,
-   click = change_color,
-}
-
-
-
-
--- The custom statusline
-local custom = {}
-
-----------------------------------------------
------------------ Components -----------------
-----------------------------------------------
-custom.file_name = { -- custom file name component to be used with wave
-  text = function()
-    local name = vim.fn.expand('%:p:t')
-    if name == '' then
-        name = '[No Name]'
-    end
-    return name .. ' '
-  end,
-  hl_colors = { 'FilenameFg', 'wavedefault' },
-}
-
-custom.file_name_divider = { '%=', { "wavedefault", "FilenameBg" } } -- divider between file name and wave
-
-
-custom.vi_mode_sep = { -- used in the terminal. The right component
-  name = 'vi_mode_sep',
-  hl_colors = {
-    Normal = { 'black', 'waveleft1' },
-    Insert = { 'white', 'waveleft1' },
-    Visual = { 'green', 'waveleft1' },
-    Replace = { 'cyan', 'waveleft1' },
-    Command = { 'yellow', 'waveleft1' },
-  },
-  text = function()
-    return sep.slant_right_2
-  end,
-  hl = function()
-    return state.mode[2]
-  end,
-}
-
-
-----------------------------------------------
----------- Statusline Declarations -----------
-----------------------------------------------
-local default = { -- the regular statusline
-  filetypes = { 'default' },
-  active = {
-    basic.vi_mode,
-    basic.vi_mode_sep,
-    { ' ', '' },
-    basic.file_name,
-    wave_left,
-    { ' ', { 'FilenameBg', 'wavedefault' } },
-    basic.divider,
-    wave_right,
-    basic.line_col,
-    basic.progress,
-  },
-  inactive = {
-    basic.file_name_inactive,
-    basic.divider,
-    basic.divider,
-    basic.line_col_inactive,
-    { '', { 'white', 'InactiveBg' } },
-    basic.progress_inactive,
-  },
-}
-
-local readme = { -- statusline for markdown and help
-	filetypes = { "markdown", "json", "help" },
-	active = {
-		custom.file_name_divider,
-		wave_left,
-		{ " ", "" },
-		custom.file_name,
-		{ " ", "" },
-		wave_right_2,
-		custom.file_name_divider,
-	}
-}
-
-local terminal = { -- statusline for the terminal
-	filetypes = { "toggleterm" },
-	active = {
-		basic.vi_mode,
-		custom.vi_mode_sep,
-
-		wave_left_2,
-		wave_left_2_infinte,
-
-		basic.divider
-	}
-}
-
-
-----------------------------------------------
---------------- Global Setup -----------------
-----------------------------------------------
-windline.setup({
-    colors_name = function(colors)
-        colors.FilenameFg = colors.white
-        colors.FilenameBg = colors.black_light
-
-        colors.wavedefault = "#1F1E2F" --colors.black_light
-        colors.waveleft1 = colors.wavedefault
-        colors.waveleft2 = colors.wavedefault
-        colors.waveleft3 = colors.wavedefault
-        colors.waveleft4 = colors.wavedefault
-        colors.waveleft5 = colors.wavedefault
-
-        colors.waveright1 = colors.wavedefault
-        colors.waveright2 = colors.wavedefault
-        colors.waveright3 = colors.wavedefault
-        colors.waveright4 = colors.wavedefault
-        colors.waveright5 = colors.wavedefault
-        return colors
-    end,
-    statuslines = {
-        default,
-				readme,
-				terminal
-    },
-})
-
--- animation loop
 vim.defer_fn(function()
-    change_color()
+	c_col()
 end, 100)
 
 
 
+local components = {};
+
+components.space				= { "%=", "" };
+components.gap					= { " ", "" };
+
+components.bg						= { " ", "StatusLine" };
+
+--components.ruler				= { [[ %3l:%-2c ]], { "fg2", "bg2" } };
+components.progress			= { [[%3p%% ]],			{ "white", "black" } };
+
+components.fileName_off	= { [[ %f ]],				{ "fg2", "bg2" }};
+
+
+components.mode					= {
+	name = "vi_mode",
+	hl_colors = {
+		Normal	= { "fg", "bg" },
+		Insert	= { "bg", "fg" },
+		Visual	= { "bg", "bgV" },
+		Command	= { "bg", "bgC" },
+		Replace = { "bg", "bgR" }
+	},
+	hl = function()
+		return wlState.mode[2]
+	end,
+
+	text = function()
+		local str = "";
+
+		-- {{{ White space
+		-- If the text is short add white spaces.
+		if (wlState.mode[1]:len() < 13) then
+			local l = 13 - wlState.mode[1]:len();
+		
+			for i = 0, l, 1 do
+				str = str .. " ";
+			end
+
+		else 
+			str = " "
+		end
+		-- }}}
+		
+		return " " .. wlState.mode[1] .. str;
+	end
+}
+
+components.mode_sep = {
+	name = "vi_mode_sep",
+	hl_colors = {
+		Normal	= { "bg2", "bg" },
+		Insert	= { "bg2", "fg" },
+		Visual	= { "bg2", "bgV" },
+		Command	= { "bg2", "bgC" },
+		Replace = { "bg2", "bgR" }
+	},
+	hl = function()
+		return wlState.mode[2]
+	end,
+
+	text = function()
+		return "";
+	end
+}
+
+components.file_name = {
+	name = "file_name",
+	hl_colors = {
+		"fg2", "bg2"
+	},
+
+	text = function()
+		local name = vim.fn.expand("%:p:t");
+
+		local icon = "";
+
+		-- {{{ File Type Icons
+		local type = vim.o.filetype;
+
+		if (type == "vim") then
+			icon = ""
+		elseif (type == "help") then
+			icon = ""
+		elseif (type == "txt") then
+			icon = ""
+		elseif (type == "lua") then
+			icon = "";
+		elseif (type == "html") then
+			icon = "";
+		elseif (type == "css") then
+			icon = "";
+		elseif (type == "javascript") then
+			icon = "";
+		elseif (type == "json") then
+			icon = "";
+		else
+			icon = "";
+		end
+		-- }}}
+
+		if (name == "") then
+			name = "New";
+		elseif (name:len() >= 13) then
+			name = string.sub(name, 1, 9) .. "..";
+		end
+
+		return " " .. icon .. " " .. name .. " "
+	end
+}
+
+components.ripple = {
+	text = function()
+		return {
+			{ "", { "gradL1", "bg2"}},
+			{ "   ", { "", "gradL1"}},
+			
+			{ "", { "gradL2", "gradL1"}},
+			{ "   ", { "", "gradL2"}},
+			
+			{ "", { "gradL3", "gradL2"}},
+			{ "   ", { "", "gradL3"}},
+			
+			{ "", { "gradL4", "gradL3"}},
+			{ "   ", { "", "gradL4"}},
+			
+			{ "", { "gradL5", "gradL4"}},
+			{ "", { "gradR2", "gradR1"}},
+
+			{ "   ", { "", "gradR2"}},
+			{ "", { "gradR3", "gradR2"}},
+			
+			{ "   ", { "", "gradR3"}},
+			{ "", { "gradR4", "gradR3"}},
+			
+			{ "   ", { "", "gradR4"}},
+			{ "", { "gradR5", "gradR4"}},
+			
+			{ "   ", { "", "gradR5"}},
+			{ "", { "bg2", "gradR5"}},
+			
+		}
+	end,
+
+	click = c_col
+}
+
+
+components.ruler = { 
+	text = function()
+		return "  " .. [[ %3l  %-2c ]];
+	end,
+
+	hl_colors = { "fg2", "bg2" } 
+};
+
+components.ruler_sep = {
+	name = "vi_mode_sep",
+	hl_colors = {
+		Normal	= { "bg" , "bg2" },
+		Insert	= { "fg" , "bg2" },
+		Visual	= { "bgV", "bg2" },
+		Command	= { "bgC", "bg2" },
+		Replace = { "bgR", "bg2" }
+	},
+	hl = function()
+		return wlState.mode[2]
+	end,
+
+	text = function()
+		return "";
+	end
+}
+
+components.credits = {
+	width = 9,
+	hl_colors = {
+		Normal	= { "fg", "bg" },
+		Insert	= { "bg", "fg" },
+		Visual	= { "bg", "bgV" },
+		Command	= { "bg", "bgC" },
+		Replace = { "bg", "bgR" }
+	},
+	hl = function()
+		return wlState.mode[2]
+	end,
+
+	text = function()
+		return "  " .. shuttle;
+	end
+}
+
+
+
+wl.setup({
+	colors_name = function(cl)
+		cl.fg		= "#cdd6f4";
+		cl.bg		= "#1e1e2e";
+		
+		cl.bgV	= "#74c7ec";
+		cl.bgC	= "#a6e3a1";
+		cl.bgR	= "#e79bfd";
+
+		cl.bg2	= "#313244";
+		cl.fg2	= "#a6adc8";
+
+		cl.gradL1= "#000000";
+		cl.gradL2= "#000000";
+		cl.gradL3= "#000000";
+		cl.gradL4= "#000000";
+		cl.gradL5= "#000000";
+
+		cl.gradR1= "#000000";
+		cl.gradR2= "#000000";
+		cl.gradR3= "#000000";
+		cl.gradR4= "#000000";
+		cl.gradR5= "#000000";
+
+		return cl;
+	end,
+
+	statuslines = {
+		{
+			filetypes = { "default" },
+
+			active = {
+				components.mode,
+				components.mode_sep,
+				components.file_name,
+				components.ripple,
+				components.ruler,
+				components.ruler_sep,
+				components.credits
+			},
+			inactive = {
+				components.mode
+			}
+		}
+	}
+})
 
 

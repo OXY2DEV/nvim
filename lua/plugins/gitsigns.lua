@@ -9,7 +9,7 @@ require('gitsigns').setup({
 	},
 	signcolumn = true,
 	numhl = false,
-	linehl = true,
+	linehl = false,
 
 	current_line_blame = true,
 	current_line_blame_opts = {

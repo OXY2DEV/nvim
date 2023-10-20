@@ -52,6 +52,7 @@ map("n", "<leader>0", ":res 0<CR>")
 
 map("n", "<leader>z", ":Twilight<CR>")
 
+map("n", "<leader>g", ":Gitsigns toggle_linehl<CR>")
 map("n", "<leader>r", ":SearchReplaceSingleBufferSelections<CR>")
 
 

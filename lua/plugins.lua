@@ -29,6 +29,9 @@ require("lazy").setup({
 	-----------------------------------
 	{ -- is used by "Indent-Blankline" for underlined scope highlighting(That line under (, {, [ )
 		"nvim-treesitter/nvim-treesitter",
+		dependencies = {
+			"windwp/nvim-ts-autotag"
+		},
 		build = ":TSUpdate",
 		config = function()
 			require("plugins/treesitter")
@@ -60,6 +63,17 @@ require("lazy").setup({
 	-----------------------------------
 	{ -- is used for HTML snippet. Use <space>m on Normal mode to make a snippet from the given input
 		"mattn/emmet-vim",
+	},
+
+	{
+    "kylechui/nvim-surround",
+    version = "*", -- Use for stability; omit to use `main` branch for the latest features
+    event = "VeryLazy",
+    config = function()
+        require("nvim-surround").setup({
+            -- Configuration here, or leave empty to use defaults
+        })
+    end
 	},
 
 
@@ -263,6 +277,7 @@ require("lazy").setup({
 	-----------------------------------
 	{ 
 		"lukas-reineke/indent-blankline.nvim",
+		main = "ibl",
 		config = function()
 			require("plugins/blankline")
 		end

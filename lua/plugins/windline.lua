@@ -28,7 +28,7 @@ utils.change_mode_name({
 
 local barCol = 1;
 local moon = "";
-local signal = "  ";
+local signal = "   ";
 
 local c_col = function()
 	local cls = {};
@@ -72,14 +72,18 @@ local c_col = function()
 		timeout = 100,
 		interval = 150
 	})
+end
 
 
+local c_txt = function()
 	local phases = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
-	local ship	 = { "  ", "   ─", "  ──", "  ───", " ────", "─────󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "────", "──── ", "── ", "─  ", "   ", "   ", "   ", "   ", "   ─", "  ──", "  ───", " ───󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "──────", "──────", "────", "─── ", "───  ", "──  ", "─  ", "  ", "  " };
+	local ship	 = { "   ", "   ─", "  ──", "  ───", " ────", "─────󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "─────", "──── ", "─── ", "──  ", "─  ", "   ", "   ", "   ", "   ─", "  ──", "  ───", " ───󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "──────", "──────", "─────", "──── ", "─── ", "──  ", "─  ", "   ", "   ", "   " };
 	
 	anim.basic_animation({
 		timeout = nil,
 		effect = effe.list_text(phases),
+		manage = false,
+		interval = 300, delay = 2000,
 		
 		on_tick = function(val)
 			moon = val;
@@ -90,7 +94,8 @@ local c_col = function()
 	anim.basic_animation({
 		timeout = nil,
 		effect = effe.list_text(ship),
-		interval = 200, delay = 100,
+		manage = false,
+		interval = 400, delay = 2000,
 		
 		on_tick = function(val)
 			signal = val;
@@ -101,20 +106,19 @@ end
 
 vim.defer_fn(function()
 	c_col();
+	c_txt();
 end, 100)
 
 
 
 local components = {};
 
-components.space				= { "%=", "" };
+components.space				= { "%=", { "fg", "bg" } };
 components.gap					= { " ", "" };
 
 components.bg						= { " ", "StatusLine" };
 
 components.progress			= { [[%3p%% ]],			{ "white", "black" } };
-
-components.fileName_off	= { [[ %f ]],				{ "fg2", "bg2" }};
 
 
 components.mode					= {
@@ -203,14 +207,22 @@ components.file_name = {
 			icon = "";
 		end
 		-- }}}
+		
+		local sp = "";
 
 		if (name == "") then
 			name = "New";
-		elseif (name:len() >= 13) then
-			name = string.sub(name, 1, 9) .. "..";
+		elseif (name:len() >= 10) then
+			name = icon .. " " .. string.sub(name, 1, 9) .. "..";
+		elseif (name:len() < 10) then
+			for i = 0, 9 - name:len(), 1 do
+				sp = sp .. " "
+			end
+
+			name = string.sub(sp ,0, math.floor(string.len(sp) / 2)) .. icon .. " " .. name .. string.sub(sp, math.floor(string.len(sp) / 2), string.len(sp))
 		end
 
-		return " " .. icon .. " " .. name .. " "
+		return " " .. name .. " ";
 	end
 }
 
@@ -291,10 +303,24 @@ components.idle = {
 	end,
 
 	text = function()
-		return "  " .. signal;
+		return "  " .. signal .. " ";
 	end
 }
 
+components.idle_2 = {
+	text = function()
+		local name = vim.fn.expand("%:p:t");
+
+		if (name == "") then
+			name = "New";
+		elseif (name:len() >= 13) then
+			name = string.sub(name, 1, 9) .. "..";
+		end
+		return moon .. "  " .. name
+	end,
+
+	hl_colors = { "fg", "bg" }
+}
 
 
 wl.setup({
@@ -329,16 +355,20 @@ wl.setup({
 			filetypes = { "default" },
 
 			active = {
+				components.space,
 				components.mode,
 				components.mode_sep,
 				components.file_name,
 				components.ripple,
 				components.ruler,
 				components.ruler_sep,
-				components.idle
+				components.idle,
+				components.space
 			},
 			inactive = {
-				components.mode
+				components.space,
+				components.idle_2,
+				components.space
 			}
 		}
 	}

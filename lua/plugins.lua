@@ -19,6 +19,7 @@ List of Plugins goes here.
 
 ]]
 
+-- NOTE Make changes
 
 
 -- {{{
@@ -174,7 +175,8 @@ require("lazy").setup({
 		"windwp/windline.nvim",
 		config = function()
 			require("plugins/windline")
-		end
+		end,
+		priority = 1000
 	},
 
 
@@ -257,6 +259,14 @@ require("lazy").setup({
     },
 		config = function()
 			require("plugins/noice")
+		end
+	},
+
+	{
+		"folke/drop.nvim",
+		event = "VimEnter",
+		config = function()
+			require("plugins/drop");
 		end
 	},
 
@@ -473,7 +483,7 @@ require("lazy").setup({
 		"luukvbaal/statuscol.nvim",
 		config = function()
 			require("plugins/statuscol")
-		end
+		end,
 	},
 
 	-----------------------------------

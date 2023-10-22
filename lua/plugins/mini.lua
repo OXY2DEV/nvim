@@ -27,7 +27,9 @@ require("mini.map").setup({
 		MiniMap.gen_integration.builtin_search()
 	}
 })
-require("mini.indentscope").setup()
+require("mini.indentscope").setup({
+	symbol = "│"
+})
 
 MiniMap.gen_integration.gitsigns()
 

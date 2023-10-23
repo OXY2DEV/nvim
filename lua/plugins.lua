@@ -22,7 +22,7 @@ List of Plugins goes here.
 -- NOTE Make changes
 
 
--- {{{
+-- {{{2
 -- Plugins
 require("lazy").setup({
 	-----------------------------------
@@ -519,4 +519,4 @@ require("lazy").setup({
 		"tpope/vim-obsession"
 	}
 })
--- }}}
+-- }}}2

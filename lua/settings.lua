@@ -4,15 +4,13 @@ local A = vim.api
 
 vim.cmd([[filetype plugin on]])
 
-G.indent_blankline_filetype_exclude = { "dashboard" }			-- Disable indents in the Startup screen
-
 O.spell = true
 O.spelllang = "en_us"
 
 O.foldenable = true								-- Enables folding. Used by nvim-ufo
 O.foldcolumn = "1"
-O.foldlevel = 99
-O.foldlevelstart = 99
+O.foldlevel = 1
+O.foldlevelstart = 1
 O.fillchars = "foldsep: ,foldopen:,foldclose:"
 O.foldmethod = "marker"						-- Fold text within {{{}}}
 
@@ -42,8 +40,7 @@ O.softtabstop = -1                -- ┠ Needed to set tab size
 
 O.scrolloff = 999									-- center the cursor vertically
 O.sidescrolloff = 999							-- center the cursor horizontally
---O.list = true
---O.listchars = 'trail:·,nbsp:◇,tab:→ ,extends:▸,precedes:◂'
 
+A.nvim_set_hl(0, "Folded", { fg="red" })
 
 

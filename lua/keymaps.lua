@@ -26,7 +26,11 @@ map("n", "<leader>qq", ":q!<CR>")
 map("n", "<leader>sv", ":vsp<CR>")
 map("n", "<leader>sh", ":sp<CR>")
 
+map("n", "<leader><leader>", ":lua require('specs').show_specs()<CR>")
+
 map("n", "<leader>fb", ":Telescope file_browser path=%:p:h select_buffer=true<CR>")
+map("n", "<leader>fp", ":Telescope projects<CR>")
+
 map("n", "<leader>t", ":Telescope<CR>")
 map("n", "<leader>th", ":Telescope themes<CR>")
 map("n", "<leader>c", ":CompilerOpen<CR>")

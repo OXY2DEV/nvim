@@ -100,6 +100,17 @@ require("lazy").setup({
     end,
   },
 
+	{
+		"petertriho/nvim-scrollbar",
+		dependencies = {
+			"kevinhwang91/nvim-hlslens"
+		},
+
+		config = function()
+			require("plugins/scrollbar")
+		end
+	},
+
 
 
 
@@ -517,6 +528,40 @@ require("lazy").setup({
 	-----------------------------------
 	{ -- for tmux resurrect 
 		"tpope/vim-obsession"
-	}
+	},
+
+	-- {{{3 CmdLine Suggestions 
+	{
+		"gelguy/wilder.nvim",
+		config = function()
+		  require("plugins/wilder");
+		end
+	},
+	-- }}}3
+	
+	-- {{{3 Projects
+	{
+		"ahmedkhalf/project.nvim",
+		config = function()
+			require("plugins/project");
+		end
+	},
+	-- }}}3
+	
+	-- {{{3 Dropbar
+	{ -- Use after NeoVim 10.0.0 is released
+		"Bekaboo/dropbar.nvim",
+		enabled = false
+	},
+	-- }}}3
+	
+	-- {{{3
+	{
+		"edluffy/specs.nvim",
+		config = function()
+			require("plugins/specs");
+		end
+	},
+	-- }}}3
 })
 -- }}}2

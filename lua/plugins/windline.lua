@@ -29,6 +29,7 @@ utils.change_mode_name({
 local barCol = 1;
 local moon = "";
 local signal = "   ";
+local tText = "";
 
 local c_col = function()
 	local cls = {};
@@ -78,7 +79,8 @@ end
 local c_txt = function()
 	local phases = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
 	local ship	 = { "   ", "   ─", "  ──", "  ───", " ────", "─────󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "─────", "──── ", "─── ", "──  ", "─  ", "   ", "   ", "   ", "   ─", "  ──", "  ───", " ───󰑅", "────󰑅─", "───󰑅──", "──󰑅───", "─󰑅───󰑅", "󰑅───󰑅─", "───󰑅──", "──󰑅───", "─󰑅────", "󰑅─────", "──────", "──────", "─────", "──── ", "─── ", "──  ", "─  ", "   ", "   ", "   " };
-	
+	local term	 = { "", "" };
+
 	anim.basic_animation({
 		timeout = nil,
 		effect = effe.list_text(phases),
@@ -99,6 +101,18 @@ local c_txt = function()
 		
 		on_tick = function(val)
 			signal = val;
+			vim.cmd.redrawstatus()
+		end
+	})
+
+	anim.basic_animation({
+		timeout = nil,
+		effect = effe.list_text(term),
+		manage = false,
+		interval = 250, delay = 2000,
+
+		on_tick = function(val)
+			tText = val;
 			vim.cmd.redrawstatus()
 		end
 	})
@@ -322,6 +336,14 @@ components.idle_2 = {
 	hl_colors = { "fg", "bg" }
 }
 
+components.termNorm = {
+	text = function()
+		return tText
+	end,
+
+	hl_colors = { "fg", "bg" }
+}
+
 
 wl.setup({
 	colors_name = function(cl)
@@ -369,6 +391,19 @@ wl.setup({
 				components.space,
 				components.idle_2,
 				components.space
+			}
+		},
+
+		{
+			filetypes = { "toggleterm" },
+
+			active = {
+				components.space,
+				components.mode,
+				components.space
+			},
+			inactive = {
+				components.termNorm
 			}
 		}
 	}

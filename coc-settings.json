@@ -20,13 +20,13 @@
 	},
 	"diagnostic.hintSign": "", // icon for showing HINTS
 	"diagnostic.refreshOnInsertMode": false,
-	"diagnostic.virtualText": true, // use virtual text to show Diagnostic Informations
-	"diagnostic.virtualTextAlign": "below", // virtual text's postion(currently behind the line)
-	"diagnostic.virtualTextPrefix": " └  ", // what to show before the Diagnostic Information. Currently a logo.
+	"diagnostic.virtualText": false, // use virtual text to show Diagnostic Informations
+	"diagnostic.virtualTextAlign": "right", // virtual text's postion(currently behind the line)
+	"diagnostic.virtualTextPrefix": "  ", // what to show before the Diagnostic Information. Currently a logo.
 	"diagnostic.warningSign": "", // icon for showing WARNINGS
 
-	"tsserver.enable": true,
-	"eslint.enable": true,
+	"typescript.showUnused": false,
+	"javascript.showUnused": false,
 	
 	
 	"floatFactory.floatConfig": { // general settings for floating windows
@@ -42,7 +42,6 @@
 		"tagname-lowercase": false
 	},
 
-	"ltex.enabled": false,
 
 	"suggest.detailField": "preview", // where to show suggestions detail
 	"suggest.labelMaxLength": 25, // width of suggestions floating window
@@ -55,5 +54,44 @@
 
 	"suggest.removeDuplicateItems": true, // don't show duplicate suggestions
 	"suggest.snippetIndicator": " •", // snippets are marked with a •
-	"suggest.virtualText": true // show current auto completion as a virtual text
+  "suggest.virtualText": true,
+
+	"cSpell.words": [
+		"eruda",
+		"gsap"
+	],
+  "cSpell.enabledLanguageIds": [
+    "asciidoc",
+    "c",
+    "cpp",
+    "csharp",
+    "css",
+    "en",
+    "git-commit",
+    "gitcommit",
+    "go",
+    "handlebars",
+    "haskell",
+    "html",
+    "jade",
+    "java",
+    "javascriptreact",
+    "latex",
+    "less",
+    "markdown",
+    "php",
+    "plaintext",
+    "pug",
+    "python",
+    "restructuredtext",
+    "rust",
+    "scala",
+    "scss",
+    "text",
+    "typescript",
+    "typescriptreact",
+    "vim",
+    "yaml",
+    "yml"
+  ] // show current auto completion as a virtual text
 }

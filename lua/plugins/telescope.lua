@@ -18,7 +18,7 @@ require("telescope").setup {
   extensions = {
     file_browser = {
 			--theme = "dropdown"									-- Use the theme if you like,
-			layout_strategy = "vertical",
+			layout_strategy = "flex",
 			-- Do not USE the theme "Ivy" if you want floating file browser
       
 			-- disables netrw and use telescope-file-browser in its place

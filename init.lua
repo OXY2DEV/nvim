@@ -9,9 +9,32 @@ require("config/settings");
 require("config/keymaps");
 ---_
 
----+ Title: "Load scripts"
+---+ Title: "Load scripts" Gap: "1" Border: " "
 require("scripts/foldtext");
-require("scripts/whereAmI");
+require("scripts/beacon");
+require("scripts/winopen");
 ---_
 
---print("Hello World");
+require("config/lazy");
+
+--+
+--
+--+2
+--
+--+3
+--
+--+
+--
+--
+--
+--
+--_
+--
+--_
+--
+--_
+--
+--_
+
+
+--require("custom_plugins/trail-nvim/lua/trail").setup();

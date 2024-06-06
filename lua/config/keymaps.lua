@@ -27,8 +27,9 @@ createKeymap(nil, "fw", ":write!<CR>");
 ---_
 
 ---+ Title: "Folding"
-createKeymap(nil, "<leader>", "zA");
+createKeymap(nil, "<leader>", "za");
 ---_
 
-
+createKeymap(nil, "<leader>l", ":.lua<CR>");
+createKeymap("v", "<leader>l", ":'<,'>lua<CR>");
 createKeymap(nil, "<leader><leader>", ":Beacon<CR>");

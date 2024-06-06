@@ -2,6 +2,8 @@ local beaconSpace = vim.api.nvim_create_namespace("beacon");
 local beaconTimer = vim.uv.new_timer();
 
 ---+ Icon: " " Title: "rgb number to table converter" BorderL: " " BorderR: " "
+--- @param color = number
+--- @return table
 local rgbToTable = function (color)
 	local hex = string.format("%x", color);
 
@@ -14,6 +16,8 @@ end
 --_
 
 ---+ Icon: " " Title: "hex color to table converter" BorderL: " " BorderR: " "
+--- @param color string
+--- @rwturn table
 local hexToTable = function (color)
 	local hex = string.gsub(color, "#", "");
 
@@ -34,6 +38,11 @@ end
 --_
 
 ---+ Icon: " " Title: "Do eased interpolation" BorderL: " " BorderR: " "
+--- @param ease string
+--- @param from number
+--- @param to number
+--- @param position number
+--- @return number
 local ease = function(ease, from, to, position)
 	local easeValue = 0;
 
@@ -81,6 +90,7 @@ local ease = function(ease, from, to, position)
 end
 --_
 
+---+ Icon: " " Title: "Gradient creating function" BorderL: " " BorderR: " "
 local gradient = function(from, to, steps, animationSteps, gradientEase, animationEase)
 	local totalColors = {};
 	local animationValues = {};
@@ -111,8 +121,9 @@ local gradient = function(from, to, steps, animationSteps, gradientEase, animati
 
 	return totalColors, animationValues
 end
+---_
 
-
+---+ Icon: " " Title: "Options(& default values)" Border: "╌" BorderL: " " BorderR: " "
 local colCount = 5;
 local normalBg =  vim.api.nvim_get_hl(0, { name = "Normal" }).bg;
 local color = { r = 203, g = 166, b = 247 };
@@ -126,8 +137,9 @@ local gradientEase = "linear";
 local animationEase = "ease-out-sine";
 
 local startColors, animationValues;
+---_
 
-
+---+ Icon: " " Title: "User command" Border: "━" BorderL: " " BorderR: " "
 vim.api.nvim_create_user_command("Beacon", function(options)
 	local posY, posX = vim.api.nvim_win_get_cursor(0)[1] - 1, vim.api.nvim_win_get_cursor(0)[2];
 	local availableWidth = #table.concat(vim.api.nvim_buf_get_lines(0, posY, posY + 1, false));
@@ -224,3 +236,4 @@ end, {
 	nargs = "*",
 	desc = "Show me where my cursor is!"
 })
+--_

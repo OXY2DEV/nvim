@@ -1,6 +1,5 @@
 return {
 	"neovim/nvim-lspconfig",
-	enabled = true,
 
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",

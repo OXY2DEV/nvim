@@ -1,153 +1,196 @@
 local bars = {};
-local statuscol = require("bars/statuscolumn");
+local statuscolumn = require("bars/statuscolumn");
+local statusline = require("bars/statusline");
+local tabline = require("bars/tabline");
 
-bars.defaultConfig = {
-	statusColumn = {
-		enabled = true,
-		config = {
-			segmants = { "gap", "folds", "line_numbers", "border" },
+---+ Title: "Default configuration"
+---+2 Title: "Description"
+---
+--- A table containing various configuration related options for the plugin.
+--- Used by the setup() function after merging(extending) with the user's
+--- config table.
+---
+---_2
 
-			gap = {
-				length = 1,
-				fill = " "
-			},
-			folds = {
-				padding = " ",
-				placeholder = " ",
-				folds = {
-					{
-						open = "",
-						close = "",
+---+2 Title: "Code"
 
-						open_hl = "bars_fold_1_o",
-						close_hl = "bars_fold_1_c"
-					},
-					{
-						open = "",
-						close = "",
+---@class default_config
+---@field global_disable nil | table Filetypes where the plugin will be disabled
+---@field custom_settings nil | table[] Configuration for specific filetupes and/or buftypes
+---@field statuscolumn nil | table Configuration for the staruscolumn
+bars.default_config = {
+	global_disable = {
+		filetypes = { "help", "Lazy" },
+		buftypes = { "terminal", "nofile" }
+	},
+	custom_configs = {
+	},
 
-						open_hl = "bars_fold_2_o",
-						close_hl = "bars_fold_2_c"
-					},
-					{
-						open = "󰍀",
-						close = "󰌾",
-
-						open_hl = "bars_fold_3_o",
-						close_hl = "bars_fold_3_c"
-					},
-					{
-						open = "",
-						close = "",
-
-						open_hl = "bars_fold_4_o",
-						close_hl = "bars_fold_4_c"
-					}
-				},
-
-				borders = {
-					{
-						top = "│",
-						normal = "│",
-						bottom = "╰",
-
-						hl = "bars_fold_1_b",
-
-						mix_branch = "├",
-						mix_tail = "─"
-					},
-					{
-						top = "┆",
-						normal = "┆",
-						bottom = "╰",
-
-						hl = "bars_fold_2_b",
-
-						mix_branch = "├",
-						mix_tail = "┄"
-					},
-					{
-						top = "╎",
-						normal = "╎",
-						bottom = "╰",
-
-						hl = "bars_fold_3_b",
-
-						mix_branch = "├",
-						mix_tail = "╌"
-					},
-					{
-						top = "|",
-						normal = "|",
-						bottom = "╰",
-
-						hl = "bars_fold_4_b",
-
-						mix_branch = "├",
-						mix_tail = "╶"
-					},
-				},
-
-				custom_hls = {
-					bars_fold_1_c = { fg = "#74C7EC" },
-					bars_fold_1_o = { fg = "#3b566d" },
-					bars_fold_1_b = { fg = "#585b70" },
-
-					bars_fold_2_c = { fg = "#A6E3A1" },
-					bars_fold_2_o = { fg = "#4b6054" },
-					bars_fold_2_b = { fg = "#62657b" },
-
-					bars_fold_3_c = { fg = "#F9E2AF" },
-					bars_fold_3_o = { fg = "#675f59" },
-					bars_fold_3_b = { fg = "#6c7086" },
-
-					bars_fold_4_c = { fg = "#CBA6F7" },
-					bars_fold_4_o = { fg = "#574b71" },
-					bars_fold_4_b = { fg = "#757a91" },
+	default = {
+		tabline = {
+			enabled = true,
+			options = {
+				components = {
+					{ type = "buffers_all" },
+					{ type = "gap" },
+					-- { type = "separator" },
+					{ type = "tabs" }
 				}
-			},
-			line_numbers = {
-				colors = {
-					from = "#9399B2",
-					to = "#585B70",
+			}
+		},
+		statusline = {
+			enabled = true,
+			options = {
+				set_defaults = true,
 
-					steps = 10,
-					ease = "ease-in-sine",
+				components = {
+					{ type = "mode" },
+					{ type = "buf_name" },
 
-					hl_prefix = "bars_number_",
-					current_line = {
-						hl_name = "bars_current_line",
-						value = {
-							fg = "#89B4FA"
+					{ type = "gap" },
+
+					{ type = "cursor_position" }
+				}
+			}
+		},
+		statuscolumn = {
+			enabled = true,
+			options = {
+				set_defaults = true,
+
+				default_hl = "statuscol_bg",
+				components = {
+					{
+						type = "fold",
+						mode = "line",
+
+						text = {
+							default = " ",
+							closed = {
+								"", "", ""
+							},
+							opened = "",
+
+							edge = "╰",
+							branch = "┝",
+							scope = "│"
+						},
+
+						hl = {
+							--default = "FloatShadow",
+							closed = "Special",
+							opened = "Normal",
+
+							scope = "Bars_scope",
+							edge = "Bars_scope"
 						}
-					}
+					},
+					{
+						type = "gap",
+
+						text = " "
+					},
+					{
+						type = "number",
+						mode = "hybrid",
+
+						hl = {
+							prefix = "Bars_glow_num_",
+							from = 0, to = 9
+						},
+						right_align = true
+					},
+					{
+						type = "gap",
+
+						text = " "
+					},
+					{
+						type = "border",
+
+						hl = {
+							prefix = "Bars_glow_",
+							from = 0, to = 7
+						},
+						text = "│"
+					},
+					{
+						type = "gap",
+
+						text = " "
+					},
 				}
-			},
-			border = {
-				colors = {
-					from = "#89B4FA",
-					to = "#585B70",
-
-					steps = 10,
-					ease = "ease-in-quad",
-
-					hl_prefix = "bars_border_",
-				},
-
-				border_character = "│",
-				fold_connector = "├─"
 			}
 		}
 	}
 };
 
---- Setup function for bars-N-lines
---- @param userConfig table | nil
-bars.setup = function (userConfig)
-	local use = vim.tbl_deep_extend("keep", userConfig or {}, bars.defaultConfig);
+---_2
+---_
 
-	vim.g.nestFolds = false;
-	statuscol.setup(use.statusColumn);
+local inherit = function (table, inherit_from)
+	for key, value in pairs(table) do
+		if value == "inherit" then
+			table[key] = inherit_from[key];
+		end
+	end
+
+	return table;
+end
+
+local winValidate = function (window, config)
+	local use_config = {};
+
+	if vim.tbl_contains(config.global_disable.filetypes or {}, vim.bo.filetype) then
+		goto config_set
+	end
+
+	if vim.tbl_contains(config.global_disable.buftypes or {}, vim.bo.buftype) then
+		goto config_set
+	end
+
+
+	if vim.islist(config.custom_configs) == true then
+		for _, conf in ipairs(config.custom_configs) do
+			if vim.tbl_contains(conf.filetypes or {}, vim.bo.filetype) and vim.tbl_contains(conf.buftypes or {}, vim.bo.buftype) then
+				use_config = inherit(conf.config, config.default or {});
+
+				goto config_set
+			elseif vim.tbl_contains(conf.filetypes or {}, vim.bo.filetype) or vim.tbl_contains(conf.buftypes or {}, vim.bo.buftype) then
+				use_config = inherit(conf.config, config.default or {});
+
+				goto config_set
+			end
+		end
+	end
+
+	use_config = config.default;
+	::config_set::
+
+	statuscolumn.init(window, use_config.statuscolumn);
+	statusline.init(window, use_config.statusline);
+	tabline.init(use_config.tabline);
+end
+
+bars.setup = function (user_config)
+	local merged_config = vim.tbl_deep_extend("force", bars.default_config, user_config or {});
+
+	vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+		pattern = "*",
+		callback = function (data)
+			local windows = vim.fn.win_findbuf(data.buf);
+
+			for _, window in ipairs(windows) do
+				winValidate(window, merged_config);
+			end
+		end
+	});
+
+	vim.api.nvim_create_autocmd({ "WinEnter", "TabEnter" }, {
+		pattern = "*",
+		callback = function ()
+		end
+	});
 end
 
 return bars;

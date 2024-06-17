@@ -1,7 +1,7 @@
 ---+ Title: "Fold_text function" Icon: "󰡱 "
 FoldText = function()
 	local foldStartLine = table.concat(vim.fn.getbufline(vim.api.nvim_get_current_buf(), vim.v.foldstart));
-	
+
 	local title, icon, number;
 
 	local border = foldStartLine:match('Border:%s*"([^"]+)"') or "─";
@@ -42,7 +42,7 @@ FoldText = function()
 	end
 
 	--- Number of lines
-	if foldStartLine:match('Line Count:%s*"([^"]+)"') == "false" then
+	if foldStartLine:match('Line count:%s*"([^"]+)"') == "false" then
 		number = "";
 	else
 		if border == " " then
@@ -55,7 +55,7 @@ FoldText = function()
 
 	local totalVirtualColumns = vim.api.nvim_win_get_width(0) - vim.fn.getwininfo(vim.fn.win_getid())[1].textoff;
 	local fillCharLen = totalVirtualColumns - vim.fn.strchars(string.rep(border, padding) .. icon .. string.rep(border, gap) .. title .. number .. border);
-	
+
 	local _out = string.rep(border, padding) .. icon .. string.rep(border, gap) .. title .. string.rep(border, fillCharLen) .. number .. border;
 
 	return _out;

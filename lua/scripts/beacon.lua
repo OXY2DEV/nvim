@@ -147,7 +147,7 @@ vim.api.nvim_create_user_command("Beacon", function(options)
 	if availableWidth < 1 then
 		return;
 	end
-	
+
 	if options.fargs[1] ~= nil then
 		colCount = tonumber(options.fargs[1]);
 	else

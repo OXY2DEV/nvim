@@ -1,5 +1,13 @@
 local utils = {}
 
+utils.toStr = function (color)
+	local R = #string.format("%x", color.r) == 1 and "0" .. string.format("%x", color.r) or string.format("%x", color.r);
+	local G = #string.format("%x", color.g) == 1 and "0" .. string.format("%x", color.g) or string.format("%x", color.g);
+	local B = #string.format("%x", color.b) == 1 and "0" .. string.format("%x", color.b) or string.format("%x", color.b);
+
+	return "#" .. R .. G .. B;
+end
+
 ---+ Icon: " " Title: "rgb number to table converter" BorderL: " " BorderR: " "
 --- @param color number
 --- @return table

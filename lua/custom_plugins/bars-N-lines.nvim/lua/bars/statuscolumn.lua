@@ -1,446 +1,248 @@
-local utils = require("bars/utils");
 local statuscolumn = {};
 
-statuscolumn.used_in_bufs = {};
-statuscolumn.buffers_with_folds = {};
-statuscolumn.fold_positions = {};
-
-statuscolumn.cachedConfig = {};
-
----@diagnostic disable undefined-global
-statuscolumn.border = {
-	hls = {},
-	text = "",
-	fold_connector= nil,
-
-	init = function (self, segmantConfig)
-		if segmantConfig == nil then
-			return;
-		end
-
-		local colors = segmantConfig.colors;
-		local from = utils.hexToTable(colors.from);
-		local to = utils.hexToTable(colors.to);
-
-
-		self.text = segmantConfig.border_character;
-		self.steps = colors.steps;
-		self.hl_prefix = segmantConfig.hl_prefix;
-		self.fold_connector = segmantConfig.fold_connector;
-
-		if #self.hls ~= 0 then
-			return;
-		end
-
-		for c = 0, self.steps - 1 do
-			local r = utils.ease(colors.ease, from.r, to.r, c * (1 / (colors.steps - 1)))
-			local g = utils.ease(colors.ease, from.g, to.g, c * (1 / (colors.steps - 1)))
-			local b = utils.ease(colors.ease, from.b, to.b, c * (1 / (colors.steps - 1)))
-
-			table.insert(self.hls, colors.hl_prefix .. c);
-
-			vim.api.nvim_set_hl(0,
-				colors.hl_prefix .. c,
-				vim.tbl_extend("keep", {
-					fg = string.format("#%x%x%x", r, g, b),
-				}, colors.extra_styles or {})
-			);
-		end
-	end,
-
-	component = function (self)
-		local color = "";
-
-		if vim.v.relnum == 0 then
-			color = "%#" .. self.hls[1] .. "#";
-		elseif vim.v.relnum < (self.steps - 1) then
-			color = "%#" .. self.hls[vim.v.relnum] .. "#";
-		else
-			color = "%#" .. self.hls[#self.hls] .. "#";
-		end
-
-		if self.fold_connector == nil then
-			return color .. self.text .. " ";
-		else
-			local txt = vim.fn.foldclosed(vim.v.lnum) == -1 and self.text .. " " or self.fold_connector;
-
-			return color .. txt;
-		end
-	end
-};
-
-statuscolumn.line_numbers = {
-	current_line = "Special",
-	hls = {},
-
-
-	init = function (self, segmantConfig)
-		if segmantConfig == nil then
-			return;
-		end
-
-
-		if vim.tbl_islist(segmantConfig.colors) == true and #self.hls == 0 then
-			self.hls = segmantConfig.colors;
-			return;
-		end
-
-		local colors = segmantConfig.colors;
-		local from = utils.hexToTable(colors.from);
-		local to = utils.hexToTable(colors.to);
-
-		if #self.hls ~= 0 then
-			return;
-		end
-
-
-		if colors.current_line ~= nil then
-			vim.api.nvim_set_hl(0, colors.current_line.hl_name, vim.tbl_extend("keep", colors.current_line.value, colors.extra_styles or {}));
-			self.current_line = colors.current_line.hl_name;
-		end
-
-		for c = 0, (colors.steps - 1) do
-			local r = utils.ease(colors.ease, from.r, to.r, c * (1 / (colors.steps - 1)))
-			local g = utils.ease(colors.ease, from.g, to.g, c * (1 / (colors.steps - 1)))
-			local b = utils.ease(colors.ease, from.b, to.b, c * (1 / (colors.steps - 1)))
-
-			table.insert(self.hls, colors.hl_prefix .. c);
-
-			vim.api.nvim_set_hl(0,
-				colors.hl_prefix .. c,
-				vim.tbl_extend("keep", {
-					fg = string.format("#%x%x%x", r, g, b)
-				}, colors.extra_styles or {})
-			);
-		end
-	end,
-
-	component = function (self)
-		local _o = "";
-
-		if vim.v.relnum == 0 then
-			_o = "%#" .. self.current_line .. "#" .. "%=%{" .. vim.v.lnum .. "} ";
-		elseif vim.v.relnum <= #self.hls then
-			_o = "%#" .. self.hls[vim.v.relnum] .. "#" .. "%=%{" .. vim.v.relnum .. "} ";
-		else
-			_o = "%#" .. self.hls[#self.hls] .. "#" .. "%=%{" .. vim.v.relnum .. "} ";
-		end
-
-
-		return _o;
-	end
-};
-
-statuscolumn.folds = {
-	borders = {},
-	folds = {},
-	padding = "",
-
-	init = function (self, segmantConfig)
-		if segmantConfig == nil then
-			return;
-		end
-
-		self.borders = segmantConfig.borders;
-		self.folds = segmantConfig.folds;
-		self.padding = segmantConfig.padding;
-
-		for hl_name, hl_val in pairs(segmantConfig.custom_hls) do
-			vim.api.nvim_set_hl(0, hl_name, hl_val);
-		end
-	end,
-
-	getFoldLevel = function (self, level)
-		if level > #self.folds then
-			return #selt.folds;
-		end
-
-		return level;
-	end,
-
-	validate = function (self)
-		if statuscolumn.fold_positions[vim.api.nvim_get_current_buf()] == nil then
-			return;
-		end
-
-		for index, value in ipairs(statuscolumn.fold_positions[vim.api.nvim_get_current_buf()]) do
-			if vim.fn.foldclosed(value.close) ~= value.close or vim.fn.foldclosedend(value.close_end) ~= value.close_end or vim.fn.foldlevel(vim.v.lnum) ~= value.level then
-				table.remove(statuscolumn.fold_positions[vim.api.nvim_get_current_buf()], index)
-			end
-		end
-	end,
-
-	component = function (self)
-		local isBufferValid = vim.tbl_contains(statuscolumn.buffers_with_folds, vim.api.nvim_get_current_buf());
-
-		if isBufferValid == false then
-			return "";
-		end
-
-		if vim.api.nvim_get_mode().mode == "i" then
-			return " ";
-		end
-
-		local foldLevel;
-		local text, color = "", "";
-		local foldLocs = statuscolumn.fold_positions;
-
-		if foldLocs[vim.api.nvim_get_current_buf()] == nil then
-			foldLocs[vim.api.nvim_get_current_buf()] = {};
-		end
-
-		-- lines that are in a fold
-		if vim.fn.foldlevel(vim.v.lnum) > 0 then
-			-- Lines that are the start of a folds
-			if vim.fn.foldclosed(vim.v.lnum) ~= -1 then
-				local foldRegisterComplete = false;
-				local dataMatches = true;
-
-				for index, value in ipairs(foldLocs[vim.api.nvim_get_current_buf()]) do
-					-- already recorded fold
-					if value.close == vim.v.lnum then
-						statuscolumn.fold_positions[vim.api.nvim_get_current_buf()][index] = vim.tbl_extend("force", statuscolumn.fold_positions[vim.api.nvim_get_current_buf()][index], {
-							close_end = vim.fn.foldclosedend(vim.v.lnum),
-							level = vim.fn.foldlevel(vim.v.lnum)
-						});
-
-						foldRegisterComplete = true;
-
-						if value.close_end ~= vim.fn.foldclosedend(vim.v.lnum) then
-							dataMatches = false;
-						end
-
-						break;
-					end
-				end
-
-				if foldRegisterComplete == false then
-					table.insert(statuscolumn.fold_positions[vim.api.nvim_get_current_buf()], {
-						close = vim.fn.foldclosed(vim.v.lnum),
-						close_end = vim.fn.foldclosedend(vim.v.lnum),
-
-						level = vim.fn.foldlevel(vim.v.lnum)
-					});
-				end
-
-
-				foldLevel = self:getFoldLevel(vim.fn.foldlevel(vim.v.lnum));
-				
-				if vim.g.nestFolds == false then
-					text = self.folds[foldLevel].close;
-					color = self.folds[foldLevel].close_hl ~= nil and "%#" .. self.folds[foldLevel].close_hl .. "#" or "";
-				else
-					for f = 1, foldLevel - 1 do
-						text = text .. (self.borders[f].hl ~= nil and "%#" .. self.borders[f].hl .. "#" or "") .. self.borders[f].normal;
-					end
-
-					text = text .. (self.folds[foldLevel].close_hl ~= nil and "%#" .. self.folds[foldLevel].close_hl .. "#" or "") .. self.folds[foldLevel].close;
-				end
-			else
-				local markAdded = false;
-
-				for index, value in ipairs(foldLocs[vim.api.nvim_get_current_buf()]) do
-					if value.close == vim.v.lnum then
-						foldLevel = self:getFoldLevel(vim.fn.foldlevel(vim.v.lnum));
-
-						if vim.g.nestFolds == true then
-							text = self.folds[foldLevel].open_hl ~= nil and text .. "%#" .. self.folds[foldLevel].open_hl .. "#" .. self.folds[foldLevel].open or text .. self.folds[foldLevel].open;
-						else
-							text = self.folds[foldLevel].open
-							color = self.folds[foldLevel].open_hl ~= nil and "%#" .. self.folds[foldLevel].open_hl .. "#" or "";
-						end
-
-						markAdded = true;
-						break
-					elseif vim.fn.foldlevel(vim.v.lnum) == value.level and (vim.v.lnum > value.close and vim.v.lnum < value.close_end) then
-						foldLevel = self:getFoldLevel(vim.fn.foldlevel(vim.v.lnum));
-
-						if vim.g.nestFolds == true then
-							text = self.borders[foldLevel].hl ~= nil and text .. "%#" .. self.borders[foldLevel].hl .. "#" .. self.borders[foldLevel].top or text .. self.borders[foldLevel].top;
-						else
-							text = self.borders[foldLevel].top;
-							color = self.borders[foldLevel].hl ~= nil and "%#" .. self.borders[foldLevel].hl .. "#" or "";
-						end
-
-						markAdded = true;
-						break
-					elseif vim.v.lnum > value.close and vim.v.lnum < value.close_end then
-						foldLevel = value.level;
-
-						if vim.g.nestFolds == true then
-							text = self.borders[foldLevel].hl ~= nil and text .. "%#" .. self.borders[foldLevel].hl .. "#" .. self.borders[foldLevel].normal or text .. self.borders[foldLevel].normal;
-						else
-							text = self.borders[foldLevel].normal;
-							color = self.borders[foldLevel].hl ~= nil and "%#" .. self.borders[foldLevel].hl .. "#" or "";
-						end
-
-						markAdded = true;
-					elseif value.close_end == vim.v.lnum then
-						foldLevel = self:getFoldLevel(vim.fn.foldlevel(vim.v.lnum));
-
-						if vim.g.nestFolds == true then
-							text = self.borders[foldLevel].hl ~= nil and text .. "%#" .. self.borders[foldLevel].hl .. "#" .. self.borders[foldLevel].bottom or text .. self.borders[foldLevel].bottom;
-						else
-							local foldNext = self:getFoldLevel(vim.fn.foldlevel(vim.v.lnum + 1));
-
-							if foldNext ~= 0 then
-								text = (self.borders[foldLevel].hl ~= nil and "%#" .. self.borders[foldLevel].hl .. "#" .. self.borders[foldLevel].mix_branch or self.borders[foldLevel].mix_branch) .. (self.borders[foldNext].hl ~= nil and "%#" .. self.borders[foldNext].hl .. "#" .. self.borders[foldNext].mix_tail or self.borders[foldNext].mix_tail)
-							else
-								text = self.borders[foldLevel].bottom;
-								color = self.borders[foldLevel].hl ~= nil and "%#" .. self.borders[foldLevel].hl .. "#" or "";
-							end
-						end
-
-						markAdded = true;
-						break
-					end
-				end
-
-				if markAdded == false then
-					text = "?";
-				end
-			end
-		else
-			text = " ";
-		end
-
-		return color .. text .. self.padding;
-	end
-};
-
-statuscolumn.gap = {
-	length = 0,
-	fill = "",
-
-	init = function (self, segmantConfig)
-		self.length = segmantConfig.length;
-		self.fill = segmantConfig.fill;
-	end,
-
-	component = function (self)
-		return string.rep(self.fill, self.length);
-	end
-}
-
-statuscolumn.ignore_filetypes = { "", "Lazy", "help" };
-
-
---- Create the column
-statuscolumn.createColumn = function()
-	local _out = ""
-
-	for _, segmants in ipairs(statuscolumn.cachedConfig.segmants) do
-		if segmants == "border" then
-			_out = _out .. statuscolumn.border:component();
-		elseif segmants == "line_numbers" then
-			_out = _out .. statuscolumn.line_numbers:component();
-		elseif segmants == "folds" then
-			_out = _out .. statuscolumn.folds:component();
-		elseif segmants == "gap" then
-			_out = _out .. statuscolumn.gap:component();
-		end
-	end
-
-	return _out;
-end
-
---- Function to set up the statuscolumn
---- @param userConfig table
-statuscolumn.setup = function (userConfig)
-	if userConfig == nil or userConfig.enabled == false then
+local returnValue = function (property, index)
+	if property == nil or index == nil then
 		return;
 	end
 
-	local returnParser = function (language)
-		return pcall(function()
-			return vim.treesitter.get_parser(vim.api.nvim_get_current_buf(), language)
-		end)
+	if vim.islist(property) == false then
+		return property;
 	end
 
-	vim.api.nvim_create_user_command("FUupdate", function ()
-		statuscolumn.folds:validate();
-	end, {
-		desc = "Manually update the folds in the buffer"
-	});
+	if index > #property then
+		return property[#property];
+	end
 
-	statuscolumn.cachedConfig = userConfig.config;
-
-	-- UIEnter for the first window and BufEnter for everything else
-	vim.api.nvim_create_autocmd({ "BufEnter", "BufAdd", "ModeChanged" }, {
-		pattern = "*",
-		callback = function ()
-			local rootParser, fileLanguage;
-
-			-- Ignore filetypes
-			if vim.tbl_contains(statuscolumn.ignore_filetypes, vim.bo.filetype) then
-				vim.wo.statuscolumn = "";
-				return;
-			end
-
-			if vim.tbl_contains(statuscolumn.cachedConfig.segmants, "folds") == false then
-				goto foldsDisabled;
-			end
-
-			fileLanguage = vim.treesitter.language.get_lang(vim.bo.filetype)
-
-			if returnParser(fileLanguage) == false then
-				table.insert(statuscolumn.buffers_with_folds, vim.api.nvim_get_current_buf());
-				goto noParser;
-			else
-				rootParser = vim.treesitter.get_parser(vim.api.nvim_get_current_buf(), fileLanguage);
-			end
-
-			rootParser:for_each_tree(function (TStree, languageTree)
-				local language = languageTree:lang();
-
-				local folds = vim.treesitter.query.parse(language, [[
-					((_) @element
-						(#any-match? @element
-							"-+"
-							"-_")) @match
-				]]);
-
-				for captureID, captureNode, metadata, match in folds:iter_captures(TStree:root(), vim.api.nvim_get_current_buf()) do
-					table.insert(statuscolumn.buffers_with_folds, vim.api.nvim_get_current_buf());
-					break;
-				end
-			end);
-
-			::noParser::
-			::foldsDisabled::
-
-			if vim.tbl_contains(statuscolumn.used_in_bufs, vim.api.nvim_get_current_buf()) == true then
-				if vim.tbl_contains(statuscolumn.cachedConfig.segmants, "folds") then
-					statuscolumn.folds:validate();
-				end
-
-				return;
-			else
-				table.insert(statuscolumn.used_in_bufs, vim.api.nvim_get_current_buf());
-			end
-
-			-- Create Base setup
-			for _, segmant in ipairs(statuscolumn.cachedConfig.segmants) do
-				if segmant == "border" then
-					statuscolumn.border:init(statuscolumn.cachedConfig[segmant])
-				elseif segmant == "line_numbers" then
-					statuscolumn.line_numbers:init(statuscolumn.cachedConfig[segmant]);
-				elseif segmant == "folds" then
-					statuscolumn.folds:init(statuscolumn.cachedConfig[segmant]);
-				elseif segmant == "gap" then
-					statuscolumn.gap:init(statuscolumn.cachedConfig[segmant]);
-				end
-			end
-
-			-- Set the default options
-			vim.o.number = false;
-			vim.o.foldcolumn = "0";
-			vim.o.signcolumn = "no";
-
-			vim.o.statuscolumn = "%!v:lua.require('bars/statuscolumn').createColumn()";
-		end
-	});
+	return property[index];
 end
----@diagnostic enable
+
+
+statuscolumn.window_config = {};
+
+statuscolumn.init = function (window, user_config)
+	if user_config == nil then
+		statuscolumn.window_config[window] = {};
+	elseif user_config.enabled == false then
+		statuscolumn.window_config[window] = {};
+		return;
+	else
+		statuscolumn.window_config[window] = user_config.options;
+
+		if user_config.options.set_defaults == true then
+			vim.wo[window].number = false;
+			vim.wo[window].relativenumber = false;
+
+			vim.wo[window].foldcolumn = "0";
+			vim.wo[window].signcolumn = "no";
+		end
+	end
+
+	vim.wo[window].statuscolumn = "%!v:lua.require('bars/statuscolumn').generateStatuscolumn(" .. window .. ")";
+end
+
+statuscolumn.gap = function (gap_config)
+	local _output = "";
+
+	if type(gap_config.hl) == "string" then
+		_output = "%#" .. gap_config.hl .. "#"
+	end
+
+	_output = _output .. gap_config.text;
+
+	return _output;
+end
+
+statuscolumn.border = function (border_config)
+	local _output = "";
+
+	if border_config.hl == nil then
+		return border_config.text;
+	end
+
+	if vim.islist(border_config.hl) == true then
+		if (vim.v.relnum + 1) < #border_config.hl then
+			_output = "%#" .. border_config.hl[vim.v.relnum + 1] .. "#";
+		else
+			_output = "%#" .. border_config.hl[#border_config.hl] .. "#";
+		end
+
+		_output = _output .. border_config.text;
+	else
+		if vim.v.relnum >= border_config.hl.from and vim.v.relnum <= border_config.hl.to then
+			_output = "%#" .. border_config.hl.prefix .. vim.v.relnum .. "#";
+		else
+			_output = "%#" .. border_config.hl.prefix .. border_config.hl.to .. "#";
+		end
+
+		_output = _output .. border_config.text
+	end
+
+	return _output;
+end
+
+statuscolumn.number = function (number_config)
+	local _output, _color = "", "";
+
+	if vim.islist(number_config.hl) == true then
+		if (vim.v.relnum + 1) < #number_config.hl then
+			_color = "%#" .. number_config.hl[vim.v.relnum + 1] .. "#";
+		else
+			_color = "%#" .. number_config.hl[#number_config.hl] .. "#";
+		end
+	elseif type(number_config.hl) == "table" then
+		if vim.v.relnum >= number_config.hl.from and vim.v.relnum <= number_config.hl.to then
+			_color = "%#" .. number_config.hl.prefix .. vim.v.relnum .. "#";
+		else
+			_color = "%#" .. number_config.hl.prefix .. number_config.hl.to .. "#";
+		end
+	end
+
+	if number_config.mode == "normal" then
+		_output = vim.v.lnum;
+	elseif number_config.mode == "relative" then
+		_output = vim.v.relnum;
+	elseif number_config.mode == "hybrid" then
+		_output = vim.v.relnum == 0 and vim.v.lnum or vim.v.relnum;
+	end
+
+	if number_config.right_align == true then
+		return _color ~= "" and _color .. "%=%{" .. _output .. "}" or "%=%{ " .. _output .. "}";
+	else
+		return _color ~= "" and _color .. _output or _output;
+	end
+end
+
+statuscolumn.fold = function (fold_config)
+	local _output = "";
+
+	local foldlvl_before = vim.fn.foldlevel((vim.v.lnum - 1) >= 1 and (vim.v.lnum - 1) or 1);
+	local foldlvl_current = vim.fn.foldlevel(vim.v.lnum);
+	local foldlvl_after = vim.fn.foldlevel((vim.v.lnum + 1) <= vim.fn.line("$") and (vim.v.lnum + 1) or vim.fn.line("$"));
+
+	local foldclosed = vim.fn.foldclosed(vim.v.lnum);
+	local foldclosed_end = vim.fn.foldclosedend(vim.v.lnum);
+
+
+	if fold_config.mode == "simple" then
+		if type(fold_config.hl.default) == "string" then
+			_output = "%#" .. fold_config.hl.default .. "#";
+		end
+
+		-- Handle lines with no folds
+		if foldlvl_current == 0 then
+			_output = type(fold_config.space) == "string" and _output .. fold_config.space or _output .. " ";
+
+			goto mark_added;
+		end
+
+		-- Handle lines with a closed fold
+		if foldclosed ~= -1 and foldclosed == vim.v.lnum then
+			_output = type(fold_config.hl.closed) == "string" and _output .. "%#" .. fold_config.hl.closed .. "#" or _output;
+			_output = type(fold_config.text.closed) == "string" and _output .. fold_config.text.closed or _output .. ">";
+
+			goto mark_added;
+		end
+
+		-- Handle lines with an open fold
+		if foldlvl_current > foldlvl_before then
+			_output = type(fold_config.hl.opened) == "string" and _output .. "%#" .. fold_config.hl.opened .. "#" or _output;
+			_output = type(fold_config.text.opened) == "string" and _output .. fold_config.text.opened or _output .. "→";
+
+			goto mark_added;
+		end
+
+		-- Lines that are inside the folds
+		_output = type(fold_config.hl.scope) == "string" and _output .. "%#" .. fold_config.hl.scope .. "#" or _output;
+		_output = type(fold_config.text.scope) == "string" and _output .. fold_config.text.scope or _output .. " ";
+	elseif fold_config.mode == "line" then
+		if type(fold_config.hl.default) == "string" then
+			_output = "%#" .. fold_config.hl.default .. "#";
+		end
+
+		-- Handle lines with no folds
+		if foldlvl_current == 0 then
+			_output = type(fold_config.space) == "string" and _output .. fold_config.space or _output .. " ";
+
+			goto mark_added;
+		end
+
+		local _color, _icon;
+
+		-- Handle lines with a closed fold
+		if foldclosed ~= -1 and foldclosed == vim.v.lnum then
+			_color = returnValue(fold_config.hl.closed, foldlvl_current);
+			_icon = returnValue(fold_config.text.closed, foldlvl_current);
+
+			_output = type(_color) == "string" and _output .. "%#" .. _color .. "#" or _output;
+			_output = type(_icon) == "string" and _output .. _icon or _output;
+
+			goto mark_added;
+		end
+
+		-- Handle lines in an open fold
+		if foldlvl_current > foldlvl_before or vim.v.lnum == 1 then
+			_color = returnValue(fold_config.hl.opened, foldlvl_current);
+			_icon = returnValue(fold_config.text.opened, foldlvl_current);
+
+			_output = type(_color) == "string" and _output .. "%#" .. _color .. "#" or _output;
+			_output = type(_icon) == "string" and _output .. _icon or _output;
+
+			goto mark_added;
+		elseif foldlvl_current > foldlvl_after or vim.v.lnum == vim.fn.line("$") then
+			if foldlvl_after == 0 or vim.v.lnum == vim.fn.line("$") then
+				_color = returnValue(fold_config.hl.edge, foldlvl_current);
+				_icon = returnValue(fold_config.text.edge, foldlvl_current);
+			else
+				_color = returnValue(fold_config.hl.branch, foldlvl_current);
+				_icon = returnValue(fold_config.text.branch, foldlvl_current);
+			end
+
+			_output = type(_color) == "string" and _output .. "%#" .. _color .. "#" or _output;
+			_output = type(_icon) == "string" and _output .. _icon or _output;
+
+			goto mark_added;
+		else
+			_color = returnValue(fold_config.hl.scope, foldlvl_current);
+			_icon = returnValue(fold_config.text.scope, foldlvl_current);
+
+			_output = type(_color) == "string" and _output .. "%#" .. _color .. "#" or _output;
+			_output = type(_icon) == "string" and _output .. _icon or _output;
+
+			goto mark_added;
+		end
+	end
+
+	::mark_added::
+	return _output;
+end
+
+statuscolumn.generateStatuscolumn = function (win)
+	local _output = "";
+	local loaded_config = statuscolumn.window_config[win];
+
+	-- Current window is one of the windows to skip
+	if loaded_config == nil then
+		return _output;
+	end
+
+	if loaded_config.default_hl ~= nil and loaded_config.default_hl ~= "" then
+		_output = "%#" .. loaded_config.default_hl .. "#";
+	end
+
+	for _, component in ipairs(loaded_config.components or {}) do
+		if component.type == "gap" then
+			_output = _output .. statuscolumn.gap(component)
+		elseif component.type == "border" then
+			_output = _output .. statuscolumn.border(component)
+		elseif component.type == "number" then
+			_output = _output .. statuscolumn.number(component)
+		elseif component.type == "fold" then
+			_output = _output .. statuscolumn.fold(component)
+		end
+	end
+
+	return _output;
+end
+
 
 return statuscolumn;

@@ -14,8 +14,8 @@ window.defaults = {
 		},
 
 		split = {
+			win = 0,
 			width = 10, height = 10,
-			vertical = false,
 			split = "left"
 		}
 	},
@@ -56,6 +56,10 @@ window.openFloat = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #widths == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -78,6 +82,10 @@ window.openFloat = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #heights == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -101,6 +109,10 @@ window.openFloat = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #widths == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -124,6 +136,10 @@ window.openFloat = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #winblends == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -147,6 +163,10 @@ window.openFloat = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #winblends == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -175,6 +195,10 @@ window.openFloat = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #winblends == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -197,7 +221,7 @@ window.closeFloat = function (window_to_use, window_config, animation_config)
 
 	if ani_conf.type == "width" then
 		local widths = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_width(window_to_use), win_conf.width, ani_conf.steps, true)
-		
+
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #widths == 0 then
 				if #vim.api.nvim_list_wins() > 1 then
@@ -211,8 +235,8 @@ window.closeFloat = function (window_to_use, window_config, animation_config)
 			vim.api.nvim_win_set_width(window_to_use, table.remove(widths, 1));
 		end))
 	elseif ani_conf.type == "height" then
-		local heights = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_height(window_to_use), win_conf.height, ani_conf.steps, true)
-		
+	local heights = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_height(window_to_use), win_conf.height, ani_conf.steps, true)
+
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #heights == 0 then
 				if #vim.api.nvim_list_wins() > 1 then
@@ -228,7 +252,7 @@ window.closeFloat = function (window_to_use, window_config, animation_config)
 	elseif ani_conf.type == "shrink" then
 		local widths = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_width(window_to_use), win_conf.width, ani_conf.steps, true)
 		local heights = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_height(window_to_use), win_conf.height, ani_conf.steps, true)
-		
+
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #widths == 0 then
 				if #vim.api.nvim_list_wins() > 1 then
@@ -315,6 +339,8 @@ window.openSplit = function (buffer, window_config, animation_config)
 		local widths = utils.createFrames(ani_conf.timing, 1, win_conf.width, ani_conf.steps, true)
 
 		new_window = vim.api.nvim_open_win(buffer, true, {
+			win = win_conf.win,
+
 			split = win_conf.split,
 			width = 1, height = win_conf.height
 		});
@@ -323,6 +349,10 @@ window.openSplit = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #widths == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -341,6 +371,10 @@ window.openSplit = function (buffer, window_config, animation_config)
 
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #heights == 0 then
+				if ani_conf.on_complete ~= nil then
+					ani_conf.on_complete();
+				end
+
 				timer:stop();
 				return;
 			end
@@ -348,6 +382,8 @@ window.openSplit = function (buffer, window_config, animation_config)
 			vim.api.nvim_win_set_height(new_window, table.remove(heights, 1));
 		end))
 	end
+
+	return new_window;
 end
 
 window.closeSplit = function (window_to_use, window_config, animation_config)
@@ -355,10 +391,10 @@ window.closeSplit = function (window_to_use, window_config, animation_config)
 	local ani_conf = vim.tbl_deep_extend("keep", animation_config, window.defaults.animation);
 
 	local timer = vim.uv.new_timer();
-	
+
 	if ani_conf.type == "width" then
 		local widths = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_width(window_to_use), win_conf.width, ani_conf.steps, true)
-		
+
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #widths == 0 then
 				if #vim.api.nvim_list_wins() > 1 then
@@ -373,7 +409,7 @@ window.closeSplit = function (window_to_use, window_config, animation_config)
 		end))
 	elseif ani_conf.type == "height" then
 		local heights = utils.createFrames(ani_conf.timing, vim.api.nvim_win_get_height(window_to_use), win_conf.height, ani_conf.steps, true)
-		
+
 		timer:start(0, ani_conf.step_delay, vim.schedule_wrap(function ()
 			if #heights == 0 then
 				if #vim.api.nvim_list_wins() > 1 then

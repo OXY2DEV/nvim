@@ -1,5 +1,8 @@
 local utils = {}
 
+---+ Title: "Turns color tables to hex color codes"
+---@param color { r: number, g: number, b: number } Table containing the color
+---@return string # Hexadecimal color code
 utils.toStr = function (color)
 	local R = #string.format("%x", color.r) == 1 and "0" .. string.format("%x", color.r) or string.format("%x", color.r);
 	local G = #string.format("%x", color.g) == 1 and "0" .. string.format("%x", color.g) or string.format("%x", color.g);
@@ -7,10 +10,11 @@ utils.toStr = function (color)
 
 	return "#" .. R .. G .. B;
 end
+---_
 
 ---+ Icon: " " Title: "rgb number to table converter" BorderL: " " BorderR: " "
---- @param color number
---- @return table
+--- @param color number Number returned by "nvim_get_hl()"
+--- @return table # Table with r, g, b values
 utils.rgbToTable = function (color)
 	local hex = string.format("%x", color);
 
@@ -23,8 +27,8 @@ end
 --_
 
 ---+ Icon: " " Title: "hex color to table converter" BorderL: " " BorderR: " "
---- @param color string
---- @rwturn table
+--- @param color string Hexadecimal color code
+--- @return table
 utils.hexToTable = function (color)
 	local hex = string.gsub(color, "#", "");
 
@@ -45,10 +49,10 @@ end
 --_
 
 ---+ Icon: " " Title: "Do eased interpolation" BorderL: " " BorderR: " "
---- @param ease string
---- @param from number
---- @param to number
---- @param position number
+--- @param ease string The name of the easing function to use
+--- @param from number Starting value
+--- @param to number Final value
+--- @param position number % position from the start value to the final value
 --- @return number
 utils.ease = function(ease, from, to, position)
 	local easeValue = 0;
@@ -96,6 +100,5 @@ utils.ease = function(ease, from, to, position)
 	return from + ((to - from) * easeValue);
 end
 --_
-
 
 return utils;

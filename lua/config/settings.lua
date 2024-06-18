@@ -3,14 +3,14 @@
 ---+ Title: "Appearance"
 vim.o.background = "dark";
 
-vim.o.cursorcolumn = true;
+-- vim.o.cursorcolumn = true;
 vim.o.cursorline = true;
 
 vim.o.foldcolumn = "auto";
 vim.o.foldtext = "foldtext()";
 
 vim.o.number = true;
-vim.o.relativenumber = false;
+vim.o.relativenumber = true;
 vim.o.ruler = true;
 vim.o.rulerformat = " %l  %c";
 
@@ -43,7 +43,7 @@ vim.o.sidescrolloff = 999;
 
 vim.o.spell = true;
 
-vim.o.softtabstop = -4;
+vim.o.softtabstop = 4;
 vim.o.tabstop = 4;
 
 vim.o.wrap = false;

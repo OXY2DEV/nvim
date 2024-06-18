@@ -39,7 +39,7 @@ require("config/keymaps");
 ---+ Title: "Load scripts" Gap: "1" Border: " "
 require("scripts/foldtext");
 require("scripts/beacon");
-require("scripts/winopen");
+-- require("scripts/winopen");
 ---_
 
 require("config/lazy");

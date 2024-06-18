@@ -1,8 +1,35 @@
 local colors = {};
 local utils = require("bars/utils");
 
+---@class hl_opts Table that turns into a highlight group when used in "nvim_set_hl()"
+---@field fg (string | number)? Foreground color
+---@field bg (string | number)? Background color
+---@field sp (string | number)?
+---@field blend number? Opacity
+---@field bold boolean? Makes the text bold
+---@field italic boolean? Makes the text italic
+---@field underline boolean? Adds underline to the text
+---@field undercurl boolean? Adds a undercurl to the text, uses an underline when not supported by the terminal
+---@field strikethrough boolean? Adds a strikethrough to the text
+---@field link string? Highlight group to link to
+
+---@class color Table containing configuration for highlight groups
+---@field type string? Determines the type of color a table represents
+---@field group_name string? Name of the highlight group, a "Bars_" prefix is added to the name
+---@field value hl_opts? The settings for the specified highlight group
+---@field name_prefix string? Prefix for the gradient, a "Bars_" prefix is added before the name and a number is added after it. Always starts from 0
+---@field from string? The start color for the gradient
+---@field to string? The stop color for the gradient
+---@field steps number? The number of steps the gradient has
+
+---@class color_user_config Configuration table structure for the setup function
+---@field default color[] Default configuration table
+---@field [string] color[] Various colorscheme specific configurations
+
+---@type hl_opts[] Cached highlight group
 colors.hls = {};
 
+---@type table<string, color[]> Default colors
 colors.default_config = {
 	default = {
 		-- For the statuscolumn
@@ -157,14 +184,17 @@ colors.default_config = {
 			group_name = "tabline_buf_inactive_alt",
 			value = { bg = "#313244" }
 		},
-	},
+	};
 };
 
+--- Setup function for the colors
+---@param color_config color_user_config? User configuration table
 colors.setup = function (color_config)
 	if color_config == nil then
 		return;
 	end
 
+	---@type color_user_config
 	local use_config = vim.tbl_deep_extend("force", colors.default_config, color_config);
 
 	for colorscheme, values in pairs(use_config) do
@@ -237,8 +267,6 @@ colors.setup = function (color_config)
 	vim.api.nvim_create_autocmd({ "ColorScheme" }, {
 		pattern = "*",
 		callback = function ()
-			vim.print(colors.hls);
-
 			for name, value in pairs(colors.hls) do
 				if use_config[vim.g.colors_name] ~= nil then
 					vim.api.nvim_set_hl(0, name, value[vim.g.colors_name]);

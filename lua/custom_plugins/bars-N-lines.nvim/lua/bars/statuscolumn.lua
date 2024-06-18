@@ -1,5 +1,13 @@
 local statuscolumn = {};
 
+---@type primary_user_options A list of window specific configs
+statuscolumn.window_config = {};
+
+
+--- Function to return the value of a specific string/list
+---@param property string | table The string/list that will be cut
+---@param index number Length of the cut string/list
+---@return any
 local returnValue = function (property, index)
 	if property == nil or index == nil then
 		return;
@@ -17,8 +25,9 @@ local returnValue = function (property, index)
 end
 
 
-statuscolumn.window_config = {};
-
+--- Initializes the statuscolumn for a window
+---@param window number The window id
+---@param user_config primary_user_config? The user configuration table
 statuscolumn.init = function (window, user_config)
 	if user_config == nil then
 		statuscolumn.window_config[window] = {};
@@ -29,8 +38,7 @@ statuscolumn.init = function (window, user_config)
 		statuscolumn.window_config[window] = user_config.options;
 
 		if user_config.options.set_defaults == true then
-			vim.wo[window].number = false;
-			vim.wo[window].relativenumber = false;
+			vim.wo[window].relativenumber = true;
 
 			vim.wo[window].foldcolumn = "0";
 			vim.wo[window].signcolumn = "no";
@@ -40,6 +48,9 @@ statuscolumn.init = function (window, user_config)
 	vim.wo[window].statuscolumn = "%!v:lua.require('bars/statuscolumn').generateStatuscolumn(" .. window .. ")";
 end
 
+--- Component to add a gap to the statuscolumn
+---@param gap_config gap_config_table The configuration options
+---@return string
 statuscolumn.gap = function (gap_config)
 	local _output = "";
 
@@ -52,6 +63,9 @@ statuscolumn.gap = function (gap_config)
 	return _output;
 end
 
+--- Component that adds a custom border to the statuscolumn
+---@param border_config border_config_table The configuration options
+---@return string
 statuscolumn.border = function (border_config)
 	local _output = "";
 
@@ -80,6 +94,9 @@ statuscolumn.border = function (border_config)
 	return _output;
 end
 
+--- Component that shows various types of line numbers.
+---@param number_config number_config_table The configuration table
+---@return string
 statuscolumn.number = function (number_config)
 	local _output, _color = "", "";
 
@@ -112,6 +129,9 @@ statuscolumn.number = function (number_config)
 	end
 end
 
+--- Component to show a custom fold column
+---@param fold_config fold_config_table The configuration table
+---@return string
 statuscolumn.fold = function (fold_config)
 	local _output = "";
 
@@ -120,8 +140,6 @@ statuscolumn.fold = function (fold_config)
 	local foldlvl_after = vim.fn.foldlevel((vim.v.lnum + 1) <= vim.fn.line("$") and (vim.v.lnum + 1) or vim.fn.line("$"));
 
 	local foldclosed = vim.fn.foldclosed(vim.v.lnum);
-	local foldclosed_end = vim.fn.foldclosedend(vim.v.lnum);
-
 
 	if fold_config.mode == "simple" then
 		if type(fold_config.hl.default) == "string" then
@@ -216,6 +234,9 @@ statuscolumn.fold = function (fold_config)
 	return _output;
 end
 
+--- Creates a statuscolumn for the given window
+---@param win number The window id
+---@return string
 statuscolumn.generateStatuscolumn = function (win)
 	local _output = "";
 	local loaded_config = statuscolumn.window_config[win];

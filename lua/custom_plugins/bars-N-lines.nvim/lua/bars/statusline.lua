@@ -1,6 +1,10 @@
 local statusline = {};
 local devicons = require("nvim-web-devicons");
-
+--- Search for key in a table, return the default value if not found
+---@param key string The key to search
+---@param current_config table Table where to search for the key
+---@param default_config table Table that contains the default value
+---@return any
 local getDefault = function (key, current_config, default_config)
 	if current_config ~= nil and current_config[key] ~= nil then
 		return current_config[key];
@@ -9,6 +13,10 @@ local getDefault = function (key, current_config, default_config)
 	return default_config[key];
 end
 
+--- Color the provided text
+---@param text string? The text to color
+---@param hl string? The highlight group to use
+---@return string
 local colorizer = function (text, hl)
 	if text == nil then
 		return ""
@@ -21,8 +29,12 @@ local colorizer = function (text, hl)
 	return "%#" .. hl .. "#" .. text;
 end
 
+---@type table[] User configuration tables for the various windows
 statusline.window_config = {};
 
+--- Initializes the statusline for the specified window
+---@param window number The window ID
+---@param user_config primary_user_config? The statusline configuration
 statusline.init = function (window, user_config)
 	if user_config == nil then
 		statusline.window_config[window] = {};
@@ -40,8 +52,13 @@ statusline.init = function (window, user_config)
 	vim.wo[window].statusline = "%!v:lua.require('bars/statusline').generateStatusline(" .. window .. ")";
 end
 
+--- Shows the current mode with icons
+---@param mode_config mode_component User configuration for the component
+---@return string
 statusline.mode = function (mode_config)
 	local mode = vim.api.nvim_get_mode().mode;
+
+	---@type mode_component Table containing a merge of default options(ones that aren't provided) and user options(ones that are provided)
 	local merged_config = vim.tbl_deep_extend("keep", mode_config or {}, {
 		default = {
 			icon = " ", icon_hl = nil,
@@ -78,10 +95,15 @@ statusline.mode = function (mode_config)
 	})
 end
 
+--- Creates a component to show the buffer's file name
+---@param window number Window ID
+---@param buf_name_config component Configuration table for the component
+---@return string
 statusline.buf_name = function (window, buf_name_config)
 	local buffer_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(window)), ":t");
 	local icon, hl = devicons.get_icon(buffer_name)
 
+	---@type component Table containing a merge of default options(ones that aren't provided) and user options(ones that are provided)
 	local merged_config = vim.tbl_deep_extend("keep", buf_name_config or {}, {
 		corner_left = "", corner_left_hl = nil,
 		corner_right = "", corner_right_hl = "Bars_buf_name_alt",
@@ -104,11 +126,26 @@ statusline.buf_name = function (window, buf_name_config)
 	});
 end
 
+--- Adds padding between components, optionally allows setting the highlight group for it
+---@param gap_config { hl: string? } Configuration table for the component
+---@return string
 statusline.gap = function (gap_config)
-	return "%=";
+	local _o = "";
+
+	if gap_config ~= nil and gap_config.hl ~= nil then
+		_o = _o .. "%#" .. gap_config.hl .. "#";
+	end
+
+	_o = _o .. "%=";
+
+	return _o;
 end
 
+--- Shows the current cursor position, optionally allows custom text to be shown
+---@param position_config component_type_2 User configuration table for the component
+---@return string
 statusline.cursor_position = function (position_config)
+	---@type component_type_2 Table containing a merge of default options(ones that aren't provided) and user options(ones that are provided)
 	local merged_config = vim.tbl_deep_extend("keep", position_config or {}, {
 		corner_left = "", corner_left_hl = "Bars_cursor_position_alt",
 		corner_right = "", corner_right_hl = nil,
@@ -138,14 +175,22 @@ statusline.cursor_position = function (position_config)
 	})
 end
 
+--- Function to return the statusline for the specified window
+---@param win number Window ID
+---@return string
 statusline.generateStatusline = function (win)
 	local _output = "";
 	local loaded_config = statusline.window_config[win];
 
 	-- Current window is one of the windows to skip
-	 if loaded_config == nil then
-	 	return _output;
-	 end
+	if loaded_config == nil then
+		return _output;
+	end
+
+	if loaded_config.default_hl ~= nil and loaded_config.default_hl ~= "" then
+		_output = "%#" .. loaded_config.default_hl .. "#";
+	end
+
 
 	for _, component in ipairs(loaded_config.components or {}) do
 		if component.type == "mode" then

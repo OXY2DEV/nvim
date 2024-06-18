@@ -1,6 +1,11 @@
 local tabline = {};
 local devicons = require("nvim-web-devicons");
 
+--- Function that renders the text to the tabline
+---@param list tabline_component[] List of components to render
+---@param width number? Maximum character length
+---@param separator_config separator_config? Configuration table for the separator
+---@return string
 tabline.renderer = function (list, width, separator_config)
 	local max_len = width ~= nil and (separator_config ~= nil and width - vim.fn.strchars(separator_config.text) or width) or 999;
 	local len = 0;
@@ -100,19 +105,48 @@ tabline.renderer = function (list, width, separator_config)
 		end
 	end
 
-	if fitted_in_space == false and separator_config ~= nil then
-		if separator_config.hl ~= nil then
-			_o = _o .. "%#" .. separator_config.hl .. "#";
-		end
-
-		_o = _o .. separator_config.text;
+	if separator_config ~= nil and separator_config.on_skip ~= nil and pcall(separator_config.on_skip) then
+		separator_config.on_skip();
 	end
 
-	return _o, len;
+
+	if fitted_in_space == false and separator_config ~= nil then
+		local _s = "";
+
+		if separator_config.condition ~= nil and pcall(separator_config.condition) == true and separator_config.condition() == false then
+			goto separator_disabled;
+		end
+
+		if separator_config.hl ~= nil then
+			_s = "%#" .. separator_config.hl .. "#";
+		end
+
+		_s = _s .. separator_config.text;
+
+		if separator_config.direction == "after" or separator_config.direction == nil then
+			_o = _o .. _s;
+		elseif separator_config.direction == "before" then
+			_o = _s .. _o;
+		end
+
+		if separator_config.on_complete ~= nil and pcall(separator_config.on_complete) then
+			separator_config.on_complete();
+		end
+
+		::separator_disabled::
+	end
+
+	return _o;
 end
 
+---@type primary_user_options User configuration table for the tabline
 tabline.config = {};
 
+---@type boolean Default variable to control the rendering of separators from different components
+tabline.separator_set = false;
+
+--- Function to set the global tabline
+---@param user_config primary_user_config
 tabline.init = function (user_config)
 	if user_config == nil or user_config.enabled == false then
 		return;
@@ -123,10 +157,14 @@ tabline.init = function (user_config)
 	vim.o.tabline = "%!v:lua.require('bars/tabline').generateTabline()";
 end
 
+--- Function to show all the active tabs,like workspaces
+---@param tab_config { width: number?, active: tabline_component?, inactive: tabline_component?, separator: separator_config? } User provided configuration table
+---@return string
 tabline.tabs = function (tab_config)
 	local tabs = vim.api.nvim_list_tabpages();
 	local current_tab = vim.api.nvim_get_current_tabpage();
 
+	---@type { width: number?, active: tabline_component, inactive: tabline_component, separator: separator_config } Merged configuration table
 	local merged_config = vim.tbl_deep_extend("keep", tab_config, {
 		inactive = {
 			corner_left = "", corner_left_hl = "Bars_tabline_tab_inactive",
@@ -164,14 +202,17 @@ tabline.tabs = function (tab_config)
 		end
 	end
 
-	return tabline.renderer(tmp, merged_config.width or 26);
+	return tabline.renderer(tmp, merged_config.width or 25, merged_config.separator);
 end
 
+--- Adds gap between components, optionally allows colors
+---@param gap_config { hl: string? }
+---@return string
 tabline.gap = function (gap_config)
 	local _o = "";
 
-	if gap_config.bg ~= nil then
-		_o = _o .. "%#" .. gap_config.bg .. "#";
+	if gap_config.hl ~= nil then
+		_o = _o .. "%#" .. gap_config.hl .. "#";
 	end
 
 	_o = _o .. "%=";
@@ -179,19 +220,21 @@ tabline.gap = function (gap_config)
 	return _o;
 end
 
-tabline.separator = function (sep_config)
-	local merged_config = vim.tbl_extend("keep", sep_config, {
-		text = "",
-		bg = "Bars_tabline_tab_inactive_alt",
-	});
-
-	return tabline.renderer({ merged_config });
+--- Function to show some text
+---@param txt_config tabline_component
+---@return string
+tabline.text = function (txt_config)
+	return tabline.renderer({ txt_config });
 end
 
+--- Shows all the opened buffers(ones that are in some window)
+---@param buf_config { width: number?, active: tabline_component?, inactive: tabline_component?, separator: separator_config? } User provided configuration table
+---@return string
 tabline.buffers = function (buf_config)
 	local this_tabpage = vim.api.nvim_get_current_tabpage();
 	local windows = vim.api.nvim_tabpage_list_wins(this_tabpage);
 
+	---@type { width: number?, active: tabline_component, inactive: tabline_component, separator: separator_config } Merged configuration table
 	local merged_config = vim.tbl_deep_extend("keep", buf_config, {
 		inactive = {
 			corner_left = "", corner_left_hl = "Bars_tabline_tab_inactive",
@@ -212,6 +255,27 @@ tabline.buffers = function (buf_config)
 
 			bg = nil
 		},
+
+		separator = {
+			text = "", hl = "Bars_tabline_buf_inactive",
+			direction = "after",
+
+			condition = function ()
+				if tabline.separator_set == true then
+					return false;
+				end
+
+				return true
+			end,
+
+			on_complete = function ()
+				tabline.separator_set = true;
+			end,
+
+			on_skip = function ()
+				tabline.separator_set = false;
+			end
+		}
 	})
 
 	local tmp = {};
@@ -237,10 +301,14 @@ tabline.buffers = function (buf_config)
 		table.insert(checked_bufs, buffer);
 	end
 
-	return tabline.renderer(tmp, merged_config.width ~= nil and merged_config.width or vim.o.columns - 26);
+	return tabline.renderer(tmp, merged_config.width ~= nil and merged_config.width or vim.o.columns - 26, merged_config.separator);
 end
 
+---Lists all the buffers that have been loaded
+---@param buf_config { width: number?, active: tabline_component?, inactive: tabline_component?, separator: separator_config? } User provided configuration table
+---@return string
 tabline.buffers_all = function (buf_config)
+	---@type { width: number?, active: tabline_component, inactive: tabline_component, separator: separator_config } Merged configuration table
 	local merged_config = vim.tbl_deep_extend("keep", buf_config, {
 		inactive = {
 			corner_left = "", corner_left_hl = "Bars_tabline_buf_inactive",
@@ -263,7 +331,24 @@ tabline.buffers_all = function (buf_config)
 		},
 
 		separator = {
-			text = "", hl = "Bars_tabline_buf_inactive"
+			text = "", hl = "Bars_tabline_buf_inactive",
+			direction = "after",
+
+			condition = function ()
+				if tabline.separator_set == true then
+					return false;
+				end
+
+				return true
+			end,
+
+			on_complete = function ()
+				tabline.separator_set = true;
+			end,
+
+			on_skip = function ()
+				tabline.separator_set = false;
+			end
 		}
 	});
 
@@ -305,12 +390,11 @@ tabline.generateTabline = function ()
 		_output = "%#" .. tabline.config.default_hl .. "#";
 	end
 
-
 	for _, component in ipairs(tabline.config.components or {}) do
 		if component.type == "gap" then
 			_output = _output .. tabline.gap(component);
-		elseif component.type == "separator" then
-			_output = _output .. tabline.separator(component);
+		elseif component.type == "text" then
+			_output = _output .. tabline.text(component);
 		elseif component.type == "tabs" then
 			--  return string.format("%%%d@v:lua.require'lualine.utils.fn_store'.call_fn@%s%%T", id, str)
 			_output = _output .. tabline.tabs(component);

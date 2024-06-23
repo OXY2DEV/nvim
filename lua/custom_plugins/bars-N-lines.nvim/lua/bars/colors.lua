@@ -47,10 +47,37 @@ colors.default_config = {
 			from = "#89B4FA", to = "#585B70",
 			steps = 10
 		},
+
 		{
 			type = "normal",
-			group_name = "scope",
-			value = { fg = "#45475A" }
+			group_name = "fold_1",
+			value = { fg = "#58709D" }
+		},
+		{
+			type = "normal",
+			group_name = "fold_2",
+			value = { fg = "#68896D" }
+		},
+		{
+			type = "normal",
+			group_name = "fold_3",
+			value = { fg = "#925971" }
+		},
+
+		{
+			type = "normal",
+			group_name = "fold_1_open",
+			value = { fg = "#3B4766" }
+		},
+		{
+			type = "normal",
+			group_name = "fold_2_open",
+			value = { fg = "#4F6658" }
+		},
+		{
+			type = "normal",
+			group_name = "fold_3_open",
+			value = { fg = "#6B465A" }
 		},
 
 		-- For the statusline
@@ -190,12 +217,8 @@ colors.default_config = {
 --- Setup function for the colors
 ---@param color_config color_user_config? User configuration table
 colors.setup = function (color_config)
-	if color_config == nil then
-		return;
-	end
-
 	---@type color_user_config
-	local use_config = vim.tbl_deep_extend("force", colors.default_config, color_config);
+	local use_config = vim.tbl_deep_extend("force", colors.default_config, color_config or {});
 
 	for colorscheme, values in pairs(use_config) do
 		for _, color in ipairs(values) do

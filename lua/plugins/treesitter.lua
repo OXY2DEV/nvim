@@ -11,15 +11,16 @@ return {
 				"html",
 				"css",
 				"javascript",
-    
+
 				"regex",
 				"markdown",
+				"markdown_inline",
 				"bash",
-    
+
 				"vimdoc",
 				"query"
 			},
-    
+
 		    highlight = {
 				enable = true,
 				additional_vim_regex_highlighting = false

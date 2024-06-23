@@ -103,4 +103,31 @@ utils.createFrames = function (ease_name, from, to, steps, floor)
 	return frames;
 end
 
+utils.createColors = function (ease_name, from, to, steps, floor)
+	local frames = {};
+
+	local start = utils.rgbToTable(from);
+	local stop = utils.hexToTable(to);
+
+	for f = 0, (steps - 1) do
+		local r, g, b;
+
+		if floor == true then
+			r = math.floor(utils.ease(ease_name, start.r, stop.r, f * (1 / (steps - 1))))
+			g = math.floor(utils.ease(ease_name, start.g, stop.g, f * (1 / (steps - 1))))
+			b = math.floor(utils.ease(ease_name, start.b, stop.b, f * (1 / (steps - 1))))
+
+			table.insert(frames, string.format("#%x%x%x", r, g, b));
+		else
+			r = utils.ease(ease_name, start.r, stop.r, f * (1 / (steps - 1)))
+			g = utils.ease(ease_name, start.g, stop.g, f * (1 / (steps - 1)))
+			b = utils.ease(ease_name, start.b, stop.b, f * (1 / (steps - 1)))
+
+			table.insert(frames, string.format("#%x%x%x", r, g, b));
+		end
+	end
+
+	return frames;
+end
+
 return utils;

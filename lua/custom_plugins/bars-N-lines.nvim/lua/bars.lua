@@ -3,100 +3,10 @@ local statuscolumn = require("bars/statuscolumn");
 local statusline = require("bars/statusline");
 local tabline = require("bars/tabline");
 
----+ Title: "Type definitions"
-
----@class primary_user_config table
----@field enabled boolean? Enables/Disables the sttauscolumn, can be set for specific windows too
----@field options table? Table containing various options related to the statuscolumn
-
----@class primary_user_options Options for the various bars & lines
----@field default_hl string? Default highlight group
----@field components component? | tabline_component?
-
----@class gap_config_table A table for creating empty spaces in the statuscolumn
----@field hl string? Highlight group for the gap
----@field text string The character(s) to use for the gap
-
----@class border_config_table A table for creating borders in the statuscolumn
----@field hl string | { from: number, to: number, prefix: string } | string[] | nil Highlight group for the border
----@field text string Text to use as the border
-
----@class number_config_table A table for creating line numbers
----@field mode string The mode for showing numbers
----@field hl string | { from: number, to: number, prefix: string } | string[] | nil Highlight group for the numbers
----@field right_align boolean? Right aligns the item when set to true
-
----@class fold_config_table A table for creating foldcolumn
----@field mode string The mode for showing folds
----@field hl { default: string?, opened: string?, closed: string?, scope: string?, branch: string?, edge: string? } Highlight groups for various parts of the foldcolumn
----@field text { closed: string?, opened: string?, scope: string?, branch: string?, edge: string? } The text used for various parts of the foldcolumn
----@field space string? The character(s) to use for lines with no folds
+---@type table A table containing functions to open a specific buffer
+_G.__bufOpen = {};
 
 
----@class component Raw component config
----@field bg string? The highlight to use for the component
----@field corner_left_hl string? Highlight group to use for the left corner
----@field corner_left string Text for the left corner
----@field padding_left_hl string? Highlight group for the left padding 
----@field padding_left string? Text for the left padding
----@field icon_hl string? Highlight group for the icon
----@field icon string? Text for the icon
----@field text_hl string? Highlight group for the text
----@field text string? Text for the text
----@field padding_right_hl string? Highlight group for the right padding 
----@field padding_right string? Text for the right padding
----@field corner_right_hl string? Highlight group to use for the right corner
----@field corner_right string Text for the right corner
-
----@class component_type_2 Raw component config
----@field bg string? The highlight to use for the component
----@field corner_left_hl string? Highlight group to use for the left corner
----@field corner_left string Text for the left corner
----@field padding_left_hl string? Highlight group for the left padding 
----@field padding_left string? Text for the left padding
----@field icon_hl string? Highlight group for the icon
----@field icon string? Text for the icon
----@field segmant_left_hl string? Highlight group for the left segmant
----@field segmant_left string? Text for the left segmant
----@field separator_hl string? Highlight group for the separator
----@field separator string? Text for the separator
----@field segmant_right_hl string? Highlight group for the right segmant
----@field segmant_right string? Text for the right segmant
----@field padding_right_hl string? Highlight group for the right padding 
----@field padding_right string? Text for the right padding
----@field corner_right_hl string? Highlight group to use for the right corner
----@field corner_right string Text for the right corner
----@class mode_component Component configuration table for showing vim mode
----@field default component Default values for unknown modes, gets inherited when they are not set for a mode
----@field modes table<string, component> } Configuration for various modes
-
----@class tabline_component Components for the tabline
----@field prefix string? Things to add before the component, doesn't count towards the text length
----@field click string? Click handler, enclosed within %@...@
----@field bg string? The highlight to use for the component
----@field corner_left_hl string? Highlight group to use for the left corner
----@field corner_left string Text for the left corner
----@field padding_left_hl string? Highlight group for the left padding 
----@field padding_left string? Text for the left padding
----@field icon_hl string? Highlight group for the icon
----@field icon string? Text for the icon
----@field text_hl string? Highlight group for the text
----@field text string? Text for the text
----@field padding_right_hl string? Highlight group for the right padding 
----@field padding_right string? Text for the right padding
----@field corner_right_hl string? Highlight group to use for the right corner
----@field corner_right string Text for the right corner
----@field postfix string? Things to add after the component, doesn't count towards the text length
-
----@class separator_config Configuration table for the separator
----@field direction string? The direction where the separator will be placed
----@field text string The text to use as the separator
----@field hl string? The highlight group for the separator
----@field condition function Function to determine whether to draw the separator
----@field on_complete function Function to dun after rendering the separator
----@field on_skip function Function to run after the component is rendered but the separator isn't
-
----_
 
 ---+ Title: "Default configuration"
 ---
@@ -107,24 +17,29 @@ local tabline = require("bars/tabline");
 
 ---+2 Title: "Code"
 
----@class default_config
----@field global_disable nil | table Filetypes where the plugin will be disabled
----@field custom_settings nil | table[] Configuration for specific filetupes and/or buftypes
----@field statuscolumn nil | table Configuration for the staruscolumn
+---@class setup_table Default configuration table, it will be merged with the user config
 bars.default_config = {
 	global_disable = {
 		filetypes = { "help", "Lazy" },
 		buftypes = { "terminal", "nofile" }
 	},
 	custom_configs = {
+		{
+			buftypes = { "terminal" },
+			config = {
+				statuscolumn = {
+					enabled = false
+				}
+			}
+		}
 	},
 
 	default = {
 		tabline = {
-			enabled = true,
+			enable = true,
 			options = {
 				components = {
-					{ type = "buffers_all" },
+					{ type = "buffers" },
 					{ type = "gap" },
 					-- { type = "separator" },
 					{ type = "tabs" }
@@ -132,7 +47,7 @@ bars.default_config = {
 			}
 		},
 		statusline = {
-			enabled = true,
+			enable = true,
 			options = {
 				set_defaults = true,
 
@@ -147,12 +62,16 @@ bars.default_config = {
 			}
 		},
 		statuscolumn = {
-			enabled = true,
+			enable = true,
 			options = {
 				set_defaults = true,
 
 				default_hl = "statuscol_bg",
 				components = {
+					{
+						type = "sign",
+						text = ""
+					},
 					{
 						type = "fold",
 						mode = "line",
@@ -160,9 +79,11 @@ bars.default_config = {
 						text = {
 							default = " ",
 							closed = {
-								"", "", ""
+								"", "", ""
 							},
-							opened = "",
+							opened = {
+								"", "", ""
+							},
 
 							edge = "╰",
 							branch = "┝",
@@ -171,11 +92,12 @@ bars.default_config = {
 
 						hl = {
 							--default = "FloatShadow",
-							closed = "Special",
-							opened = "Normal",
+							closed = { "Bars_fold_1", "Bars_fold_2", "Bars_fold_3" },
+							opened = { "Bars_fold_1_open", "Bars_fold_2_open", "Bars_fold_3_open" },
 
-							scope = "Bars_scope",
-							edge = "Bars_scope"
+							scope = { "Bars_fold_1", "Bars_fold_2", "Bars_fold_3" },
+							edge = { "Bars_fold_1", "Bars_fold_2", "Bars_fold_3" },
+							branch = { "Bars_fold_1", "Bars_fold_2", "Bars_fold_3" }
 						}
 					},
 					{
@@ -226,6 +148,10 @@ bars.default_config = {
 ---@param inherit_from table Table to inherit from
 ---@return table
 local inherit = function (table, inherit_from)
+	if table == nil or inherit_from == nil then
+		return {};
+	end
+
 	for key, value in pairs(table) do
 		if value == "inherit" then
 			table[key] = inherit_from[key];
@@ -235,25 +161,27 @@ local inherit = function (table, inherit_from)
 	return table;
 end
 
-local winValidate = function (window, config)
+--- Validates the provided buffer
+---@param buffer number Buffer handle(Buffer number)
+---@param config table User configuration table
+bars.bufValidate = function (buffer, config)
 	local use_config = {};
 
-	if vim.tbl_contains(config.global_disable.filetypes or {}, vim.bo.filetype) then
+	if vim.tbl_contains(config.global_disable.filetypes or {}, vim.bo[buffer].filetype) then
 		goto config_set
 	end
 
-	if vim.tbl_contains(config.global_disable.buftypes or {}, vim.bo.buftype) then
+	if vim.tbl_contains(config.global_disable.buftypes or {}, vim.bo[buffer].buftype) then
 		goto config_set
 	end
-
 
 	if vim.islist(config.custom_configs) == true then
 		for _, conf in ipairs(config.custom_configs) do
-			if vim.tbl_contains(conf.filetypes or {}, vim.bo.filetype) and vim.tbl_contains(conf.buftypes or {}, vim.bo.buftype) then
+			if vim.tbl_contains(conf.filetypes or {}, vim.bo[buffer].filetype) and vim.tbl_contains(conf.buftypes or {}, vim.bo[buffer].buftype) then
 				use_config = inherit(conf.config, config.default or {});
 
 				goto config_set
-			elseif vim.tbl_contains(conf.filetypes or {}, vim.bo.filetype) or vim.tbl_contains(conf.buftypes or {}, vim.bo.buftype) then
+			elseif vim.tbl_contains(conf.filetypes or {}, vim.bo[buffer].filetype) or vim.tbl_contains(conf.buftypes or {}, vim.bo[buffer].buftype) then
 				use_config = inherit(conf.config, config.default or {});
 
 				goto config_set
@@ -264,30 +192,50 @@ local winValidate = function (window, config)
 	use_config = config.default;
 	::config_set::
 
-	statuscolumn.init(window, use_config.statuscolumn);
-	statusline.init(window, use_config.statusline);
+	statuscolumn.init(buffer, use_config.statuscolumn);
+	statusline.init(buffer, use_config.statusline);
 	tabline.init(use_config.tabline);
 end
 
+--- Sets up the plugin
+---@param user_config setup_table?
 bars.setup = function (user_config)
 	local merged_config = vim.tbl_deep_extend("force", bars.default_config, user_config or {});
 
-	vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+	vim.api.nvim_create_autocmd({ "BufWinEnter", "TermOpen" }, {
 		pattern = "*",
 		callback = function (data)
-			local windows = vim.fn.win_findbuf(data.buf);
+			local buffer = data.buf;
 
-			for _, window in ipairs(windows) do
-				winValidate(window, merged_config);
+			bars.bufValidate(buffer, merged_config);
+
+			_G.__bufOpen["buffer_" .. buffer] = function ()
+				local tabs = vim.api.nvim_list_tabpages();
+
+				for _, tab in ipairs(tabs) do
+					local windows = vim.api.nvim_tabpage_list_wins(tab);
+
+					for _, window in ipairs(windows) do
+						local buf = vim.api.nvim_win_get_buf(window);
+
+						if buf == buffer then
+							vim.api.nvim_set_current_tabpage(tab);
+							return;
+						end
+					end
+				end
+
+				vim.api.nvim_set_current_buf(buffer);
 			end
 		end
 	});
 
-	vim.api.nvim_create_autocmd({ "WinEnter", "TabEnter" }, {
-		pattern = "*",
-		callback = function ()
-		end
-	});
+	-- vim.api.nvim_create_autocmd({ "LspTokenUpdate" }, {
+	-- 	pattern = "*",
+	-- 	callback = function ()
+	-- 		vim.print("Token update")
+	-- 	end
+	-- })
 end
 
 return bars;

@@ -8,6 +8,6 @@ return {
 
 	config = function ()
 		require("bars").setup();
-		require("bars.colors").setup({});
+		require("bars.colors").setup();
 	end
 }

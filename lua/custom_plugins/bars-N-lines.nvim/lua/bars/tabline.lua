@@ -1,10 +1,12 @@
 local tabline = {};
 local devicons = require("nvim-web-devicons");
 
+tabline.buffer_list = {};
+
 --- Function that renders the text to the tabline
----@param list tabline_component[] List of components to render
+---@param list tabline_component_raw[] List of components to render
 ---@param width number? Maximum character length
----@param separator_config separator_config? Configuration table for the separator
+---@param separator_config tabline_separator_config? Configuration table for the separator
 ---@return string
 tabline.renderer = function (list, width, separator_config)
 	local max_len = width ~= nil and (separator_config ~= nil and width - vim.fn.strchars(separator_config.text) or width) or 999;
@@ -139,32 +141,106 @@ tabline.renderer = function (list, width, separator_config)
 	return _o;
 end
 
----@type primary_user_options User configuration table for the tabline
+---@type tabline_options User configuration table for the tabline
 tabline.config = {};
 
 ---@type boolean Default variable to control the rendering of separators from different components
 tabline.separator_set = false;
 
 --- Function to set the global tabline
----@param user_config primary_user_config
+---@param user_config tabline_config
 tabline.init = function (user_config)
-	if user_config == nil or user_config.enabled == false then
+	if user_config == nil or user_config.enable == false then
 		return;
 	else
 		tabline.config = user_config.options;
 	end
 
+	-- tabline.buffer_list = vim.api.nvim_list_bufs();
 	vim.o.tabline = "%!v:lua.require('bars/tabline').generateTabline()";
 end
 
+--- Validates the lizt of buffers to remove unwanted ones
+---@param buffers number[] List of unfiltered buffers
+---@param conditions tabline_buf_filter_config Table used for filtering the list of buffers
+---@return number[]
+tabline.bufValidate = function (buffers, conditions)
+	if buffers == nil then
+		return {};
+	elseif conditions == nil then
+		return buffers;
+	end
+
+	local _o = {};
+
+	for _, buf in ipairs(buffers) do
+		if conditions.filetypes ~= nil and vim.list_contains(conditions.filetypes, vim.bo[buf].filetype) == true then
+			goto skip;
+		elseif conditions.buftypes ~= nil and vim.list_contains(conditions.buftypes, vim.bo[buf].buftype) == true then
+			goto skip;
+		else
+			if conditions.names == nil then
+				table.insert(_o, buf);
+				goto skip;
+			end
+
+			for _, name in ipairs(conditions.names) do
+				if string.match(vim.api.nvim_buf_get_name(buf), name) ~= nil then
+					goto skip;
+				end
+			end
+
+			table.insert(_o, buf);
+		end
+
+		::skip::
+	end
+
+	return _o;
+end
+
+--- Function to scroll the buffer list to the left
+tabline.scrollLeft = function ()
+	if tabline.buffer_list == nil then
+		return;
+	end
+
+	if tabline.buffer_list[1] == vim.api.nvim_get_current_buf() then
+		local tmp = table.remove(tabline.buffer_list, 2);
+
+		table.insert(tabline.buffer_list, #tabline.buffer_list + 1, tmp);
+	else
+		local tmp = table.remove(tabline.buffer_list, 1);
+
+		table.insert(tabline.buffer_list, #tabline.buffer_list + 1, tmp);
+	end
+end
+
+--- Function to scroll the buffer list to the right
+tabline.scrollRight = function ()
+	if tabline.buffer_list == nil then
+		return;
+	end
+
+	if tabline.buffer_list[1] == vim.api.nvim_get_current_buf() then
+		local tmp = table.remove(tabline.buffer_list, #tabline.buffer_list);
+
+		table.insert(tabline.buffer_list, 2, tmp);
+	else
+		local tmp = table.remove(tabline.buffer_list, #tabline.buffer_list);
+
+		table.insert(tabline.buffer_list, 1, tmp);
+	end
+end
+
 --- Function to show all the active tabs,like workspaces
----@param tab_config { width: number?, active: tabline_component?, inactive: tabline_component?, separator: separator_config? } User provided configuration table
+---@param tab_config tabline_list_item_config Configuration table for the tb component
 ---@return string
 tabline.tabs = function (tab_config)
 	local tabs = vim.api.nvim_list_tabpages();
 	local current_tab = vim.api.nvim_get_current_tabpage();
 
-	---@type { width: number?, active: tabline_component, inactive: tabline_component, separator: separator_config } Merged configuration table
+	---@type tabline_list_item_config
 	local merged_config = vim.tbl_deep_extend("keep", tab_config, {
 		inactive = {
 			corner_left = "", corner_left_hl = "Bars_tabline_tab_inactive",
@@ -184,19 +260,28 @@ tabline.tabs = function (tab_config)
 			padding_right = " ", padding_right_hl = nil,
 
 			bg = nil
-		}
+		},
+
+		max_entries = 5,
 	});
 
 	local tmp = {};
-	for _, id in ipairs(tabs) do
+	for label, id in ipairs(tabs) do
 		if id == current_tab then
-			table.insert(tmp, 1, vim.tbl_extend("keep", merged_config.active, {
-				prefix = "%" .. id .. "T", postfix = "%X",
-				text = tostring(id)
-			}));
+			if #tmp >= merged_config.max_entries then
+				table.insert(tmp, 1, vim.tbl_extend("keep", merged_config.active, {
+					prefix = "%" .. label .. "T", postfix = "%X",
+					text = tostring(id)
+				}));
+			else
+				table.insert(tmp, vim.tbl_extend("keep", merged_config.active, {
+					prefix = "%" .. label .. "T", postfix = "%X",
+					text = tostring(id)
+				}));
+			end
 		else
 			table.insert(tmp, vim.tbl_extend("keep", merged_config.inactive, {
-				prefix = "%" .. id .. "T", postfix = "%X",
+				prefix = "%" .. label .. "T", postfix = "%X",
 				text = tostring(id)
 			}));
 		end
@@ -206,7 +291,7 @@ tabline.tabs = function (tab_config)
 end
 
 --- Adds gap between components, optionally allows colors
----@param gap_config { hl: string? }
+---@param gap_config tabline_gap_config Configuration table for the gap component
 ---@return string
 tabline.gap = function (gap_config)
 	local _o = "";
@@ -221,20 +306,20 @@ tabline.gap = function (gap_config)
 end
 
 --- Function to show some text
----@param txt_config tabline_component
+---@param txt_config tabline_component_raw
 ---@return string
 tabline.text = function (txt_config)
 	return tabline.renderer({ txt_config });
 end
 
 --- Shows all the opened buffers(ones that are in some window)
----@param buf_config { width: number?, active: tabline_component?, inactive: tabline_component?, separator: separator_config? } User provided configuration table
+---@param buf_config tabline_list_item_config
 ---@return string
-tabline.buffers = function (buf_config)
+tabline.windows = function (buf_config)
 	local this_tabpage = vim.api.nvim_get_current_tabpage();
 	local windows = vim.api.nvim_tabpage_list_wins(this_tabpage);
 
-	---@type { width: number?, active: tabline_component, inactive: tabline_component, separator: separator_config } Merged configuration table
+	---@type tabline_list_item_config Merged configuration table
 	local merged_config = vim.tbl_deep_extend("keep", buf_config, {
 		inactive = {
 			corner_left = "", corner_left_hl = "Bars_tabline_tab_inactive",
@@ -275,7 +360,9 @@ tabline.buffers = function (buf_config)
 			on_skip = function ()
 				tabline.separator_set = false;
 			end
-		}
+		},
+
+		max_entries = 4
 	})
 
 	local tmp = {};
@@ -284,13 +371,20 @@ tabline.buffers = function (buf_config)
 	for _, win in ipairs(windows) do
 		local buffer = vim.api.nvim_win_get_buf(win);
 		local buffer_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":t");
-		local icon, hl = devicons.get_icon(buffer_name, nil, { default = true })
+		local icon, _ = devicons.get_icon(buffer_name, nil, { default = true })
 
 		if buffer == vim.api.nvim_get_current_buf() and vim.list_contains(checked_bufs, buffer) == false then
-			table.insert(tmp, 1, vim.tbl_extend("keep", merged_config.active, {
-				icon = icon .. " ",
-				text = buffer_name ~= "" and buffer_name or "No name"
-			}));
+			if #tmp >= merged_config.max_entries then
+				table.insert(tmp, 1, vim.tbl_extend("keep", merged_config.active, {
+					icon = icon .. " ",
+					text = buffer_name ~= "" and buffer_name or "No name"
+				}));
+			else
+				table.insert(tmp, vim.tbl_extend("keep", merged_config.active, {
+					icon = icon .. " ",
+					text = buffer_name ~= "" and buffer_name or "No name"
+				}));
+			end
 		elseif buffer ~= vim.api.nvim_get_current_buf() then
 			table.insert(tmp, vim.tbl_extend("keep", merged_config.inactive, {
 				icon = icon .. " ",
@@ -305,11 +399,18 @@ tabline.buffers = function (buf_config)
 end
 
 ---Lists all the buffers that have been loaded
----@param buf_config { width: number?, active: tabline_component?, inactive: tabline_component?, separator: separator_config? } User provided configuration table
+---@param buf_config tabline_buffers_config User provided configuration table
 ---@return string
-tabline.buffers_all = function (buf_config)
-	---@type { width: number?, active: tabline_component, inactive: tabline_component, separator: separator_config } Merged configuration table
+tabline.buffers = function (buf_config)
+	---@type tabline_buffers_config Merged configuration table
 	local merged_config = vim.tbl_deep_extend("keep", buf_config, {
+		ignore = {
+			filetypes = { "" },
+			buftypes = {},
+
+			names = {}
+		},
+
 		inactive = {
 			corner_left = "", corner_left_hl = "Bars_tabline_buf_inactive",
 			corner_right = "", corner_right_hl = "Bars_tabline_buf_inactive",
@@ -349,30 +450,46 @@ tabline.buffers_all = function (buf_config)
 			on_skip = function ()
 				tabline.separator_set = false;
 			end
-		}
+		},
+
+		max_entries = 4
 	});
 
-	local buffers = vim.api.nvim_list_bufs();
+	if vim.tbl_isempty(tabline.buffer_list) or #tabline.buffer_list ~= #tabline.bufValidate(vim.api.nvim_list_bufs(), merged_config.ignore) then
+		tabline.buffer_list = tabline.bufValidate(vim.api.nvim_list_bufs(), merged_config.ignore)
+	end
+
 	local tmp = {};
 	local checked_bufs = {};
 
-	for _, buf in ipairs(buffers) do
+	for _, buf in ipairs(tabline.buffer_list) do
+		local bufType = vim.bo[buf].buftype;
 		local buffer_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t");
-		local icon, hl = devicons.get_icon(buffer_name, nil, { default = true });
+		local icon, _ = devicons.get_icon(buffer_name, nil, { default = true });
 
-		if buffer_name == "" or vim.api.nvim_buf_is_loaded(buf) == false then
+		if buffer_name == "" or vim.api.nvim_buf_is_loaded(buf) == false or bufType == "help" then
 			goto bufSkip;
 		end
 
 		if buf == vim.api.nvim_get_current_buf() and vim.list_contains(checked_bufs, buf) == false then
-			table.insert(tmp, 1, vim.tbl_extend("keep", merged_config.active, {
-				icon = icon .. " ",
-				text = buffer_name ~= "" and buffer_name or "No name"
-			}));
+			if #tmp >= merged_config.max_entries then
+				table.insert(tmp, 1, vim.tbl_extend("keep", merged_config.active, {
+					prefix = "%@v:lua.__bufOpen.buffer_" .. buf .. "@", postfix = "%X",
+					icon = icon .. " ",
+					text = buffer_name or "No name"
+				}));
+			else
+				table.insert(tmp, vim.tbl_extend("keep", merged_config.active, {
+					prefix = "%@v:lua.__bufOpen.buffer_" .. buf .. "@", postfix = "%X",
+					icon = icon .. " ",
+					text = buffer_name or "No name"
+				}));
+			end
 		elseif buf ~= vim.api.nvim_get_current_buf() then
 			table.insert(tmp, vim.tbl_extend("keep", merged_config.inactive, {
+					prefix = "%@v:lua.__bufOpen.buffer_" .. buf .. "@", postfix = "%X",
 				icon = icon .. " ",
-				text = buffer_name ~= "" and buffer_name or "No name"
+				text = buffer_name or "No name"
 			}));
 		end
 
@@ -383,6 +500,8 @@ tabline.buffers_all = function (buf_config)
 	return tabline.renderer(tmp, merged_config.width ~= nil and merged_config.width or vim.o.columns - 26, merged_config.separator);
 end
 
+--- Function to generate the tabline, it is global
+---@return string
 tabline.generateTabline = function ()
 	local _output = "";
 
@@ -396,12 +515,11 @@ tabline.generateTabline = function ()
 		elseif component.type == "text" then
 			_output = _output .. tabline.text(component);
 		elseif component.type == "tabs" then
-			--  return string.format("%%%d@v:lua.require'lualine.utils.fn_store'.call_fn@%s%%T", id, str)
 			_output = _output .. tabline.tabs(component);
+		elseif component.type == "windows" then
+			_output = _output .. tabline.windows(component);
 		elseif component.type == "buffers" then
 			_output = _output .. tabline.buffers(component);
-		elseif component.type == "buffers_all" then
-			_output = _output .. tabline.buffers_all(component);
 		end
 	end
 

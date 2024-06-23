@@ -61,6 +61,21 @@ return {
 			}
 		});
 
+		vim.api.nvim_create_autocmd({ "BufReadPre" }, {
+			pattern = "*.md",
+			callback = function ()
+				require("cmp").setup.buffer = {
+					sources = {
+						{ name = "buffer", keyword_length = 4 },
+						{ name = "async_path", keyword_length = 2 },
+
+						{ name = "spell", keyword_length = 3 },
+						{ name = "nerdfont" },
+					}
+				}
+			end
+		})
+
 		-- Set up lspconfig.
 		require('lspconfig')['tsserver'].setup {
 			capabilities = capabilities

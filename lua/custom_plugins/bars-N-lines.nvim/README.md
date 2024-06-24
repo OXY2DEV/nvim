@@ -225,10 +225,10 @@ Default highlight group for the statusline. Useful if you want to hide the statu
 List of components to show in the statusline.
 
 Currently available components are,
-    - mode `Shows the current mode, supports icons & colors for individual modes`
-    - buf_name `Shows the buffer name with it's filetype icon`
-    - gap `Adds gap between components, optionally with a specific highlight group`
-    - cursor_position `Shows the current column & row with icon, currently unfinished`
+- mode `Shows the current mode, supports icons & colors for individual modes`
+- buf_name `Shows the buffer name with it's filetype icon`
+- gap `Adds gap between components, optionally with a specific highlight group`
+- cursor_position `Shows the current column & row with icon, currently unfinished`
 
 More information about them are available in the statusline wiki files.
 
@@ -275,10 +275,9 @@ Default highlight group for the statusline. Useful if you want to hide the statu
 List of components to show in the statusline.
 
 Currently available components are,
-- mode `Shows the current mode, supports icons & colors for individual modes`
-- buf_name `Shows the buffer name with it's filetype icon`
-- gap `Adds gap between components, optionally with a specific highlight group`
-- cursor_position `Shows the current column & row with icon, currently unfinished`
+- buffers `lists all the opened buffers, conditions for listing them are also provided`
+- windows `lists all the opened windows in the current tab`
+- tabs `lists the currently opened tabs`
 
 More information about them are available in the statusline wiki files.
 

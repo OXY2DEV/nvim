@@ -100,8 +100,8 @@ Custom configuration table for specific filetypes & buftypes. Inherits values fr
 ## Disabling the plugin on certain filetypes & buftypes <!-- -+ -->
 
 The `global_disable` option has the following keys,
-    - filetypes
-    - buftypes
+- filetypes
+- buftypes
 
 >[!NOTE]
 > On skipped buffers the values of `statuscolumn`, `statusline` will not be set. So, their default value will be used.
@@ -148,10 +148,10 @@ The options used to configure the statuscolumn.
 `boolean or nil`
 
 Sets the default options for making the statuscolumn. It sets the following options,
-    - relativenumber(for refresh on cursor move)
-    - foldcolumn(set to 0, because the plugin doesn't make use of the default one)
-    - signcolumn(set to "no", because the plugin has it's own functions for showing signs)
-    - numberwidth(set to 1, prevents a mouse click bug in 0.10.0)
+- relativenumber(for refresh on cursor move)
+- foldcolumn(set to 0, because the plugin doesn't make use of the default one)
+- signcolumn(set to "no", because the plugin has it's own functions for showing signs)
+- numberwidth(set to 1, prevents a mouse click bug in 0.10.0)
 
 #### default_hl
 `string or nil`
@@ -211,8 +211,8 @@ The options used to configure the statusline.
 Sets some default options for the statusline.
 
 The following options are set.
-    - laststatus(set to 2, to use buffer specific statusline)
-    - cmdheight(set to 1, to prevent a bug in neovim leading the statusline to temporarily disappear)
+- laststatus(set to 2, to use buffer specific statusline)
+- cmdheight(set to 1, to prevent a bug in neovim leading the statusline to temporarily disappear)
 
 #### default_hl
 `string or nil`
@@ -275,10 +275,10 @@ Default highlight group for the statusline. Useful if you want to hide the statu
 List of components to show in the statusline.
 
 Currently available components are,
-    - mode `Shows the current mode, supports icons & colors for individual modes`
-    - buf_name `Shows the buffer name with it's filetype icon`
-    - gap `Adds gap between components, optionally with a specific highlight group`
-    - cursor_position `Shows the current column & row with icon, currently unfinished`
+- mode `Shows the current mode, supports icons & colors for individual modes`
+- buf_name `Shows the buffer name with it's filetype icon`
+- gap `Adds gap between components, optionally with a specific highlight group`
+- cursor_position `Shows the current column & row with icon, currently unfinished`
 
 More information about them are available in the statusline wiki files.
 

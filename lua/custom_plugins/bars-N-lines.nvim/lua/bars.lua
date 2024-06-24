@@ -6,8 +6,6 @@ local tabline = require("bars/tabline");
 ---@type table A table containing functions to open a specific buffer
 _G.__bufOpen = {};
 
-
-
 ---+ Title: "Default configuration"
 ---
 --- A table containing various configuration related options for the plugin.
@@ -20,15 +18,16 @@ _G.__bufOpen = {};
 ---@class setup_table Default configuration table, it will be merged with the user config
 bars.default_config = {
 	global_disable = {
-		filetypes = { "help", "Lazy" },
-		buftypes = { "terminal", "nofile" }
+		filetypes = { "help", "lazy" },
+		-- buftypes = { "terminal", "nofile" }
 	},
 	custom_configs = {
 		{
+			filetypes = { "query" },
 			buftypes = { "terminal" },
 			config = {
 				statuscolumn = {
-					enabled = false
+					enable = false
 				}
 			}
 		}
@@ -201,6 +200,15 @@ end
 ---@param user_config setup_table?
 bars.setup = function (user_config)
 	local merged_config = vim.tbl_deep_extend("force", bars.default_config, user_config or {});
+
+	vim.api.nvim_create_autocmd({ "FileType" }, {
+		pattern = "*",
+		callback = function (data)
+			local buffer = data.buf;
+
+			bars.bufValidate(buffer, merged_config);
+		end
+	})
 
 	vim.api.nvim_create_autocmd({ "BufWinEnter", "TermOpen" }, {
 		pattern = "*",

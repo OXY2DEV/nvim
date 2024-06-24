@@ -53,7 +53,8 @@ require("bars").setup({
 
 Here's what all of them do,
 
-> global_disable `{ filetypes: string[], buftypes: string[] } or nil`
+### global_disable 
+`{ filetypes: string[], buftypes: string[] } or nil`
 
 You can set specific filetypes and buftypes where the plugin will be *disabled*.
 
@@ -62,7 +63,8 @@ You can set specific filetypes and buftypes where the plugin will be *disabled*.
 >
 > If you would like to *hide* them for a specific buffer use the `custom_configs` option.
 
-> default `{ statuscolumn: statuscolumn_config?, statusline: statusline_config?, tabline: tabline_config? }`
+### default
+`{ statuscolumn: statuscolumn_config?, statusline: statusline_config?, tabline: tabline_config? }`
 
 Default configuration of the plugin. More info on the various keys of this table is provided in their own sections.
 
@@ -71,7 +73,8 @@ Default configuration of the plugin. More info on the various keys of this table
 >
 > So, if you only set the `statusline` for a buffer the `statuscolumn` & `tabline` will be configured using the values in the `default` table.
 
-> custom_configs `{ { buftypes: string[]?, filetypes: string[]?, config: default }[] } or nil`
+### custom_configs
+`{ { buftypes: string[]?, filetypes: string[]?, config: default }[] } or nil`
 
 Custom configuration table for specific filetypes & buftypes. Inherits values from the `default` table.
 
@@ -79,6 +82,47 @@ Custom configuration table for specific filetypes & buftypes. Inherits values fr
 > If `filetypes` & `buftypes` are set together then the plugin will try to match both of them first and then will match them individually.
 >
 > This currently **has no extra functionality** and an option will be provided to better control this behaviour.
+
+
+## Disabling the plugin on certain filetypes & buftypes
+
+The `global_disable` option has the following keys,
+    - filetypes
+    - buftypes
+
+>[!NOTE]
+> On skipped buffers the values of `statuscolumn`, `statusline` will not be set. So, their default value will be used.
+
+### filetypes
+`string[]`
+
+A list of filetypes that will be skipped.
+
+>[!IMPORTANT]
+> Buffers are updated when their `filetype` changes. So, you don't need to do something like `filetypes = { "" }`.
+
+## Setting the statuscolumn
+
+The `statuscolumn` is one of the keys available in the `default`(and in the items in `custom_configs`). This can be used to set up a custom statuscolumn.
+
+The statuscolumn table with all the available options is given below.
+
+```lua
+{
+    enable = true,
+    options = {
+        set_defaults = false,
+        default_hl = nil,
+
+        components = {}
+    }
+}
+```
+
+### enable
+`boolean or nil`
+
+Enables/Disables the statuscolumn.
 
 <!-- 
     vim:spell

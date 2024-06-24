@@ -164,11 +164,11 @@ Useful for changing the background color for the statuscolumn. Also removes the 
 Components are used to easily add functionalities to the statuscolumn without having to write the code yourself. You can set a list of components to use in the statuscolumn.
 
 Currently available components are.
-    - gap `Adds a simple gap in the statuscolumn, allows setting a custom highlight for the gap`
-    - border `Adds border in the statuscolumn, optionally supports gradients`
-    - number `Adds line numbers & relative line numbers to the statuscolumn, optionally supports gradients`
-    - fold `Adds a custom foldcolumn, provides various ways to show folds`
-    - sign `Adds a custom signcolumn, allows filtering of signs based on namespaces & priority`
+- gap `Adds a simple gap in the statuscolumn, allows setting a custom highlight for the gap`
+- border `Adds border in the statuscolumn, optionally supports gradients`
+- number `Adds line numbers & relative line numbers to the statuscolumn, optionally supports gradients`
+- fold `Adds a custom foldcolumn, provides various ways to show folds`
+- sign `Adds a custom signcolumn, allows filtering of signs based on namespaces & priority`
 
 >[!NOTE]
 > Function as components will be added in the future allowing users to make custom components for their needs.

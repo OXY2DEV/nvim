@@ -1,3 +1,7 @@
+---+ name: Nvim-lspconfig; |lsp| ##plugin##
+---
+---_
+
 return {
 	"neovim/nvim-lspconfig",
 

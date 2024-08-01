@@ -1,3 +1,7 @@
+---+ name: Nvim-colorizer; |looks| ##plugin##
+---
+---_
+
 return {
 	"NvChad/nvim-colorizer.lua",
 

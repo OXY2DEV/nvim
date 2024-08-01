@@ -1,7 +1,7 @@
 local animations = {};
 
 ---+ Icon: " " Title: "rgb number to table converter" BorderL: " " BorderR: " "
---- @param color = number
+--- @param color number
 --- @return table
 animations.rgbToTable = function (color)
 	local hex = string.format("%x", color);

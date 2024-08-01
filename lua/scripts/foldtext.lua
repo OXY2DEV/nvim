@@ -62,4 +62,4 @@ FoldText = function()
 end
 ---_
 
-vim.o.foldtext = "v:lua.FoldText()"
+-- vim.o.foldtext = "v:lua.FoldText()"

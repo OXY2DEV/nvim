@@ -1,5 +1,10 @@
+---+ name: Terminal.nvim; |looks| ##plugin##
+---
+---_
+
 return {
 	dir = "~/.config/nvim/lua/custom_plugins/terminal.nvim",
+	enabled = false,
 
 	dependencies = {
 		{

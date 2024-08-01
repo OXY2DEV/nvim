@@ -1,3 +1,7 @@
+---+ name: Nvim-treesitter; |ts| ##plugin##
+---
+---_
+
 return {
 	"nvim-treesitter/nvim-treesitter",
 	build = ":TSUpdate",

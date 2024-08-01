@@ -1,3 +1,7 @@
+---+ name: Nvim-cmp; |cmp| ##plugin##
+---
+---_
+
 return {
 	"hrsh7th/nvim-cmp",
 

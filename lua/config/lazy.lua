@@ -28,7 +28,7 @@ require("lazy").setup("plugins", {
 		},
 
 		icons = {
-			cmd = "  ",
+			cmd = "  ", ---+ ##code##
 
 			config = "  ",
 			event = "  ",
@@ -50,7 +50,7 @@ require("lazy").setup("plugins", {
 			source = " ",
 			start = "",
 
-			task = "  "
+			task = "  " ---_
 		}
 	}
 })

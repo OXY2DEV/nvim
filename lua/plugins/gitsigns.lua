@@ -1,3 +1,7 @@
+---+ name: Gitsigns.nvim; |git| ##plugin##
+---
+---_
+
 return {
 	"lewis6991/gitsigns.nvim",
 

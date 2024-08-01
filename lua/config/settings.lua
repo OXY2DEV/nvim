@@ -1,6 +1,6 @@
 --- File for various vim related settings
 
----+ Title: "Appearance"
+---+ type: look; title: Appearance;
 vim.o.background = "dark";
 
 -- vim.o.cursorcolumn = true;
@@ -14,6 +14,7 @@ vim.o.relativenumber = true;
 vim.o.ruler = true;
 vim.o.rulerformat = " %l  %c";
 
+vim.o.cmdheight = 1;
 vim.o.pumheight = 5;
 
 vim.o.shiftwidth = 4;
@@ -21,15 +22,16 @@ vim.o.shiftwidth = 4;
 vim.o.signcolumn = "number";
 ---_
 
----+ Title: "Mouse"
+---+ type: custom; icon: 󰇀 ; hl: @define; title: Touch;
 vim.o.mouse = "n";
 ---_
 
----+ Title: "Keymaps"
+---+ type: config; title: Keymap;
 vim.g.mapleader = " ";
+vim.o.timeoutlen = 500;
 ---_
 
----+ Title: "Editing"
+---+ type: config; title: Editing;
 vim.o.complete = ".";
 vim.o.completeopt = "menu,popup";
 
@@ -39,7 +41,7 @@ vim.o.foldmethod = "marker";
 vim.o.foldmarker = "-+,-_";
 
 vim.o.scrolloff = 999;
-vim.o.sidescrolloff = 999;
+vim.o.sidescrolloff = 10;
 
 vim.o.spell = true;
 
@@ -49,11 +51,7 @@ vim.o.tabstop = 4;
 vim.o.wrap = false;
 --_
 
----+ Title: "Others"
-vim.o.timeoutlen = 500;
----_
-
----+ Title: "Colorscheme"
+---+ type: color; title: Colorscheme;
 vim.o.termguicolors = true;
 vim.cmd.colorscheme("habamax");
 ---_

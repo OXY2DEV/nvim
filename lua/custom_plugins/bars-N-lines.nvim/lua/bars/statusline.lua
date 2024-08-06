@@ -1,265 +1,213 @@
 local statusline = {};
 local devicons = require("nvim-web-devicons");
+local utils = require("bars.utils");
 
---- Artaches a bunch of string together to make a component
----@param component statusline_component_raw
----@return string
-local componentConstructor = function (component)
-	return table.concat({
-		component.default_hl ~= nil and "%#" .. component.default_hl .. "#" or "",
-		component.prefix or "",
+statusline.configuration = {
+	default = {
+		{
+			type = "mode",
 
-		component.corner_left_hl ~= nil and "%#" .. component.corner_left_hl .. "#" or "",
-		component.corner_left or "",
+			padding_left = " ",
+			padding_left_hl = {
+				-- __is_hl = true,
 
-		component.padding_left_hl ~= nil and "%#" .. component.padding_left_hl .. "#" or "",
-		component.padding_left or "",
+				["n"] = "mode_normal_alt",
+				["i"] = "mode_insert_alt",
 
-		component.icon_hl ~= nil and "%#" .. component.icon_hl .. "#" or "",
-		component.icon or "",
+				["v"] = "mode_visual_alt",
+				[""] = "mode_visual_block_alt",
+				["V"] = "mode_visual_line_alt",
 
-		component.text_hl ~= nil and "%#" .. component.text_hl .. "#" or "",
-		component.text or "",
+				["c"] = "mode_cmd_alt"
+			},
 
-		component.padding_right_hl ~= nil and "%#" .. component.padding_right_hl .. "#" or "",
-		component.padding_right or "",
+			icon = {
+				["n"] = " ",
+				["i"] = " ",
 
-		component.corner_right_hl ~= nil and "%#" .. component.corner_right_hl .. "#" or "",
-		component.corner_right or "",
+				["v"] = "󰸿 ",
+				[""] = "󰹀 ",
+				["V"] = "󰸽 ",
 
-		component.postfix or ""
-	});
-end
+				["c"] = " ",
+			},
 
---- Search for key in a table, return the default value if not found
----@param key string The key to search
----@param current_config table Table where to search for the key
----@param default_config table Table that contains the default value
----@return any
-local getDefault = function (key, current_config, default_config)
-	if current_config ~= nil and current_config[key] ~= nil then
-		return current_config[key];
-	end
+			text = {
+				default = function ()
+					return vim.api.nvim_get_mode().mode;
+				end,
 
-	return default_config[key];
-end
+				["n"] = "Normal",
+				["i"] = "Insert",
 
----@type (statusline_options | boolean)[] User configuration tables for the various buffers
-statusline.buffer_configs = {};
+				["v"] = "Visual",
+				[""] = "Visual",
+				["V"] = "Visual",
 
---- Initializes the statusline for the specified buffer
----@param buffer number The buffer ID
----@param user_config statusline_config? The statusline configuration
-statusline.init = function (buffer, user_config)
-	if user_config == nil then
-		statusline.buffer_configs[buffer] = false;
-	elseif user_config.enable == false then
-		statusline.buffer_configs[buffer] = {};
-	else
-		statusline.buffer_configs[buffer] = user_config.options;
-	end
+				["c"] = "Command"
+			},
 
-	local windows = vim.fn.win_findbuf(buffer);
-
-	if statusline.buffer_configs[buffer] == false then
-		for _, window in ipairs(windows) do
-			vim.wo[window].statusline = "";
-		end
-	else
-		for _, window in ipairs(windows) do
-			if user_config ~= nil and user_config.options ~= nil and user_config.options.set_defaults == true then
-				vim.o.cmdheight = 1;
-				vim.o.laststatus = 2;
-			end
-
-			vim.wo[window].statusline = "%!v:lua.require('bars/statusline').generateStatusline(" .. buffer .. ")";
-		end
-	end
-end
-
---- Shows the current mode with icons
----@param mode_config statusline_mode_config User configuration for the component
----@return string
-statusline.mode = function (mode_config)
-	local mode = vim.api.nvim_get_mode().mode;
-
-	---@type statusline_mode_config Table containing a merge of default options(ones that aren't provided) and user options(ones that are provided)
-	local merged_config = vim.tbl_deep_extend("keep", mode_config or {}, {
-		default = {
-			icon = " ", icon_hl = nil,
-			text = mode, text_hl = nil,
-
-			corner_left = "", corner_left_hl = "Bars_mode_normal_alt",
-			corner_right = "", corner_right_hl = "Bars_mode_normal",
-
-			padding_left = " ", padding_left_hl = nil,
 			padding_right = " ", padding_right_hl = nil,
 
-			bg = "Bars_mode_normal_alt"
+			corner_right = "",
+			corner_right_hl = {
+				["n"] = "mode_normal",
+				["i"] = "mode_insert",
+
+				["v"] = "mode_visual",
+				[""] = "mode_visual_block",
+				["V"] = "mode_visual_line",
+
+				["c"] = "mode_cmd"
+			},
 		},
-		modes = {
-			["n"] = { icon = " ", text = "Normal" },
-			["i"] = { icon = " ", text = "Insert", bg = "Bars_mode_insert_alt", corner_left_hl = "Bars_mode_insert_alt", corner_right_hl = "Bars_mode_insert" },
 
-			["v"] = { icon = "󰸿 ", text = "Visual", bg = "Bars_mode_visual_alt", corner_left_hl = "Bars_mode_visual_alt", corner_right_hl = "Bars_mode_visual" },
-			[""] = { icon = "󰹀 ", text = "Visual", bg = "Bars_mode_visual_block_alt", corner_left_hl = "Bars_mode_visual_block_alt", corner_right_hl = "Bars_mode_visual_block" },
-			["V"] = { icon = "󰸽 ", text = "Visual", bg = "Bars_mode_visual_line_alt", corner_left_hl = "Bars_mode_visual_line_alt", corner_right_hl = "Bars_mode_visual_line" },
+		{
+			type = "bufname",
+			padding_left = " ",
+			padding_left_hl = "buf_name",
+			padding_right = " ",
+			corner_right = "",
+			corner_right_hl = "buf_name_alt"
+		},
+		{
+			type = "raw",
+			text = "%="
+		},
+		{
+			type = "data",
+			value = function (part)
+				local ls, rs;
 
-			["c"] = { icon = " ", text = "Command", bg = "Bars_mode_cmd_alt", corner_left_hl = "Bars_mode_cmd_alt", corner_right_hl = "Bars_mode_cmd" },
+				if not _G.bars_display_mode then
+					_G.bars_display_mode = 1;
+				end
+
+				if _G.bars_display_mode == 1 then
+					part.icon = "  ";
+
+					ls = "%l";
+					rs = "%c";
+				elseif _G.bars_display_mode == 2 then
+					part.icon = "󰳽 ";
+
+					ls = "%b";
+					rs = nil
+				elseif _G.bars_display_mode == 3 then
+					part.icon = "󰆾 ";
+
+					ls = "%o";
+					rs = nil
+				elseif _G.bars_display_mode == 4 then
+					part.icon = "󰈙 ";
+
+					ls = "%L";
+					rs = nil
+				elseif _G.bars_display_mode == 5 then
+					part.icon = "󰏰 ";
+
+					ls = "%p";
+					rs = nil
+				end
+
+				part.before = "%@v:lua.bars_n_lines.switch_display_mode@"
+				part.text = (ls and rs) and ls .. "  " .. rs or (ls or "") .. (rs or "");
+				part.after = "%X"
+
+				return part;
+			end,
+
+			corner_left = "",
+			corner_left_hl = "cursor_position_alt",
+
+			padding_left = " ",
+			padding_left_hl = "cursor_position",
+
+			icon_hl = "cursor_position",
+
+			padding_right = " "
 		}
-	});
+	},
 
+	custom = {
+		{
+			filetypes = {},
+			buftypes = { "terminal" },
+			parts = {}
+		},
+		{
+			filetypes = { "" },
+			-- buftypes = { "terminal" },
+			parts = {}
+		}
+	}
+};
 
-	return componentConstructor({
-		default_hl = getDefault("bg", merged_config.modes[mode], merged_config.default),
+statusline.render_mode = function (config_table)
+	return utils.create_segmant(config_table, function (part)
+		local mode = vim.api.nvim_get_mode().mode;
 
-		corner_left_hl = getDefault("corner_left_hl", merged_config.modes[mode], merged_config.default),
-		corner_left = getDefault("corner_left", merged_config.modes[mode], merged_config.default),
-
-		padding_left_hl = getDefault("padding_left_hl", merged_config.modes[mode], merged_config.default),
-		padding_left = getDefault("padding_left", merged_config.modes[mode], merged_config.default),
-
-		icon_hl = getDefault("icon_hl", merged_config.modes[mode], merged_config.default),
-		icon = getDefault("icon", merged_config.modes[mode], merged_config.default),
-
-		text_hl = getDefault("text_hl", merged_config.modes[mode], merged_config.default),
-		text = getDefault("text", merged_config.modes[mode], merged_config.default),
-
-		padding_right_hl = getDefault("padding_right_hl", merged_config.modes[mode], merged_config.default),
-		padding_right = getDefault("padding_right", merged_config.modes[mode], merged_config.default),
-
-		corner_right_hl = getDefault("corner_right_hl", merged_config.modes[mode], merged_config.default),
-		corner_right = getDefault("corner_right", merged_config.modes[mode], merged_config.default),
-	});
+		if part[mode] then
+			return part[mode];
+		elseif part.default and pcall(part.default) then
+			return part.default();
+		elseif not part.__is_hl and part.n then
+			return part.n;
+		else
+			return "";
+		end
+	end)
 end
 
---- Creates a component to show the buffer's file name
----@param buffer number Buffer ID
----@param buf_name_config statusline_buf_name_config Configuration table for the component
----@return string
-statusline.buf_name = function (buffer, buf_name_config)
+statusline.render_bufname = function (buffer, config_table)
 	local buffer_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":t");
+
 	local icon, _ = devicons.get_icon(buffer_name);
 
-	---@type statusline_buf_name_config Table containing a merge of default options(ones that aren't provided) and user options(ones that are provided)
-	local merged_config = vim.tbl_deep_extend("keep", buf_name_config or {}, {
-		corner_left = "", corner_left_hl = nil,
-		corner_right = "", corner_right_hl = "Bars_buf_name_alt",
-
-		padding_left = " ", padding_left_hl = nil,
-		padding_right = " ", padding_right_hl = nil,
-
-		default_hl = "Bars_buf_name",
-	});
-
-	return componentConstructor({
-		default_hl = merged_config.default_hl,
-
-		corner_left_hl = merged_config.corner_left_hl,
-		corner_left = merged_config.corner_left,
-
-		padding_left_hl = merged_config.padding_left_hl,
-		padding_left = merged_config.padding_left,
-
-		icon = icon,
-		text = buffer_name ~= "" and " " .. buffer_name or "No name",
-
-		padding_right_hl = merged_config.padding_right_hl,
-		padding_right = merged_config.padding_right,
-
-		corner_right_hl = merged_config.corner_right_hl,
-		corner_right = merged_config.corner_right,
-	});
-end
-
---- Adds padding between components, optionally allows setting the highlight group for it
----@param gap_config statusline_gap_config Configuration table for the component
----@return string
-statusline.gap = function (gap_config)
-	local _o = "";
-
-	if gap_config ~= nil and gap_config.hl ~= nil then
-		_o = _o .. "%#" .. gap_config.hl .. "#";
+	if buffer_name == "" then
+		buffer_name = "No name";
+		icon = " "
 	end
 
-	_o = _o .. "%=";
+	config_table.text = (icon or "") .. " "  .. buffer_name;
+
+	return utils.create_segmant(config_table)
+end
+
+statusline.render_data = function (config_table)
+	if config_table.value and pcall(config_table.value, config_table) then
+		config_table = config_table.value(config_table);
+	end
+
+	return utils.create_segmant(config_table)
+end
+
+statusline.draw = function (window, buffer)
+	local conf = utils.find_config(statusline.configuration, buffer);
+	local _o = "%#Normal#";
+
+	for _, part in ipairs(conf) do
+		if part.type == "mode" then
+			_o = _o .. statusline.render_mode(part);
+		elseif part.type == "bufname" then
+			_o = _o .. statusline.render_bufname(buffer, part);
+		elseif part.type == "raw" then
+			_o = _o .. (part.text or "");
+		elseif part.type == "data" then
+			_o = _o .. statusline.render_data(part);
+		end
+	end
 
 	return _o;
 end
 
---- Shows the current cursor position, optionally allows custom text to be shown
----@param position_config statusline_position_config User configuration table for the component
----@return string
-statusline.cursor_position = function (position_config)
-	---@type statusline_position_config Table containing a merge of default options(ones that aren't provided) and user options(ones that are provided)
-	local merged_config = vim.tbl_deep_extend("keep", position_config or {}, {
-		corner_left = "", corner_left_hl = "Bars_cursor_position_alt",
-		corner_right = "", corner_right_hl = nil,
-
-		padding_left = " ", padding_left_hl = "Bars_cursor_position",
-		padding_right = " ", padding_right_hl = nil,
-
-		segmant_left = "%l",
-		segmant_right = "%c",
-		separator = "  ",
-
-		icon = "  ", icon_hl = nil,
-
-		bg = "Bars_cursor_position"
-	});
-
-	return componentConstructor({
-		default_hl = merged_config.default_hl,
-
-		corner_left_hl = merged_config.corner_left_hl,
-		corner_left = merged_config.corner_left,
-
-		padding_left_hl = merged_config.padding_left_hl,
-		padding_left = merged_config.padding_left,
-
-		icon = merged_config.icon,
-		text = merged_config.segmant_left .. merged_config.separator .. merged_config.segmant_right,
-
-		padding_right_hl = merged_config.padding_right_hl,
-		padding_right = merged_config.padding_right,
-
-		corner_right_hl = merged_config.corner_right_hl,
-		corner_right = merged_config.corner_right,
-	});
+statusline.init = function (buffer, window, config_table)
+	vim.g.cmdheight = 0;
+	vim.wo[window].statusline = "%!v:lua.require('bars.statusline').draw(" .. window .. "," .. buffer .. ")";
 end
 
---- Function to return the statusline for the specified buffer
----@param buf number Buffer ID
----@return string
-statusline.generateStatusline = function (buf)
-	local _output = "";
-
-	--[[@as statusline_options]]
-	local loaded_config = statusline.buffer_configs[buf];
-
-	-- Current buffer is one of the buffers to skip
-	if loaded_config == nil then
-		return _output;
-	end
-
-	if loaded_config.default_hl ~= nil and loaded_config.default_hl ~= "" then
-		_output = "%#" .. loaded_config.default_hl .. "#";
-	end
-
-
-	for _, component in ipairs(loaded_config.components or {}) do
-		if component.type == "mode" then
-			_output = _output .. statusline.mode(component);
-		elseif component.type == "buf_name" then
-			_output = _output .. statusline.buf_name(buf, component);
-		elseif component.type == "gap" then
-			_output = _output .. statusline.gap(component);
-		elseif component.type == "cursor_position" then
-			_output = _output .. statusline.cursor_position(component);
-		end
-	end
-
-	return _output;
+statusline.disable = function (window)
+	vim.wo[window].statusline = "";
 end
 
 return statusline;

@@ -1,4 +1,4 @@
-#  🎇 bars-N-lines.nvim
+# 🎇 bars-N-lines.nvim
 
 Custom statuscolumn, statusline & tabline for `neovim`.
 
@@ -275,9 +275,9 @@ Default highlight group for the statusline. Useful if you want to hide the statu
 List of components to show in the statusline.
 
 Currently available components are,
-- buffers `lists all the opened buffers, conditions for listing them are also provided`
-- windows `lists all the opened windows in the current tab`
-- tabs `lists the currently opened tabs`
+- buffers `lists all the open buffers, conditions for listing them are also provided`
+- windows `lists all the open windows in the current tab`
+- tabs `lists the currently open tabs`
 
 More information about them are available in the statusline wiki files.
 

@@ -1,3 +1,12 @@
 return {
-	"rebelot/kanagawa.nvim"
+	"rebelot/kanagawa.nvim",
+	config = function ()
+		-- Default options:
+		require('kanagawa').setup({
+			-- transparent = true,         -- do not set background color
+		})
+
+		-- setup must be called before loading
+		-- vim.cmd("colorscheme kanagawa")
+	end
 }

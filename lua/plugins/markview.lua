@@ -16,6 +16,32 @@ return {
 	},
 
 	config = function ()
+-- require("markview").setup({
+--     highlight_groups = {
+--         {
+--             group_name = "Heading1",
+--             value = { fg = "#1e1e2e", bg = "#a6e3a1" }
+--         },
+--         {
+--             group_name = "Heading1Corner",
+--             value = { fg = "#a6e3a1" }
+--         },
+--     },
+--     headings = {
+--         enable = true,
+--         shift_width = 0,
+--
+--         heading_1 = {
+--             style = "label",
+--
+--             padding_left = " ",
+--             padding_right = "",
+--             padding_left_hl = "Heading1Corner",
+--
+--             hl = "Heading1"
+--         }
+--     }
+-- });
 		-- local def_conf = require("markview").configuration;
 		--
 		-- def_conf.tables = vim.tbl_extend("force", def_conf.tables, {
@@ -35,9 +61,9 @@ return {
 		-- 	-- 	end
 		-- 	-- }
 		--
-		-- 	-- highlight_groups = presets.highlight_groups.colorful_heading_bg,
+		-- 	highlight_groups = presets.highlight_groups.h_decorated,
 		-- 	-- tables = presets.tables.border_double
-		-- 	-- headings = presets.headings.glow_labels
+		-- 	headings = presets.headings.decorated_labels
 		-- })
 	end
 }

@@ -3,19 +3,21 @@ local utils = require("markview.utils");
 
 local ts_available, treesitter_parsers = pcall(require, "nvim-treesitter.parsers");
 local function parser_installed(parser)
-	return (ts_available and treesitter_parsers.has_parser(parser)) or
-		(vim.treesitter.query.get(parser, "highlights"))
+	return (ts_available and treesitter_parsers.has_parser(parser)) or pcall(vim.treesitter.query.get, parser, "highlights")
 end
 
 -- Check for requirements
 if vim.fn.has("nvim-0.10") == 0 then
-	warn("[ markview.nvim ] : Thie plugin is only available on version 0.10.0 and higher!");
+	vim.notify("[ markview.nvim ] : This plugin is only available on version 0.10.0 and higher!", vim.log.levels.WARN);
 	return;
 elseif not parser_installed("markdown") then
-	warn("[ markview.nvim ] : Treesitter parser for 'markdown' wasn't found!");
+	vim.notify("[ markview.nvim ] : Treesitter parser for 'markdown' wasn't found!", vim.log.levels.WARN);
 	return;
 elseif not parser_installed("markdown_inline") then
-	warn("[ markview.nvim ] : Treesitter parser for 'markdown_inline' wasn't found!");
+	vim.notify("[ markview.nvim ] : Treesitter parser for 'markdown_inline' wasn't found!", vim.log.levels.WARN);
+	return;
+elseif not parser_installed("html") then
+	vim.notify("[ markview.nvim ] : Treesitter parser for 'html' wasn't found! It is required for basic html tag support.", vim.log.levels.WARN);
 	return;
 end
 
@@ -23,8 +25,10 @@ if vim.islist(markview.configuration.buf_ignore) and vim.list_contains(markview.
 	return
 end
 
-if vim.islist(markview.configuration.highlight_groups) then
+-- Don't add hls unless absolutely necessary
+if not markview.added_hls and vim.islist(markview.configuration.highlight_groups) then
 	markview.add_hls(markview.configuration.highlight_groups)
+	markview.added_hls = true;
 end
 
 local markview_augroup = vim.api.nvim_create_augroup("markview_buf_" .. vim.api.nvim_get_current_buf(), { clear = true });
@@ -70,13 +74,6 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
 		end
 
 		markview.state.buf_states[buffer] = true;
-
-		if vim.tbl_isempty(markview.global_options) then
-			markview.global_options = {
-				conceallevel = vim.o.conceallevel,
-				concealcursor = vim.o.concealcursor
-			}
-		end
 
 		local parsed_content = markview.parser.init(buffer, markview.configuration);
 
@@ -214,6 +211,7 @@ vim.api.nvim_create_autocmd(events, {
 
 			markview.renderer.clear_content_range(event.buf, partial_contents)
 			markview.renderer.clear_content_range(event.buf, prev_contents);
+			markview.renderer.clear(event.buf, parse_start, parse_stop);
 
 			markview.renderer.render_in_range(event.buf, prev_contents, markview.configuration);
 			markview.renderer.update_range(event.buf, current_range);

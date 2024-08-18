@@ -41,8 +41,10 @@ markview.deep_merge = function (behavior, tbl_1, tbl_2)
 				for index, item in ipairs(value) do
 					if not markview.list_contains(tbl_1[key], item) then
 						table.insert(tbl_1[key], item);
-					else
+					elseif tbl_1[key][index] and type(tbl_1[key][index]) == "table" and type(item) == "table" then
 						tbl_1[key][index] = markview.deep_merge(behavior, tbl_1[key][index], item);
+					elseif not markview.list_contains(tbl_1[key], item) then
+						tbl_1[key][index] = item;
 					end
 				end
 			else
@@ -70,31 +72,49 @@ markview.hl_exits = function (hl_list, hl)
 	return false;
 end
 
+markview.added_hls = {};
+
+markview.remove_hls = function ()
+	if vim.tbl_isempty(markview.added_hls) then
+		return;
+	end
+
+	for _, hl in ipairs(markview.added_hls) do
+		if vim.fn.hlexists("Markview" .. hl) == 1 then
+			vim.api.nvim_set_hl(0, "Markview" .. hl, {});
+		end
+	end
+end
+
 markview.add_hls = function (obj)
-	local added = {};
+	markview.added_hls = {};
 	local use_hl = {};
 
 	for _, hl in ipairs(obj) do
 		if hl.output and type(hl.output) == "function" and pcall(hl.output) then
 			local _o = hl.output();
+			local _n = {};
 
 			for _, item in ipairs(_o) do
 				local exists, index = markview.hl_exits(use_hl, item);
 
 				if exists == true then
 					table.remove(use_hl, index);
+				else
+					table.insert(_n, item.group_name);
 				end
 			end
 
-			use_hl = vim.list_extend(use_hl, _o)
+			use_hl = vim.list_extend(use_hl, _o);
+			markview.added_hls = vim.list_extend(markview.added_hls, _n);
 		elseif hl.group_name and hl.value then
-			local contains, index = markview.list_contains(added, hl.group_name);
+			local contains, index = markview.list_contains(markview.added_hls, hl.group_name);
 
 			if contains == true and index then
 				use_hl[index] = hl;
 			else
 				table.insert(use_hl, hl)
-				table.insert(added, hl.group_name);
+				table.insert(markview.added_hls, hl.group_name);
 			end
 		end
 	end
@@ -124,16 +144,16 @@ markview.global_options = {};
 ---@type markview.config
 markview.configuration = {
 	callbacks = {
-		on_enable = function (buffer, window)
+		on_enable = function (_, window)
 			vim.wo[window].conceallevel = 2;
 			vim.wo[window].concealcursor = "nc";
 		end,
-		on_disable = function (buffer, window)
+		on_disable = function (_, window)
 			vim.wo[window].conceallevel = 0;
 			vim.wo[window].concealcursor = "";
 		end,
 
-		on_mode_change = function (buffer, window, mode)
+		on_mode_change = function (_, window, mode)
 			if vim.list_contains(markview.configuration.modes, mode) then
 				vim.wo[window].conceallevel = 2;
 			else
@@ -778,7 +798,6 @@ markview.configuration = {
 						default = true
 					};
 				else
-					vim.print(luminosity)
 					return {
 						bg = markview.colors.mix(bg, bg, 1, math.max(1 - luminosity, 0.05) * -1),
 						default = true
@@ -1046,7 +1065,7 @@ markview.configuration = {
 	buf_ignore = { "nofile" },
 
 	modes = { "n", "no" },
-	special_modes = nil,
+	hybrid_modes = nil,
 
 	headings = {
 		enable = true,
@@ -1102,6 +1121,7 @@ markview.configuration = {
 
 	code_blocks = {
 		enable = true,
+		icons = true,
 
 		style = "language",
 		hl = "MarkviewCode",
@@ -1358,6 +1378,9 @@ markview.configuration = {
 	},
 
 	list_items = {
+		indent_size = 2,
+		shift_width = 4,
+
 		marker_minus = {
 			add_padding = true,
 
@@ -1430,12 +1453,9 @@ markview.commands = {
 	enableAll = function ()
 		markview.state.enable = true;
 
-		vim.o.conceallevel = 2;
-		vim.o.concealcursor = "n";
-
 		for _, buf in ipairs(markview.attached_buffers) do
 			local parsed_content = markview.parser.init(buf);
-			local windows = utils.find_attached_wins(buffer);
+			local windows = utils.find_attached_wins(buf);
 
 			if markview.configuration.callbacks and markview.configuration.callbacks.on_enable then
 				for _, window in ipairs(windows) do
@@ -1451,7 +1471,7 @@ markview.commands = {
 	end,
 	disableAll = function ()
 		for _, buf in ipairs(markview.attached_buffers) do
-			local windows = utils.find_attached_wins(buffer);
+			local windows = utils.find_attached_wins(buf);
 
 			if markview.configuration.callbacks and markview.configuration.callbacks.on_disable then
 				for _, window in ipairs(windows) do
@@ -1460,7 +1480,6 @@ markview.commands = {
 			end
 
 			markview.state.buf_states[buf] = false;
-
 			markview.renderer.clear(buf);
 		end
 
@@ -1593,13 +1612,130 @@ end, {
 })
 
 markview.setup = function (user_config)
+	if user_config and user_config.highlight_groups then
+		markview.configuration.highlight_groups = vim.list_extend(markview.configuration.highlight_groups, user_config.highlight_groups);
+		user_config.highlight_groups = nil;
+	end
+
 	---@type markview.config
 	-- Merged configuration tables
-	markview.configuration = markview.deep_merge("force", markview.configuration, user_config or {});
+	markview.configuration = vim.tbl_deep_extend("force", markview.configuration, user_config or {});
 
 	if vim.islist(markview.configuration.highlight_groups) then
+		markview.remove_hls();
 		markview.add_hls(markview.configuration.highlight_groups);
 	end
+
+	markview.commands.enableAll();
+end
+
+
+
+
+markview.buf_attach = function (event)
+	local ts_available, treesitter_parsers = pcall(require, "nvim-treesitter.parsers");
+	local function parser_installed(parser)
+		return (ts_available and treesitter_parsers.has_parser(parser)) or pcall(vim.treesitter.query.get, parser, "highlights")
+	end
+
+	-- Check for requirements
+	if vim.fn.has("nvim-0.10") == 0 then
+		vim.notify("[ markview.nvim ] : This plugin is only available on version 0.10.0 and higher!", vim.log.levels.WARN);
+		return;
+	elseif not parser_installed("markdown") then
+		vim.notify("[ markview.nvim ] : Treesitter parser for 'markdown' wasn't found!", vim.log.levels.WARN);
+		return;
+	elseif not parser_installed("markdown_inline") then
+		vim.notify("[ markview.nvim ] : Treesitter parser for 'markdown_inline' wasn't found!", vim.log.levels.WARN);
+		return;
+	elseif not parser_installed("html") then
+		vim.notify("[ markview.nvim ] : Treesitter parser for 'html' wasn't found! It is required for basic html tag support.", vim.log.levels.WARN);
+		return;
+	end
+
+	local buffer = event.buf;
+	local windows = utils.find_attached_wins(event.buf);
+
+	-- local markview_augroup = vim.api.nvim_create_augroup("markview_buf_" .. buffer, { clear = true });
+
+	if not vim.list_contains(markview.attached_buffers, buffer) then
+		table.insert(markview.attached_buffers, buffer);
+		markview.attached_windows = vim.list_extend(markview.attached_windows, windows)
+	end
+
+	if markview.state.enable == false then
+		-- Call the on_disable callback before exiting
+		if not markview.configuration.callbacks or not markview.configuration.callbacks.on_disable then
+			return;
+		end
+
+		for _, window in ipairs(windows) do
+			pcall(markview.configuration.callbacks.on_disable, buffer, window);
+		end
+
+		return;
+	end
+
+	if markview.state.buf_states[buffer] == false then
+		-- Call the on_disable callback before exiting
+		-- Even if only the buffer is disabled
+		if not markview.configuration.callbacks or not markview.configuration.callbacks.on_disable then
+			return;
+		end
+
+		for _, window in ipairs(windows) do
+			pcall(markview.configuration.callbacks.on_disable, buffer, window);
+		end
+
+		return;
+	end
+
+	markview.state.buf_states[buffer] = true;
+
+	local lines = vim.api.nvim_buf_line_count(buffer);
+
+	markview.renderer.clear(buffer);
+
+	if lines < (markview.configuration.max_length or 1000) then
+		local parsed_content = markview.parser.init(buffer, markview.configuration);
+
+		markview.renderer.render(buffer, parsed_content, markview.configuration)
+	else
+		local cursor = vim.api.nvim_win_get_cursor(0);
+		local start = math.max(0, cursor[1] - (markview.configuration.render_range or 100));
+		local stop = math.min(lines, cursor[1] + (markview.configuration.render_range or 100));
+
+		local parsed_content = markview.parser.parse_range(buffer, markview.configuration, start, stop);
+
+		markview.renderer.render(buffer, parsed_content, markview.configuration)
+	end
+
+	-- This needs all of the buffer to be parsed
+	local keymap_content = markview.parser.init(buffer, markview.configuration);
+
+	markview.keymaps.init(buffer, keymap_content, markview.configuration);
+	for _, window in ipairs(windows) do
+		if markview.configuration.callbacks and markview.configuration.callbacks.on_enable then
+			pcall(markview.configuration.callbacks.on_enable, buffer, window);
+		end
+	end
+end
+
+
+markview.listen = function ()
+	if markview.configuration.buf_attach ~= true then
+		return;
+	end
+
+	-- Don't add hls unless absolutely necessary
+	if not markview.set_hl_complete and vim.islist(markview.configuration.highlight_groups) then
+		markview.add_hls(markview.configuration.highlight_groups)
+		markview.set_hl_complete = true;
+	end
+
+	vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+		callback = markview.buf_attach
+	})
 end
 
 return markview;

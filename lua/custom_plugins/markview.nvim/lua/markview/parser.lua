@@ -1,6 +1,8 @@
 local parser = {};
 -- local renderer = require("markview/renderer");
 
+parser.cached_conf = {};
+
 parser.fiter_lines = function (buffer, from, to)
 	local captured_lines = vim.api.nvim_buf_get_lines(buffer, from, to, false);
 	local filtered_lines = {};
@@ -12,6 +14,8 @@ parser.fiter_lines = function (buffer, from, to)
 
 	local tolarence = 3;
 	local found = 0;
+
+	local code_block_indent = 0;
 
 	for l, line in ipairs(captured_lines) do
 		if l ~= 1 then
@@ -30,11 +34,11 @@ parser.fiter_lines = function (buffer, from, to)
 
 		if line:match("(```)") and withinCodeBlock ~= true then
 			withinCodeBlock = true;
-			goto withinElement;
+			code_block_indent = spaces_before;
 		elseif line:match("(```)") and withinCodeBlock == true then
 			withinCodeBlock = false;
-			goto withinElement;
 		elseif withinCodeBlock == true then
+			spaces_before = spaces_before > code_block_indent and spaces_before - code_block_indent or spaces_before;
 			goto withinElement;
 		end
 
@@ -46,6 +50,10 @@ parser.fiter_lines = function (buffer, from, to)
 
 		if not line:match("^%s*([+%-*])") and not line:match("^%s*(%d+%.)") and parent_marker then
 			spaces_before = math.max(0, spaces_before - vim.fn.strchars((parent_marker or "") .. " "));
+
+			if line:match("(```)") then
+				code_block_indent = spaces_before;
+			end
 		end
 
 		::withinElement::
@@ -206,15 +214,14 @@ parser.md = function (buffer, TStree, from, to)
 
 			local language_string, additional_info = "", nil;
 
-			-- chore: This needs more work
-			if block_start:match("^%s*```{{?([^}]*)}}?") then
-				language_string = block_start:match("^%s*```{{?([^}]*)}}?");
-				additional_info = block_start:match("^%s*```{{?[^}]*}}?%s*(.*)$");
-			elseif block_start:match("^%s*```(%S*)$") then
-				language_string = block_start:match("^%s*```(%S*)$");
+			if block_start:match("%s*```{{?([^}]*)}}?") then
+				language_string = block_start:match("%s*```{{?([^}]*)}}?");
+				additional_info = block_start:match("%s*```{{?[^}]*}}?%s*(.*)$");
+			elseif block_start:match("%s*```(%S*)$") then
+				language_string = block_start:match("%s*```(%S*)$");
 			elseif block_start:match("%s*```(%S*)%s*") then
 				language_string = block_start:match("%s*```(%S*)%s");
-				additional_info = block_start:match("^%s*```%S*%s+(.*)$");
+				additional_info = block_start:match("%s*```%S*%s+(.*)$");
 			end
 
 			table.insert(parser.parsed_content, {
@@ -222,7 +229,7 @@ parser.md = function (buffer, TStree, from, to)
 				type = "code_block",
 				language = language_string,
 
-				info_string = block_start:gsub("^%s*", ""),
+				info_string = vim.fn.strcharpart(block_start, col_start),
 				block_info = additional_info,
 
 				line_lengths = line_lens,
@@ -301,7 +308,7 @@ parser.md = function (buffer, TStree, from, to)
 				--- So, we will instead count the number of spaces at the start
 				table.insert(line_positions, {
 					row_start = r_row_start,
-					col_start = r_col_start == 0 and vim.fn.strchars(row_text:match("^(%s*)")) or r_col_start,
+					col_start = r_col_start == 0 and vim.fn.strdisplaywidth(row_text:match("^(%s*)")) or r_col_start,
 					row_end = r_row_end,
 					col_end = r_col_end
 				})
@@ -326,16 +333,17 @@ parser.md = function (buffer, TStree, from, to)
 								table.insert(alignments, "right");
 							end
 
+							-- TODO: This needs rework
 							if line:match("|([^|]+)|") then
 								local col_content = line:match("|([^|]+)|");
-								line = line:gsub("|" .. col_content, "");
+								line = vim.fn.strcharpart(line, vim.fn.strchars("|" .. col_content));
 
-								table.insert(col_widths, vim.fn.strchars(col_content));
+								table.insert(col_widths, vim.fn.strdisplaywidth(col_content));
 							elseif line:match("|([^|]+)$") then
 								local col_content = line:match("|([^|]+)$");
-								line = line:gsub("|" .. col_content, "");
+								line = vim.fn.strcharpart(line, vim.fn.strchars("|" .. col_content));
 
-								table.insert(col_widths, vim.fn.strchars(col_content));
+								table.insert(col_widths, vim.fn.strdisplaywidth(col_content));
 							end
 						end
 					end
@@ -532,7 +540,7 @@ parser.md_inline = function (buffer, TStree, from, to)
 				link_text = vim.treesitter.get_node_text(capture_node:named_child(0), buffer);
 			end
 
-			if capture_node:named_child(1) and (capture_node:named_child(q):type() == "link_destination" or capture_node:named_child(q):type() == "link_label") then
+			if capture_node:named_child(1) and (capture_node:named_child(1):type() == "link_destination" or capture_node:named_child(1):type() == "link_label") then
 				link_address = vim.treesitter.get_node_text(capture_node:named_child(1), buffer);
 			end
 
@@ -708,6 +716,10 @@ parser.parse_range = function (buffer, config_table, from, to)
 
 	local root_parser = vim.treesitter.get_parser(buffer);
 	root_parser:parse(true);
+
+	if config_table then
+		parser.cached_conf = config_table;
+	end
 
 	-- Clear the previous contents
 	parser.parsed_content = {};

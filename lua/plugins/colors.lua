@@ -14,11 +14,5 @@ return {
 
 	config = function ()
 		require("colors").setup();
-
-		vim.api.nvim_set_keymap("n", "<leader>c", "", {
-			callback = function ()
-				require("colors/picker").colorPicker:init()
-			end
-		})
 	end
 }

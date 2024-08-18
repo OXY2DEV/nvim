@@ -19,6 +19,12 @@
 --- List of modes where both raw & preview is shown
 ---@field hybrid_modes string[]?
 ---
+--- Max number of lines in a file to do full rendering
+---@field max_length number?
+---
+--- Number of lines to render on partial render mode
+---@field render_range number?
+---
 --- Callbacks for plugin states
 ---@field callbacks markview.config.callbacks?
 ---
@@ -64,6 +70,12 @@
 ---
 --- List of modes where both raw & preview is shown
 ---@field hybrid_modes string[]?
+---
+--- Max number of lines in a file to do full rendering
+---@field max_length number?
+---
+--- Number of lines to render on partial render mode
+---@field render_range number?
 ---
 --- Options for various plugins states
 ---@field callbacks markview.config.callbacks
@@ -201,6 +213,9 @@
 ---
 --- Name of the style to use
 ---@field style string
+---
+--- Used for disabling icons on language view
+---@field icons boolean?
 ---
 --- Default highlight group used by the rest of the options
 --- Used for highlighting the lines when the style is "simple"
@@ -401,6 +416,9 @@
 ---
 --- Enable/Disable custom list items
 ---@field enable boolean?
+---
+--- Indent size of list items
+---@field indent_size number?
 ---
 --- Number of characters to shift per level
 ---@field shift_width number?

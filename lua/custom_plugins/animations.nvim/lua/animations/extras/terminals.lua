@@ -253,8 +253,19 @@ terminals.open = function (id, config)
 
 			terminals.active[id] = buf;
 		end
-	else
+	elseif vim.tbl_isempty(terminals.active) then
 		buf = vim.api.nvim_create_buf(false, true);
+		config.open_controls = vim.tbl_deep_extend("force", config.open_controls, {
+			__pcall_complete = false,
+
+			on_complete = function ()
+				terminals.init(buf, config)
+			end
+		})
+
+		table.insert(terminals.active, buf);
+	else
+		buf = terminals.active[#terminals.active];
 		config.open_controls = vim.tbl_deep_extend("force", config.open_controls, {
 			__pcall_complete = false,
 

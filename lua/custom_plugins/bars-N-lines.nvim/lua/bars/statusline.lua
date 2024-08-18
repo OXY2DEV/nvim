@@ -11,14 +11,14 @@ statusline.configuration = {
 			padding_left_hl = {
 				-- __is_hl = true,
 
-				["n"] = "mode_normal_alt",
-				["i"] = "mode_insert_alt",
+				["n"] = "BarsStatuslineNormal",
+				["i"] = "BarsStatuslineInsert",
 
-				["v"] = "mode_visual_alt",
-				[""] = "mode_visual_block_alt",
-				["V"] = "mode_visual_line_alt",
+				["v"] = "BarsStatuslineVisual",
+				[""] = "BarsStatuslineVBlock",
+				["V"] = "BarsStatuslineVLine",
 
-				["c"] = "mode_cmd_alt"
+				["c"] = "BarsStatuslineCmd"
 			},
 
 			icon = {
@@ -51,24 +51,24 @@ statusline.configuration = {
 
 			corner_right = "",
 			corner_right_hl = {
-				["n"] = "mode_normal",
-				["i"] = "mode_insert",
+				["n"] = "BarsStatuslineNormalSep",
+				["i"] = "BarsStatuslineInsertSep",
 
-				["v"] = "mode_visual",
-				[""] = "mode_visual_block",
-				["V"] = "mode_visual_line",
+				["v"] = "BarsStatuslineVisualSep",
+				[""] = "BarsStatuslineVBlockSep",
+				["V"] = "BarsStatuslineVLineSep",
 
-				["c"] = "mode_cmd"
+				["c"] = "BarsStatuslineCmdSep"
 			},
 		},
 
 		{
 			type = "bufname",
 			padding_left = " ",
-			padding_left_hl = "buf_name",
+			padding_left_hl = "BarsStatuslineBuf",
 			padding_right = " ",
 			corner_right = "",
-			corner_right_hl = "buf_name_alt"
+			corner_right_hl = "BarsStatuslineBufSep"
 		},
 		{
 			type = "raw",
@@ -118,12 +118,12 @@ statusline.configuration = {
 			end,
 
 			corner_left = "",
-			corner_left_hl = "cursor_position_alt",
+			corner_left_hl = "BarsStatuslineRulerSep",
 
 			padding_left = " ",
-			padding_left_hl = "cursor_position",
+			padding_left_hl = "BarsStatuslineRuler",
 
-			icon_hl = "cursor_position",
+			icon_hl = "BarsStatuslineRuler",
 
 			padding_right = " "
 		}

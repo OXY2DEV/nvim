@@ -29,7 +29,6 @@ Markview.nvim comes with a ton of features such as,
 - Fully customisable setup! You can customise everything to your needs!
 - A `hybrid mode` that allows rendering in real-time! It will even unconceal nodes under the cursor.
 - Dynamic `highlight groups` that allows support for almost any colorscheme!
-- Can be loaded on other filetypes too!
 
 And a lot more to come!
 
@@ -120,7 +119,7 @@ You can install the plugin by running the following command.
 
 ### 👾 Github releases
 
-You can also download one of the [releases](https://github.com/OXY2DEV/markview.nvim/releases/tag/v1.0.0).
+You can also download one of the [releases](https://github.com/OXY2DEV/markview.nvim/releases).
 
 ### 🛸 Testing
 
@@ -184,7 +183,7 @@ require("markview").setup({
     callbacks = {
         on_enable = function (_, win)
             vim.wo[win].conceallevel = 2;
-            vim.wo[win].conecalcursor = "nc";
+            vim.wo[win].concealcursor = "nc";
         end
     }
 })

@@ -14,17 +14,17 @@ tabline.configuration = {
 			max_entries = 5,
 
 			active = {
-				corner_left = "", corner_left_hl = "tabline_buf_active",
-				corner_right = "", corner_right_hl = "tabline_buf_active",
+				corner_left = "", corner_left_hl = "BarsTablineBufActiveSep",
+				corner_right = "", corner_right_hl = "BarsTablineBufActiveSep",
 
-				padding_left = " ", padding_left_hl = "tabline_buf_active_alt",
+				padding_left = " ", padding_left_hl = "BarsTablineBufActive",
 				padding_right = " ",
 			},
 			inactive = {
-				corner_left = "", corner_left_hl = "tabline_buf_inactive",
-				corner_right = "", corner_right_hl = "tabline_buf_inactive",
+				corner_left = "", corner_left_hl = "BarsTablineBufInactiveSep",
+				corner_right = "", corner_right_hl = "BarsTablineBufInactiveSep",
 
-				padding_left = " ", padding_left_hl = "tabline_buf_inactive_alt",
+				padding_left = " ", padding_left_hl = "BarsTablineBufInactive",
 				padding_right = " ",
 			}
 		},
@@ -34,17 +34,17 @@ tabline.configuration = {
 			max_cols = 25,
 
 			active = {
-				corner_left = "", corner_left_hl = "tabline_tab_active",
-				corner_right = "", corner_right_hl = "tabline_tab_active",
+				corner_left = "", corner_left_hl = "BarsTablineTabActiveSep",
+				corner_right = "", corner_right_hl = "BarsTablineTabActiveSep",
 
-				padding_left = " ", padding_left_hl = "tabline_tab_active_alt",
+				padding_left = " ", padding_left_hl = "BarsTablineTabActive",
 				padding_right = " ",
 			},
 			inactive = {
-				corner_left = "", corner_left_hl = "tabline_tab_inactive",
-				corner_right = "", corner_right_hl = "tabline_tab_inactive",
+				corner_left = "", corner_left_hl = "BarsTablineTabInactiveSep",
+				corner_right = "", corner_right_hl = "BarsTablineTabInactiveSep",
 
-				padding_left = " ", padding_left_hl = "tabline_tab_inactive_alt",
+				padding_left = " ", padding_left_hl = "BarsTablineTabInactive",
 				padding_right = " ",
 			}
 		}

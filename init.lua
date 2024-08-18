@@ -1,4 +1,4 @@
----+ Icon: "" Title: "Neovim" Line count: "false" Padding: "0" BorderL: " " BorderR: " "
+---+ type: doc; title: nvim;
 --- Created by: OXY2DEV
 --- Usecase: Termux
 ---
@@ -31,36 +31,20 @@
 ---_
 ---_
 
----+ Title: "Load core files" Gap: "1" Border: " "
+---+ ${dep=Hello world}
 require("config/settings");
 require("config/keymaps");
+require("config.diagnostic");
 ---_
 
----+ Title: "Load scripts" Gap: "1" Border: " "
-require("scripts/foldtext");
+---+ title: Load scripts;
+-- require("scripts/foldtext");
 require("scripts/beacon");
+require("scripts.fancy_cmdline");
+require("scripts.terminal_bg_sync");
 -- require("scripts/winopen");
 ---_
 
 require("config/lazy");
-
---+
---
---+2
---
---+3
---
---+
---
---
---
---
---_
---
---_
---
---_
---
---_
 
 -- vim:nospell:

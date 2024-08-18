@@ -36,7 +36,7 @@ statuscolumn.configuration = {
 
 			hl = function ()
 				if vim.v.relnum == 0 then
-					return "%#Title#";
+					return "%#BarsStatusColumnNum#";
 				end
 
 				return "%#LineNr#"
@@ -47,11 +47,11 @@ statuscolumn.configuration = {
 			type = "text",
 			text = "▏",
 			hl = function ()
-				if vim.v.relnum <= 7 then
-					return "%#Glow_" .. vim.v.relnum .. "#";
+				if vim.v.relnum <= 8 then
+					return "%#BarsStatusColumnGlow" .. (vim.v.relnum + 1) .. "#";
 				end
 
-				return "%#Glow_7#"
+				return "%#BarsStatusColumnGlow9#"
 			end
 		}
 	},
@@ -128,13 +128,13 @@ statuscolumn.render_folds = function (window, buffer, config_table)
 		mix = { "┝" }
 	});
 	local hls = vim.tbl_extend("keep", config_table.hls or {}, {
-		marker_open = { "rainbow1", "rainbow2", "rainbow3", "rainbow4", "rainbow5", "rainbow6" },
-		marker_close = { "rainbow1_dark", "rainbow2_dark", "rainbow3_dark", "rainbow4_dark", "rainbow5_dark", "rainbow6_dark" },
+		marker_open = { "BarsStatuscolumnFold1", "BarsStatuscolumnFold2", "BarsStatuscolumnFold3", "BarsStatuscolumnFold4", "BarsStatuscolumnFold5", "BarsStatuscolumnFold6" },
+		marker_close = { "BarsStatuscolumnFold1Marker", "BarsStatuscolumnFold2Marker", "BarsStatuscolumnFold3Marker", "BarsStatuscolumnFold4Marker", "BarsStatuscolumnFold5Marker", "BarsStatuscolumnFold6Marker" },
 
-		middle = { "rainbow1", "rainbow2", "rainbow3", "rainbow4", "rainbow5", "rainbow6" },
-		bottom = { "rainbow1", "rainbow2", "rainbow3", "rainbow4", "rainbow5", "rainbow6" },
+		middle = { "BarsStatuscolumnFold1Marker", "BarsStatuscolumnFold2Marker", "BarsStatuscolumnFold3Marker", "BarsStatuscolumnFold4Marker", "BarsStatuscolumnFold5Marker", "BarsStatuscolumnFold6Marker" },
+		bottom = { "BarsStatuscolumnFold1Marker", "BarsStatuscolumnFold2Marker", "BarsStatuscolumnFold3Marker", "BarsStatuscolumnFold4Marker", "BarsStatuscolumnFold5Marker", "BarsStatuscolumnFold6Marker" },
 
-		mix = { "rainbow1", "rainbow2", "rainbow3", "rainbow4", "rainbow5", "rainbow6" }
+		mix = { "BarsStatuscolumnFold1Marker", "BarsStatuscolumnFold2Marker", "BarsStatuscolumnFold3Marker", "BarsStatuscolumnFold4Marker", "BarsStatuscolumnFold5Marker", "BarsStatuscolumnFold6Marker" }
 	});
 
 	local _f = " ";

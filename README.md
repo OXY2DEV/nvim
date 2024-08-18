@@ -2,7 +2,7 @@
 ##conf-doc##
 author: OXY2DEV;
 ft: lua;
-fn: test;
+fn: init;
 ##conf-doc-end
 -->
 # 📱 Dotfiles

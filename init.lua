@@ -1,50 +1,23 @@
----+ type: doc; title: nvim;
---- Created by: OXY2DEV
---- Usecase: Termux
----
---- Neovim dotfiles focusing on customisation & mobile-friendly user experience.
---- Meant to be used inside Termux
----
----  A nerd font is highly recommended
----
----+ Padding: "4" Icon: "" Title: "Features" Line count: "false" Padding: "0" BorderL: " " BorderR: " "
---- • Fully customisable setup out-of-the-box
---- • Beginner friendly code
---- • UI animations
----
---- And much more
----_
----+ Padding: "4" Icon: " " Title: "File structure" Line count: "false" Padding: "0" BorderL: " " BorderR: " "
----
----   nvim
----  ├─ 󰢱 init.lua
----  ├─  README.md
----  │
----  ╰─  lua
----     ├─  config
----     ├─  custom-plugins
----     ├─  plugins
----		├─ 󰯂 scripts
----		│
----		╰─  about.lua
----
----_
----_
+--[[
+	Generated with 'conf-doc.nvim'
 
----+ ${dep=Hello world}
-require("config/settings");
-require("config/keymaps");
-require("config.diagnostic");
----_
+	Author: OXY2DEV
+	Time: Sun Aug 18 13:04:18 2024
+]]--
 
----+ title: Load scripts;
--- require("scripts/foldtext");
-require("scripts/beacon");
-require("scripts.fancy_cmdline");
-require("scripts.terminal_bg_sync");
--- require("scripts/winopen");
----_
+-- -+ ${link=dep} from: README.md;range: 55,60;
+require("config/settings");   -- Options
+require("config/keymaps");    -- Keymaps
+require("config.diagnostic"); -- Fancy diagnostic messages
+-- -_
 
+-- -+ ${link=dep} from: README.md;range: 65,70;
+require("scripts/beacon");           -- Beacon to show cursor
+require("scripts.fancy_cmdline");    -- Cmd window
+require("scripts.terminal_bg_sync"); -- Background sync for Termux
+-- -_
+
+-- -+ ${link=dep} from: README.md;range: 77,80;
 require("config/lazy");
+-- -_
 
--- vim:nospell:

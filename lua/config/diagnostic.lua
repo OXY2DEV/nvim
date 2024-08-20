@@ -1,63 +1,32 @@
--- Disable the virtual texts
-vim.diagnostic.config({ virtual_text = false });
+local diagnostic = {};
 
-local diagnostics = {};
+diagnostic.enable = true;
 
-local get_len = function (list)
-	local len = 0;
+diagnostic.config = {
+	modes = { "n" },
 
-	for _, part in ipairs(list) do
-		len = len + vim.fn.strchars(part[1]);
-	end
+	width = 30,
+	default_hl = "Comment",
+	active_hl = "Title",
 
-	return len;
-end
-
-local out_of_bounds = function ()
-	local current_win = vim.api.nvim_get_current_win();
-
-	local X = vim.api.nvim_win_get_cursor(current_win)[2];
-	local textoff = vim.fn.getwininfo(current_win)[1].textoff;
-	local width = vim.api.nvim_win_get_width(current_win);
-
-	if X >= ((width - textoff) - (diagnostics.max_len)) then
-		return true
-	end
-
-	return false;
-end
-
-diagnostics.enable = true;
-
-diagnostics.virt_ns = vim.api.nvim_create_namespace("fancy")
-diagnostics.buffer = vim.api.nvim_create_buf(false, true);
-diagnostics.window = nil;
-
-diagnostics.max_len = 0;
-
-diagnostics.config = {
 	parts = {
-		border = "│  ",
-		item = "├─ ",
-		bottom = "╰─ ",
-
-		item_inv = " ─┤",
-		bottom_inv = " ─╯"
+		top = { "╭─ " },
+		border = { "│  " },
+		item = { "├─ " },
+		bottom = { "╰─ " },
 	},
-	parts_hl = {
-		border = "Comment",
-		item = "Comment",
-		bottom = "Comment",
-
-		item_inv = "Comment",
-		bottom_inv = "Comment"
+	parts_inverse = {
+		top = { " ─╮" },
+		border = { "  │" },
+		item = { " ─┤" },
+		bottom = { " ─╯" },
 	},
 
 	severity = {
-		warn = " ",
-		error = " ",
-		info = " ",
-		hint = "󰔨 "
+		warn = { " ", "DiagnosticWarn" },
+		error = { " ", "DiagnosticError" },
+		info = { " ", "DiagnosticInfo" },
+		hint = { "󰔨 ", "DiagnosticHint" }
 	},
 	severity_hl = {
 		warn = "DiagnosticWarn",
@@ -67,164 +36,354 @@ diagnostics.config = {
 	}
 }
 
-diagnostics.text_cut = function (tolarance, text)
-	if tolarance > 0 and tolarance < vim.fn.strchars(text) then
-		return string.sub(text, 1, tolarance), string.sub(text, tolarance, -1);
-	else
-		return text;
-	end
+diagnostic.win = nil;
+diagnostic.buffer = vim.api.nvim_create_buf(false, true);
+diagnostic.ns = vim.api.nvim_create_namespace("fancy-diagnostics");
+
+diagnostic.get_cursor_pos = function ()
+	local win = vim.api.nvim_get_current_win();
+	local cur = vim.api.nvim_win_get_cursor(win);
+
+	return cur[1], vim.fn.virtcol(".");
 end
 
-diagnostics.get_sign = function (lvl)
+diagnostic.len = function (...)
+	local list = { ... };
+	local len = 0;
+
+	for _, item in ipairs(list) do
+		if vim.islist(item) then
+			len = len + vim.fn.strchars(item[1]);
+		elseif type(item) == "string" then
+			len = len + vim.fn.strchars(item);
+		end
+	end
+
+	return len;
+end
+
+diagnostic.get_icon = function (lvl)
 	local severity = vim.diagnostic.severity;
 
 	if lvl == severity.WARN then
-		return diagnostics.config.severity.warn or "";
+		return diagnostic.config.severity.warn;
 	elseif lvl == severity.ERROR then
-		return diagnostics.config.severity.error or "";
+		return diagnostic.config.severity.error;
 	elseif lvl == severity.INFO then
-		return diagnostics.config.severity.info or "";
+		return diagnostic.config.severity.info;
 	elseif lvl == severity.HINT then
-		return diagnostics.config.severity.hint or "";
+		return diagnostic.config.severity.hint;
 	end
 end
 
-diagnostics.get_sign_hl = function (lvl)
-	local severity = vim.diagnostic.severity;
+diagnostic.wrap = function (line, max_len)
+	local _l = {};
+	local tmp = "";
 
-	if lvl == severity.WARN then
-		return diagnostics.config.severity_hl.warn or "";
-	elseif lvl == severity.ERROR then
-		return diagnostics.config.severity_hl.error or "";
-	elseif lvl == severity.INFO then
-		return diagnostics.config.severity_hl.info or "";
-	elseif lvl == severity.HINT then
-		return diagnostics.config.severity_hl.hint or "";
+	for part in line:gmatch("%S+") do
+		if vim.fn.strchars(part) >= max_len then
+			tmp = tmp:gsub("^(%s*)", "");
+			-- tmp = tmp:gsub("(%s*)$", "");
+
+			table.insert(_l, tmp);
+			table.insert(_l, vim.fn.strcharpart(part, 0, max_len));
+			tmp = vim.fn.strcharpart(part, max_len);
+		elseif vim.fn.strchars(tmp .. part) + 1 >= max_len then
+			tmp = tmp:gsub("^(%s*)", "");
+			-- tmp = tmp:gsub("(%s*)$", "");
+
+			table.insert(_l, tmp);
+			tmp = part .. " ";
+		else
+			tmp = tmp .. part .. " ";
+		end
 	end
+
+	if tmp ~= "" then
+		table.insert(_l, tmp);
+	end
+
+	return _l;
 end
 
-diagnostics.create_diagnostics = function (data)
-	for l, d in ipairs(data) do
-		if out_of_bounds() then
-			table.remove(d.extmarks, 1);
-			table.insert(d.extmarks, { l == #data and diagnostics.config.parts.bottom_inv or diagnostics.config.parts.item_inv, last and diagnostics.config.parts_hl.bottom_inv or diagnostics.config.parts_hl.item_inv })
-			local new_len = get_len(d.extmarks);
+diagnostic.print = function (messages)
+	if not diagnostic.buffer or not vim.api.nvim_buf_is_valid(diagnostic.buffer) then
+		diagnostic.buffer = vim.api.nvim_create_buf(false, true);
+	end
 
-			table.insert(d.extmarks, 1, { string.rep(" ", diagnostics.max_len - new_len) })
+	vim.api.nvim_buf_set_lines(diagnostic.buffer, 0, -1, false, {});
+	vim.api.nvim_buf_clear_namespace(diagnostic.buffer, diagnostic.ns, 0, -1);
+
+	local row, col = diagnostic.get_cursor_pos();
+
+	local _l = 0;
+	local used_col = 0;
+
+	local _o = {};
+	local total = 0;
+
+	for _, message in ipairs(messages) do
+		local icon = diagnostic.get_icon(message.severity);
+		local wrapped = diagnostic.wrap(message.message, diagnostic.config.width - diagnostic.len(icon, diagnostic.config.parts.item));
+
+		local maxlen = 0;
+
+		for _, ln in ipairs(wrapped) do
+			if vim.fn.strchars(ln) > maxlen then
+				maxlen = vim.fn.strchars(ln);
+			end
 		end
 
-		vim.api.nvim_buf_set_lines(diagnostics.buffer, l - 1, l, false, { "H" });
+		if maxlen > used_col then
+			used_col = maxlen;
+		end
 
-		vim.api.nvim_buf_set_extmark(diagnostics.buffer, diagnostics.virt_ns, l - 1, 0, {
-			virt_text_pos = "overlay",
-			virt_text = d.extmarks
+		total = total + #wrapped;
+		local curr_col = vim.api.nvim_win_get_cursor(0)[2];
+
+		table.insert(_o, {
+			icon = icon,
+
+			max_len = maxlen,
+			text = wrapped,
+			in_range = curr_col >= message.col and curr_col <= message.end_col
+		});
+	end
+
+	local onBottom = row + total <= vim.api.nvim_win_get_height(0);
+	local onRight = col + diagnostic.config.width > vim.api.nvim_win_get_width(0) and true or false;
+
+	for i, item in ipairs(_o) do
+		for l, line in ipairs(item.text) do
+			local stack, pos = {}, "inline";
+
+			if onBottom == true and i == #_o then
+				if l == 1 and onRight == true then
+					-- pos = "right_align";
+
+					table.insert(stack, { string.rep(" ", diagnostic.config.width - used_col - (diagnostic.len(item.icon, diagnostic.config.parts_inverse.bottom))) })
+					table.insert(stack, { string.format("%+" .. used_col .. "s", line), item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+					table.insert(stack, item.icon);
+					table.insert(stack, diagnostic.config.parts_inverse.bottom);
+				elseif l == 1 and onRight == false then
+					pos = "inline";
+
+					table.insert(stack, diagnostic.config.parts.bottom);
+					table.insert(stack, item.icon);
+					table.insert(stack, { line, item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+				elseif onRight == true then
+					pos = "right_align";
+
+					table.insert(stack, { string.format("%+" .. used_col .. "s", line), item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+					table.insert(stack, { string.rep(" ", diagnostic.len(item.icon)) });
+					table.insert(stack, { string.rep(" ", diagnostic.len(diagnostic.config.parts_inverse.bottom)) });
+				elseif onRight == false then
+					pos = "inline";
+
+					table.insert(stack, { string.rep(" ", diagnostic.len(diagnostic.config.parts_inverse.bottom)) });
+					table.insert(stack, { string.rep(" ", diagnostic.len(item.icon)) });
+					table.insert(stack, { line, item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl });
+				end
+			elseif onBottom == false and i == 1 then
+				if l == 1 and onRight == true then
+					-- pos = "right_align";
+
+					table.insert(stack, { string.rep(" ", diagnostic.config.width - used_col - (diagnostic.len(item.icon, diagnostic.config.parts_inverse.top))) })
+					table.insert(stack, { string.format("%+" .. used_col .. "s", line), item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+					table.insert(stack, item.icon);
+					table.insert(stack, diagnostic.config.parts_inverse.top);
+				elseif l == 1 and onRight == false then
+					pos = "inline";
+
+					table.insert(stack, diagnostic.config.parts.top);
+					table.insert(stack, item.icon);
+					table.insert(stack, { line, item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+				elseif onRight == true then
+					pos = "right_align";
+
+					table.insert(stack, { string.format("%+" .. used_col .. "s", line), item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+					table.insert(stack, { string.rep(" ", diagnostic.len(item.icon)) });
+					table.insert(stack, diagnostic.config.parts_inverse.border);
+				elseif onRight == false then
+					pos = "inline";
+
+					table.insert(stack, diagnostic.config.parts.border);
+					table.insert(stack, { string.rep(" ", diagnostic.len(item.icon)) });
+					table.insert(stack, { line, item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl });
+				end
+			else
+				if l == 1 and onRight == true then
+					pos = "right_align";
+
+					table.insert(stack, { string.format("%+" .. used_col .. "s", line), item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+					table.insert(stack, item.icon);
+					table.insert(stack, diagnostic.config.parts_inverse.item);
+				elseif l == 1 and onRight == false then
+					pos = "inline";
+
+					table.insert(stack, diagnostic.config.parts.item);
+					table.insert(stack, item.icon);
+					table.insert(stack, { line, item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+				elseif onRight == true then
+					pos = "right_align";
+
+					table.insert(stack, { string.format("%+" .. used_col .. "s", line), item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+					table.insert(stack, { string.rep(" ", diagnostic.len(item.icon)) });
+					table.insert(stack, diagnostic.config.parts_inverse.border);
+				else
+					pos = "inline";
+
+					table.insert(stack, diagnostic.config.parts.border);
+					table.insert(stack, { string.rep(" ", diagnostic.len(item.icon)) });
+					table.insert(stack, { line, item.in_range == true and diagnostic.config.active_hl or diagnostic.config.default_hl })
+				end
+			end
+
+			-- vim.print(stack)
+			vim.fn.setbufline(diagnostic.buffer, _l + 1, "")
+			vim.api.nvim_buf_set_extmark(diagnostic.buffer, diagnostic.ns, _l, 0, {
+				virt_text_pos = pos,
+				virt_text = stack,
+			})
+
+			_l = _l + 1;
+		end
+	end
+
+	return _l, used_col + diagnostic.len(diagnostic.config.parts.item, diagnostic.config.severity.warn);
+end
+
+---+ ${func}
+diagnostic.open_win = function (line_count, max_column)
+	if not diagnostic.win or not vim.api.nvim_win_is_valid(diagnostic.win) then
+		-- vim.print("hi");
+		diagnostic.win = vim.api.nvim_open_win(diagnostic.buffer, false, {
+			relative = "cursor",
+			row = 1, col = 0,
+
+			focusable = false,
+			width = diagnostic.config.width, height = line_count
+		})
+	else
+		vim.api.nvim_win_set_config(diagnostic.win, {
+			width = diagnostic.config.width, height = line_count
 		})
 	end
-end
 
-diagnostics.render = function (data)
-	vim.api.nvim_buf_clear_namespace(vim.api.nvim_get_current_buf(), diagnostics.virt_ns, 0, -1);
+	vim.api.nvim_win_set_cursor(diagnostic.win, { 1, 0 });
 
-	vim.bo[diagnostics.buffer].buftype = "nofile";
+	vim.wo[diagnostic.win].number = false;
+	vim.wo[diagnostic.win].relativenumber = false;
+	vim.wo[diagnostic.win].cursorline = false;
 
-	diagnostics.window = vim.api.nvim_open_win(diagnostics.buffer, false, {
-		relative = "cursor",
+	vim.wo[diagnostic.win].winhighlight = diagnostic.config.winhl or "Normal:Normal";
 
-		anchor = out_of_bounds() and "NE" or "NW",
-		row = 1, col = out_of_bounds() and 1 or 0,
-		width = diagnostics.max_len, height = #data
-	});
+	local scr_row, scr_col = diagnostic.get_cursor_pos();
+	local w, h = vim.api.nvim_win_get_width(0), vim.api.nvim_win_get_height(0);
 
-	vim.wo[diagnostics.window].number = false;
-	vim.wo[diagnostics.window].relativenumber = false;
-	vim.wo[diagnostics.window].cursorline = false;
+	if line_count + scr_row > h then
+		if scr_col + diagnostic.config.width > w then
+			vim.api.nvim_win_set_config(diagnostic.win, {
+				relative = "cursor",
+				row = 0, col = 1,
 
-	vim.wo[diagnostics.window].statuscolumn = "";
+				anchor = "SE"
+			})
+		else
+			vim.api.nvim_win_set_config(diagnostic.win, {
+				relative = "cursor",
+				row = 0, col = 0,
 
-	diagnostics.create_diagnostics(data);
-end
+				anchor = "SW"
+			})
+		end
+	else
+		if scr_col + diagnostic.config.width > w then
+			vim.api.nvim_win_set_config(diagnostic.win, {
+				relative = "cursor",
+				row = 1, col = 1,
 
-diagnostics.clear = function ()
-	if diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window) then
-		vim.bo[diagnostics.buffer].modifiable = true;
-		vim.api.nvim_buf_set_lines(diagnostics.buffer, 0, -1, false, {});
-		vim.api.nvim_win_close(diagnostics.window, true);
+				anchor = "NE"
+			})
+		else
+			vim.api.nvim_win_set_config(diagnostic.win, {
+				relative = "cursor",
+				row = 1, col = 0,
+
+				anchor = "NW"
+			})
+		end
 	end
 end
+--_
 
-diagnostics.wrap = function (text, severity, last, is_in_range)
-	local _o = {
-		{ last and diagnostics.config.parts.bottom or diagnostics.config.parts.item, last and diagnostics.config.parts_hl.bottom or diagnostics.config.parts_hl.item },
-		{ diagnostics.get_sign(severity), diagnostics.get_sign_hl(severity) },
-		{ text, is_in_range == true and "@character" or "@punctuation.bracket" }
-	};
-
-	if diagnostics.max_len < get_len(_o) then
-		diagnostics.max_len = get_len(_o);
-	end
-
-	return _o;
-end
-
-diagnostics.get_diagnostics = function ()
-	if diagnostics.enable == false then
-		diagnostics.clear();
-		return;
-	end
-
+diagnostic.show = function ()
 	local cursor = vim.api.nvim_win_get_cursor(0);
-	local data = vim.diagnostic.get(vim.api.nvim_get_current_buf(), { lnum = cursor[1] - 1 });
-	local available = {};
+	local buffer = vim.api.nvim_get_current_buf();
 
-	diagnostics.max_len = 0;
-
-	for index, d in ipairs(data) do
-		if cursor[2] >= d.col and cursor[2] <= d.end_col then
-			local _o = diagnostics.wrap(d.message, d.severity, index == #data, true);
-
-			table.insert(available, {
-				within_range = true,
-
-				extmarks = _o,
-				severity = d.severity
-			})
-		else
-			local _o = diagnostics.wrap(d.message, d.severity, index == #data, false);
-
-			table.insert(available, {
-				within_range = false,
-
-				extmarks = _o,
-				severity = d.severity
-			})
-		end
-	end
-
-	diagnostics.clear();
-
-	if not vim.tbl_isempty(available) then
-		diagnostics.render(available);
-	end
+	local diag_data = vim.diagnostic.get(buffer, { lnum = cursor[1] - 1 })
+	diagnostic.open_win(diagnostic.print(diag_data));
 end
 
--- vim.api.nvim_create_autocmd({ "LspRequest" }, {
--- 	callback = function ()
--- 		diagnostics.get_diagnostics()
--- 	end
--- })
+diagnostic.autocmd = nil;
+diagnostic.timer = vim.uv.new_timer();
 
-vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged", "LspRequest" }, {
-	callback = function ()
-		if vim.api.nvim_get_mode().mode == "n" then
-			diagnostics.get_diagnostics()
-		else
-			diagnostics.clear();
-		end
+diagnostic.init = function (config)
+	if config and type(config) == "table" then
+		diagnostic.config = vim.tbl_deep_extend("force", diagnostic.config, config);
 	end
-})
 
+	pcall(vim.api.nvim_del_autocmd, diagnostic.autocmd);
 
+	local events = { "ModeChanged" };
+	local debounce = 50;
+
+	if vim.list_contains(diagnostic.config.modes, "n") then
+		table.insert(events, "CursorMoved");
+		table.insert(events, "TextChanged");
+	end
+
+	diagnostic.autocmd = vim.api.nvim_create_autocmd(events, {
+		callback = function ()
+			diagnostic.timer:stop();
+			diagnostic.timer:start(debounce, 0, vim.schedule_wrap(function ()
+				local cursor = vim.api.nvim_win_get_cursor(0);
+				local buffer = vim.api.nvim_get_current_buf();
+
+				local mode = vim.api.nvim_get_mode().mode;
+
+				if diagnostic.enable ~= true then
+					pcall(vim.api.nvim_win_close, diagnostic.win, true);
+					diagnostic.win = nil;
+					return;
+				end
+
+				if not vim.list_contains(diagnostic.config.modes, mode) then
+					pcall(vim.api.nvim_win_close, diagnostic.win, true);
+					diagnostic.win = nil;
+					return;
+				end
+
+				local diag_data = vim.diagnostic.get(buffer, { lnum = cursor[1] - 1 });
+
+				if #diag_data == 0 then
+					pcall(vim.api.nvim_win_close, diagnostic.win, true);
+					diagnostic.win = nil;
+					return;
+				end
+
+				diagnostic.open_win(diagnostic.print(diag_data));
+				vim.api.nvim_win_call(diagnostic.win, function ()
+					vim.cmd("redraw");
+				end)
+			end));
+		end
+	})
+end
+
+diagnostic.init();
 vim.diagnostic.config({
+	virtual_text = false,
 	signs = {
 		text = {
 			[vim.diagnostic.severity.ERROR] = " ",
@@ -235,4 +394,4 @@ vim.diagnostic.config({
 	}
 });
 
-return diagnostics
+return diagnostic;

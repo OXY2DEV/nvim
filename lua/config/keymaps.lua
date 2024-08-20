@@ -1,157 +1,87 @@
----+ type: function; title: Helper function;
----
---- @param mode nil | string
---- @param keymap string
---- @param action any
---- @param options nil | table
-local createKeymap = function (mode, keymap, action, options)
-	--- @diagnostic disable-next-line
-	local _opts = vim.tbl_extend("keep", options or {}, {
-		silent = true
-	});
+--[[
+	Generated with 'conf-doc.nvim'
 
-	--- @diagnostic disable-next-line
-	vim.api.nvim_set_keymap(mode or "n", keymap, action, _opts);
+	Author: OXY2DEV
+	Time: Tue Aug 20 18:25:22 2024
+]]--
+
+-- -+ ${link=func} from: KEYMAPS.md;range: 17,34;
+---@param config { mode: string?, opts: table?, lhs: string, rhs: string }
+local keymap = function (config)
+    config = vim.tbl_deep_extend("force", {
+        mode = "n",
+        opts = {
+            silent = true
+        }
+    }, config);
+
+    local success, _ = pcall(vim.api.nvim_set_keymap, config.mode, config.lhs, config.rhs, config.opts);
+
+    if success == false then
+        vim.notify("[ keymaps.lua ]: Failed to set keymap for <" .. (config.lhs or "") .. "> for " .. (config.mode or "") .. "mode", vim.log.levels.WARN);
+    end
 end
----_
+-- -_
 
----+ type: custom; icon: 󰌌 ; hl: @attribute; title: Save & quit;
-createKeymap(nil, "<leader>q", "<Cmd>quit<CR>");
-createKeymap(nil, "<leader>x", "<Cmd>quitall<CR>");
+--from: KEYMAPS.md;range: 45,55;
+keymap({ lhs = "<leader>q", rhs = "<CMD>q<CR>" });
+keymap({ lhs = "<leader>w", rhs = "<CMD>w<CR>" });
 
-createKeymap(nil, "<leader>w", "<Cmd>write<CR>");
-createKeymap(nil, "<leader>wq", "<Cmd>wq<CR>");
+keymap({ lhs = "<leader>W", rhs = "<CMD>wq<CR>" });
+keymap({ lhs = "<leader>Q", rhs = "<CMD>q!<CR>" });
 
-createKeymap(nil, "fq", "<Cmd>quit!<CR>");
-createKeymap(nil, "fw", "<Cmd>write!<CR>");
----_
+keymap({ lhs = "<leader>x", rhs = "<CMD>qa<CR>" });
+keymap({ lhs = "<leader>X", rhs = "<CMD>qa!<CR>" });
 
----+ type: custom; icon:  ; hl: @conditional; title: Code folding;
-createKeymap(nil, "<leader>", "", {
-	callback = function ()
-		local cursor = vim.api.nvim_win_get_cursor(0);
 
-		if vim.fn.foldlevel(cursor[1]) < 1 then
-			return;
-		end
+--from: KEYMAPS.md;range: 60,67;
+keymap({ lhs = "u", rhs = "" });
+keymap({ mode = "v", lhs = "u", rhs = "" });
 
-		if vim.fn.foldclosed(cursor[1]) ~= -1 then
-			vim.cmd("foldopen");
-		else
-			vim.cmd("foldclose");
-		end
-	end
+keymap({ lhs = "<leader>u", rhs = "<CMD>undo<CR>" });
+keymap({ lhs = "<leader>r", rhs = "<CMD>redo<CR>" });
+
+
+--from: KEYMAPS.md;range: 70,93;
+keymap({
+    mode = "n",
+    lhs = "ff",
+    rhs = "",
+
+    opts = {
+        callback = function ()
+            local cursor = vim.api.nvim_win_get_cursor(0);
+
+            if vim.fn.foldlevel(cursor[1]) < 1 then
+                return;
+            end
+
+            if vim.fn.foldclosed(cursor[1]) ~= -1 then
+                vim.cmd("foldopen");
+            else
+                vim.cmd("foldclose");
+            end
+        end
+    }
 });
----_
 
---+ type: custom; title: Code execution;
-createKeymap(nil, "<leader>l", "<Cmd>.lua<CR>");
-createKeymap("v", "<leader>l", ":'<,'>lua<CR>");
---_
 
----+ type: custom; icon:  ; hl: @operator; title: Editing;
-createKeymap(nil, "u", "");
-createKeymap(nil, "<leader>u", "<Cmd>undo<CR>")
-createKeymap(nil, "<leader>r", "<Cmd>redo<CR>")
+--from: KEYMAPS.md;range: 96,100;
+keymap({ mode = "n", lhs = "<leader>l", rhs = "<CMD>.lua<CR>" });
+keymap({ mode = "v", lhs = "<leader>l", rhs = ":...'<,'>lua<CR>" });
 
-createKeymap(nil, "<leader><leader>", "<Cmd>Beacon<CR>");
 
-createKeymap(nil, "<leader>d", "", {
-	callback = function ()
-		local diagnostics = require("config.diagnostic");
+--from: KEYMAPS.md;range: 108,113;
+keymap({ mode = "n", lhs = "<leader>t", rhs = "<Cmd>Telescope<CR>" });
+keymap({ mode = "n", lhs = "<leader>f", rhs = "<Cmd>Telescope file_browser<CR>" });
+keymap({ mode = "n", lhs = "<leader>h", rhs = "<Cmd>Telescope highlights<CR>" });
 
-		if diagnostics.enable == true then
-			diagnostics.clear();
-			diagnostics.enable = false;
-		else
-			diagnostics.enable = true;
-			diagnostics.get_diagnostics()
-		end
-	end
-})
----_
 
----+ type: custom; icon: 󰭎 ; hl: @diff.plus; title: Telescope;
-createKeymap(nil, "<leader>t", "<Cmd>Telescope<CR>");
-createKeymap(nil, "<leader>?", "<Cmd>Telescope frecency<CR>");
-createKeymap(nil, "<leader>g", "<Cmd>Telescope glyph<CR>");
-createKeymap(nil, "<leader>f", "<Cmd>Telescope file_browser<CR>");
-createKeymap(nil, "<leader>s", "<Cmd>Telescope find_files<CR>");
-createKeymap(nil, "<leader>U", "<Cmd>Telescope undo<CR>");
-createKeymap(nil, "<leader>h", "<Cmd>Telescope highlights<CR>");
----_
+--from: KEYMAPS.md;range: 118,125;
+keymap({ mode = "n", lhs = "<leader>z", rhs = "<Cmd>tabp<CR>" })
+keymap({ mode = "n", lhs = "<leader>m", rhs = "<Cmd>tabN<CR>" })
 
----+ type: custom; title: Terminal; icon:  ; hl: rainbow3;
-createKeymap(nil, "<leader>t", "<cmd>Terminal<CR>");
-createKeymap(nil, "<leader>T", "<cmd>Terminal float<CR>");
----_
+keymap({ mode = "n", lhs = "<leader>,", rhs = "<Cmd>BufScrollLeft<CR>" })
+keymap({ mode = "n", lhs = "<leader>.", rhs = "<Cmd>TabScrollLeft<CR>" })
 
----+  type: custom; title: Tabs & Buffers; icon: 󰓩 ; hl: rainbow6;
-createKeymap(nil, "<leader>z", "<Cmd>tabp<CR>");
-createKeymap(nil, "<leader>m", "<Cmd>tabN<CR>");
 
-createKeymap(nil, "<leader>,", "<Cmd>TabScrollLeft<CR>");
-createKeymap(nil, "<leader>.", "<Cmd>BufScrollLeft<CR>");
----_
-
----+ type: custom; title: Windows; icon:  ; hl: @conditional;
--- Incomplete
----_
-
----+ type: custom; title: Scrolling; icon:  ; hl: rainbow: 3;
-local _guicursor;
-local in_scroll = false;
-
-createKeymap(nil, "<PageDown>", "", {
-	callback = function ()
-		local cursor = vim.api.nvim_win_get_cursor(0);
-
-		if in_scroll == true then
-			return;
-		end
-
-		require("animations").cursor.y(0, cursor[1] + math.floor(vim.o.lines * 0.75), {
-			interval = 50,
-			ease = "ease-out-sine",
-			steps = 10,
-
-			on_init = function ()
-				_guicursor = vim.g.guicursor;
-				in_scroll = true;
-
-				vim.cmd("set guicursor=a:CursorHidden");
-			end,
-			on_complete = function ()
-				in_scroll = false;
-				vim.cmd("set guicursor=" .. (_guicursor or "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20"));
-			end
-		})
-	end
-});
-createKeymap(nil, "<PageUp>", "", {
-	callback = function ()
-		local cursor = vim.api.nvim_win_get_cursor(0);
-
-		if in_scroll == true then
-			return;
-		end
-
-		require("animations").cursor.y(0, cursor[1] - math.floor(vim.o.lines * 0.75), {
-			interval = 50,
-			ease = "ease-out-sine",
-			steps = 10,
-
-			on_init = function ()
-				_guicursor = vim.g.guicursor;
-				in_scroll = true;
-
-				vim.cmd("set guicursor=a:CursorHidden");
-			end,
-			on_complete = function ()
-				in_scroll = false;
-				vim.cmd("set guicursor=" .. (_guicursor or "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20"));
-			end
-		})
-	end
-});
----_

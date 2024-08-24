@@ -123,6 +123,20 @@ keymap({ mode = "n", lhs = "<leader>,", rhs = "<Cmd>BufScrollLeft<CR>" })
 keymap({ mode = "n", lhs = "<leader>.", rhs = "<Cmd>TabScrollLeft<CR>" })
 ```
 
+### 🌟 Compiler.nvim
+
+I use `compiler.nvim` for quickly compiling C programs. So, I have a few keymaps for that.
+
+```lua
+keymap({ mode = "n", lhs = "<leader>c", rhs = "<Cmd>CompilerOpen<CR>" })
+keymap({
+    mode = "n",
+    lhs = "<leader><S-c>",
+    rhs = "<Cmd>CompilerStop<CR><Cmd>CompilerRedo<CR>"
+})
+keymap({ mode = "n", lhs = "<leader><S-t>", rhs = "<Cmd>CompilerToggleResults<CR>"})
+```
+
 ## 🎁 Extras
 
 I have these extra keymaps that are cool but not really *practical*.

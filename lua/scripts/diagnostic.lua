@@ -27,12 +27,6 @@ diagnostic.config = {
 		error = { " ", "DiagnosticError" },
 		info = { " ", "DiagnosticInfo" },
 		hint = { "󰔨 ", "DiagnosticHint" }
-	},
-	severity_hl = {
-		warn = "DiagnosticWarn",
-		error = "DiagnosticError",
-		info = "DiagnosticInfo",
-		hint = "DiagnosticSignHint"
 	}
 }
 
@@ -44,7 +38,7 @@ diagnostic.get_cursor_pos = function ()
 	local win = vim.api.nvim_get_current_win();
 	local cur = vim.api.nvim_win_get_cursor(win);
 
-	return cur[1], vim.fn.virtcol(".");
+	return cur[1], vim.fn.virtcol(".") + vim.fn.getwininfo(win)[1].textoff;
 end
 
 diagnostic.len = function (...)
@@ -239,7 +233,6 @@ diagnostic.print = function (messages)
 				end
 			end
 
-			-- vim.print(stack)
 			vim.fn.setbufline(diagnostic.buffer, _l + 1, "")
 			vim.api.nvim_buf_set_extmark(diagnostic.buffer, diagnostic.ns, _l, 0, {
 				virt_text_pos = pos,
@@ -256,7 +249,6 @@ end
 ---+ ${func}
 diagnostic.open_win = function (line_count, max_column)
 	if not diagnostic.win or not vim.api.nvim_win_is_valid(diagnostic.win) then
-		-- vim.print("hi");
 		diagnostic.win = vim.api.nvim_open_win(diagnostic.buffer, false, {
 			relative = "cursor",
 			row = 1, col = 0,
@@ -335,7 +327,7 @@ diagnostic.init = function (config)
 
 	pcall(vim.api.nvim_del_autocmd, diagnostic.autocmd);
 
-	local events = { "ModeChanged" };
+	local events = { "ModeChanged", "LspNotify" };
 	local debounce = 50;
 
 	if vim.list_contains(diagnostic.config.modes, "n") then
@@ -373,9 +365,7 @@ diagnostic.init = function (config)
 				end
 
 				diagnostic.open_win(diagnostic.print(diag_data));
-				vim.api.nvim_win_call(diagnostic.win, function ()
-					vim.cmd("redraw");
-				end)
+				vim.cmd("redraw");
 			end));
 		end
 	})

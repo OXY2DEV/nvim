@@ -23,12 +23,8 @@ require("lazy").setup("plugins", {
 
 		wrap = false,
 
-		install = {
-			colorscheme = { "habamax" }
-		},
-
 		icons = {
-			cmd = "  ", ---+ ##code##
+			cmd = "  ", ---+ ${ui, Lazy.nvim UI icons}
 
 			config = "  ",
 			event = "  ",

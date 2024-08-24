@@ -2,7 +2,7 @@
 	Generated with 'conf-doc.nvim'
 
 	Author: OXY2DEV
-	Time: Tue Aug 20 18:25:22 2024
+	Time: Thu Aug 22 19:43:59 2024
 ]]--
 
 -- -+ ${link=func} from: KEYMAPS.md;range: 17,34;
@@ -83,5 +83,15 @@ keymap({ mode = "n", lhs = "<leader>m", rhs = "<Cmd>tabN<CR>" })
 
 keymap({ mode = "n", lhs = "<leader>,", rhs = "<Cmd>BufScrollLeft<CR>" })
 keymap({ mode = "n", lhs = "<leader>.", rhs = "<Cmd>TabScrollLeft<CR>" })
+
+
+--from: KEYMAPS.md;range: 130,139;
+keymap({ mode = "n", lhs = "<leader>c", rhs = "<Cmd>CompilerOpen<CR>" })
+keymap({
+    mode = "n",
+    lhs = "<leader><S-c>",
+    rhs = "<Cmd>CompilerStop<CR><Cmd>CompilerRedo<CR>"
+})
+keymap({ mode = "n", lhs = "<leader><S-t>", rhs = "<Cmd>CompilerToggleResults<CR>"})
 
 

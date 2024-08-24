@@ -53,9 +53,8 @@ This part is used for configuring options, keymaps and other files that modifies
 These files are meant to be loaded before the `plugin manager` and should create a usable setup even without any of the plugins.
 
 ```lua ${fold} ${type=dep}
-require("config/settings");   -- Options
-require("config/keymaps");    -- Keymaps
-require("config.diagnostic"); -- Fancy diagnostic messages
+require("config.settings");   -- Options
+require("config.keymaps");    -- Keymaps
 ```
 
 ### 📜 Scripts
@@ -63,8 +62,8 @@ require("config.diagnostic"); -- Fancy diagnostic messages
 These are like a smaller version of `plugins`. They add some simple niceties.
 
 ```lua ${fold} ${type=dep}
-require("scripts/beacon");           -- Beacon to show cursor
-require("scripts.fancy_cmdline");    -- Cmd window
+require("scripts.beacon");           -- Beacon to show cursor
+require("scripts.diagnostic");       -- Fancy diagnostic messages
 require("scripts.terminal_bg_sync"); -- Background sync for Termux
 ```
 

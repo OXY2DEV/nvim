@@ -7,8 +7,14 @@
 --- Definition for the table passed into setup()
 ---@class markview.config.user
 ---
+--- Window config for split view
+---@field split_conf? table
+---
 --- List of custom highlight groups
 ---@field highlight_groups table[]?
+---
+--- List of filetypes where the plugin will be active
+---@field filetypes string[]
 ---
 --- List of buffer types to ignore
 ---@field buf_ignore string[]?
@@ -59,8 +65,14 @@
 --- Definition for the complete configuration table
 ---@class markview.config
 ---
+--- Window config for split view
+---@field split_conf? table
+---
 --- List of custom highlight groups
 ---@field highlight_groups table[]?
+---
+--- List of filetypes where the plugin will be active
+---@field filetypes string[]
 ---
 --- List of buffer types to ignore
 ---@field buf_ignore string[]?
@@ -128,6 +140,9 @@
 --- Enable/Disable stylized headings
 ---@field enable boolean?
 ---
+--- Fallback textoff value
+---@field textoff? number
+---
 --- Number of characters to shift per heading level
 ---@field shift_width number?
 ---
@@ -144,6 +159,9 @@
 ---
 --- Name of the style to use
 ---@field style string
+---
+--- Alignment for label styled headings
+---@field align? string
 ---
 --- Default highlight group used by the rest of the options
 --- Used for highlighting the line when the style is "simple"
@@ -334,14 +352,57 @@
 --- Enable/Disable custom hyperlink
 ---@field enable boolean?
 ---
----@field hyperlinks markview.render_config.links.link
+---@field hyperlinks markview.render_config.links.hyperlink
 ---
 ---@field images markview.render_config.links.link
 ---
 ---@field emails markview.render_config.links.link
 
+
+--- Configuration table for various link types
+---@class markview.render_config.links.hyperlink
+---
+---@field custom? markview.render_config.links.link[]
+---
+--- Default highlight group for the various parts
+---@field hl string?
+---
+--- The icon to use for the heading
+---@field icon string?
+---
+--- Highlight group for the icon
+---@field icon_hl string?
+---
+--- Used bu the "label" style to add text before the left padding
+---@field corner_left string?
+---
+--- Highlight group for the left corner
+---@field corner_left_hl string?
+---
+--- Used bu the "label" style to add text after the right padding
+---@field corner_right string?
+---
+--- Highlight group for the right corner
+---@field corner_right_hl string?
+---
+--- Used bu the "label" style to add text before the heading text
+---@field padding_left string?
+---
+--- Highlight group for the left padding
+---@field padding_left_hl string?
+---
+--- Used bu the "label" style to add text after the heading text
+---@field padding_right string?
+---
+--- Highlight group for the left padding
+---@field padding_right_hl string?
+
+
 --- Configuration table for various link types
 ---@class markview.render_config.links.link
+---
+--- Only for custom hyperlinks. Match string
+---@field match? string
 ---
 --- Default highlight group for the various parts
 ---@field hl string?
@@ -463,12 +524,18 @@
 ---
 --- Configuration table for the unchecked state
 ---@field unchecked markview.render_config.checkbox.state
+---
+--- Configuration table for the unchecked state
+---@field custom markview.render_config.checkbox.state[]?
 
 
 --- Configuration table for the checkbox state
 ---@class markview.render_config.checkbox.state
 ---
---- Text to use as the ustom checkbox
+--- The text inside [] checkboxes to match
+---@field match string?
+---
+--- Text to use as the custom checkbox
 ---@field text string
 ---
 --- Highlight group for text

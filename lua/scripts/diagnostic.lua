@@ -248,6 +248,10 @@ end
 
 ---+ ${func}
 diagnostic.open_win = function (line_count, max_column)
+	if line_count == 0 then
+		return;
+	end
+
 	if not diagnostic.win or not vim.api.nvim_win_is_valid(diagnostic.win) then
 		diagnostic.win = vim.api.nvim_open_win(diagnostic.buffer, false, {
 			relative = "cursor",
@@ -317,6 +321,11 @@ diagnostic.show = function ()
 	diagnostic.open_win(diagnostic.print(diag_data));
 end
 
+diagnostic.close = function ()
+	pcall(vim.api.nvim_win_close, diagnostic.win, true);
+	diagnostic.win = nil;
+end
+
 diagnostic.autocmd = nil;
 diagnostic.timer = vim.uv.new_timer();
 
@@ -372,6 +381,7 @@ diagnostic.init = function (config)
 end
 
 diagnostic.init();
+
 vim.diagnostic.config({
 	virtual_text = false,
 	signs = {

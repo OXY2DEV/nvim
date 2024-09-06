@@ -5,12 +5,7 @@
 return {
 	dir = "~/.config/nvim/lua/custom_plugins/colors.nvim/",
 	name = "colors",
-
-	dependencies = {
-		{
-			dir = "~/.config/nvim/lua/custom_plugins/window-animations.nvim",
-		}
-	},
+	priority = 999,
 
 	config = function ()
 		require("colors").setup();

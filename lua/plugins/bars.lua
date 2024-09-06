@@ -9,8 +9,5 @@ return {
 	dependencies = {
 		"nvim-tree/nvim-web-devicons"
 	},
-
-	config = function ()
-		require("bars").setup();
-	end
+	opts = { highlight_groups = {} }
 }

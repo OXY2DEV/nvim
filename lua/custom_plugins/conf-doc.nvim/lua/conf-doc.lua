@@ -109,6 +109,12 @@ doc.render_part = function (buffer, data, config)
 			"range: " .. (data.row_start + 1) .. "," .. (data.row_end + 1) .. ";",
 			"\n"
 		);
+	else
+		io.write(conf.comment_singleline,
+			"from: " .. path .. ";",
+			"range: " .. (data.row_start + 1) .. "," .. (data.row_end + 1) .. ";",
+			"\n"
+		);
 	end
 
 	for _, line in ipairs(data.lines) do

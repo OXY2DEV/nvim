@@ -63,6 +63,7 @@ These are like a smaller version of `plugins`. They add some simple niceties.
 
 ```lua ${fold} ${type=dep}
 require("scripts.beacon");           -- Beacon to show cursor
+require("scripts.cmdline");          -- Custom cmdline
 require("scripts.diagnostic");       -- Fancy diagnostic messages
 require("scripts.terminal_bg_sync"); -- Background sync for Termux
 ```

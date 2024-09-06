@@ -1,6 +1,7 @@
 local renderer = {};
 local devicons_loaded, devicons = pcall(require, "nvim-web-devicons");
 
+local utils = require("markview.utils");
 local entites = require("markview.entites");
 local languages = require("markview.languages");
 
@@ -17,22 +18,6 @@ renderer.get_icon = function (language, config_table)
 end
 
 _G.__markview_views = {};
-
-renderer.view_ranges = {};
-renderer.removed_elements = {};
-
-local get_str_width = function (str)
-	local width = 0;
-	local overlflow = 0;
-
-	for match in str:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
-		overlflow = overlflow + (vim.fn.strdisplaywidth(match) - 1);
-		width = width + #match
-	end
-
-	return width, overlflow
-end
-
 
 --- Returns a value with the specified index from entry
 --- If index is nil then return the last value
@@ -94,11 +79,13 @@ local display_width = function (text, config)
 				inl_conf.corner_right or ""
 			}));
 
-			final_string = final_string:gsub("`" .. inline_code .. "`", table.concat({
+			local escaped = inline_code:gsub("%p", "%%%1");
+
+			final_string = final_string:gsub("`" .. escaped .. "`", table.concat({
 				inl_conf.corner_left or "",
 				inl_conf.padding_left or "",
 
-				inline_code or "",
+				inline_code:gsub(".", "|"),
 
 				inl_conf.padding_right or "",
 				inl_conf.corner_right or ""
@@ -165,53 +152,69 @@ local display_width = function (text, config)
 
 	-- Hyperlinks: normal
 	for link, address in final_string:gmatch("%[([^%]]+)%]%(([^%)]+)%)") do
+		local cnf = lnk_conf;
+
+		for _, conf in ipairs(config.links.hyperlinks.custom or {}) do
+			if conf.match and string.match(address or "", conf.match) then
+				cnf = conf
+			end
+		end
+
 		d_width = d_width - vim.fn.strdisplaywidth("[" .. "](" .. address .. ")");
 
-		if lnk_conf ~= nil and lnk_conf.enable ~= false then
+		if cnf and lnk_conf and lnk_conf.enable ~= false then
 			d_width = d_width + vim.fn.strdisplaywidth(table.concat({
-				lnk_conf.corner_left or "",
-				lnk_conf.padding_left or "",
-				lnk_conf.icon or "",
-				lnk_conf.padding_right or "",
-				lnk_conf.corner_right or ""
+				cnf.corner_left or "",
+				cnf.padding_left or "",
+				cnf.icon or "",
+				cnf.padding_right or "",
+				cnf.corner_right or ""
 			}));
 
 			final_string = final_string:gsub("%[" .. link .. "%]%(" .. address .. "%)", table.concat({
-				lnk_conf.corner_left or "",
-				lnk_conf.padding_left or "",
-				lnk_conf.icon or "",
+				cnf.corner_left or "",
+				cnf.padding_left or "",
+				cnf.icon or "",
 				link,
-				lnk_conf.padding_right or "",
-				lnk_conf.corner_right or ""
+				cnf.padding_right or "",
+				cnf.corner_right or ""
 			}));
 		end
 	end
 
 	-- Hyperlink: full_reference_link
 	for link, address in final_string:gmatch("[^!]%[([^%]]+)%]%[([^%]]+)%]") do
+		local cnf = lnk_conf;
+
+		for _, conf in ipairs(config.links.hyperlinks.custom or {}) do
+			if conf.match and string.match(address or "", conf.match) then
+				cnf = conf
+			end
+		end
+
 		d_width = d_width - vim.fn.strdisplaywidth("[" .. "][" .. address .. "]");
 
-		if lnk_conf ~= nil and lnk_conf.enable ~= false then
+		if cnf ~= nil and lnk_conf and lnk_conf.enable ~= false then
 			d_width = d_width + vim.fn.strdisplaywidth(table.concat({
-				lnk_conf.corner_left or "",
-				lnk_conf.padding_left or "",
-				lnk_conf.icon or "",
-				lnk_conf.padding_right or "",
-				lnk_conf.corner_right or ""
+				cnf.corner_left or "",
+				cnf.padding_left or "",
+				cnf.icon or "",
+				cnf.padding_right or "",
+				cnf.corner_right or ""
 			}));
 
 			final_string = final_string:gsub("%[" .. link .. "%]%[" .. address .. "%]", table.concat({
-				lnk_conf.corner_left or "",
-				lnk_conf.padding_left or "",
-				lnk_conf.icon or "",
+				cnf.corner_left or "",
+				cnf.padding_left or "",
+				cnf.icon or "",
 				link,
-				lnk_conf.padding_right or "",
-				lnk_conf.corner_right or ""
+				cnf.padding_right or "",
+				cnf.corner_right or ""
 			}));
 		end
 	end
 
-	for pattern in final_string:gmatch("%[([^%]]*)%]") do
+	for pattern in final_string:gmatch("%[([^%]]+)%]") do
 		d_width = d_width - 2;
 		final_string = final_string:gsub( "[" .. pattern .. "]", pattern);
 	end
@@ -453,7 +456,7 @@ local table_header = function (buffer, content, config_table)
 					vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, row_start, col_start + curr_col + #col, {
 						virt_text_pos = "inline",
 						virt_text = {
-							{ string.rep("X", (actual_width - width)) }
+							{ string.rep(" ", (actual_width - width)) }
 						}
 					});
 				elseif align == "right" then
@@ -867,13 +870,57 @@ renderer.render_headings = function (buffer, content, config)
 		local conceal_start = string.match(content.line, "^[#]+(%s*)");
 		local line_length = #content.line;
 
+		local spaces = shift * (content.level - 1);
+
+		if conf.align then
+			if conf.align == "left" then
+				spaces = 0;
+			elseif conf.align == "center" then
+				local win = utils.find_attached_wins(buffer)[1] or vim.api.nvim_get_current_win();
+				local textoff = config.textoff or vim.fn.getwininfo(win)[1].textoff;
+
+				local w = vim.api.nvim_win_get_width(win) - textoff;
+
+				local t = vim.fn.strdisplaywidth(table.concat({
+					conf.corner_left or "",
+					conf.padding_left or "",
+					conf.icon or "",
+
+					content.title,
+
+					conf.padding_right or "",
+					conf.corner_right or "",
+				}));
+
+				spaces = math.floor((w - t) / 2);
+			else
+				local win = utils.find_attached_wins(buffer)[1] or vim.api.nvim_get_current_win();
+				local textoff = config.textoff or vim.fn.getwininfo(win)[1].textoff;
+
+				local w = vim.api.nvim_win_get_width(win) - textoff;
+
+				local t = vim.fn.strdisplaywidth(table.concat({
+					conf.corner_left or "",
+					conf.padding_left or "",
+					conf.icon or "",
+
+					content.title,
+
+					conf.padding_right or "",
+					conf.corner_right or "",
+				}));
+
+				spaces = w - t;
+			end
+		end
+
 		-- Heading rules
 		-- 1. Must start at the first column
 		-- 2. Must have 1 space between the marker and the title
 		vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, content.row_start, content.col_start, {
 			virt_text_pos = "inline",
 			virt_text = {
-				{ string.rep(conf.shift_char or " ", shift * (content.level - 1)), conf.shift_hl },
+				{ string.rep(conf.shift_char or " ", spaces), conf.shift_hl },
 
 				{ conf.corner_left or "", set_hl(conf.corner_left_hl) or set_hl(conf.hl) },
 				{ conf.padding_left or "", set_hl(conf.padding_left_hl) or set_hl(conf.hl) },
@@ -1041,12 +1088,12 @@ renderer.render_code_blocks = function (buffer, content, config_table)
 				}
 			})
 
-			local position, reduce_cols = get_str_width(text)
+			local position, width = #text, vim.fn.strdisplaywidth(vim.fn.strcharpart(text, content.col_start) or "");
 
 			vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, content.row_start + line, position, {
 				virt_text_pos = "inline",
 				virt_text = {
-					{ string.rep(config_table.pad_char or " ", block_length - length - reduce_cols), set_hl(config_table.hl) },
+					{ string.rep(config_table.pad_char or " ", block_length - width), set_hl(config_table.hl) },
 					{ string.rep(config_table.pad_char or " ", config_table.pad_amount or 1), set_hl(config_table.hl) }
 				}
 			})
@@ -1154,7 +1201,12 @@ renderer.render_code_blocks = function (buffer, content, config_table)
 			-- NOTE: Nested code blocks have a different start position
 			local length = content.line_lengths[line] - content.col_start;
 
-			vim.api.nvim_buf_add_highlight(buffer, renderer.namespace, set_hl(config_table.hl), content.row_start + line, content.col_start, -1)
+			vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, content.row_start + line, content.col_start, {
+				hl_group = set_hl(config_table.hl),
+
+				end_row = content.row_start + line,
+				end_col = #text,
+			});
 
 			-- NOTE: If the line is smaller than the start position of the code block then subtract it
 			vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, content.row_start + line, length < 0 and content.col_start + length or content.col_start, {
@@ -1164,12 +1216,12 @@ renderer.render_code_blocks = function (buffer, content, config_table)
 				}
 			})
 
-			local position, reduce_cols = get_str_width(text);
+			local position, width = #text, vim.fn.strdisplaywidth(vim.fn.strcharpart(text, content.col_start) or "");
 
 			vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, content.row_start + line, position, {
 				virt_text_pos = "inline",
 				virt_text = {
-					{ string.rep(config_table.pad_char or " ", block_length - length - reduce_cols), set_hl(config_table.hl) },
+					{ string.rep(config_table.pad_char or " ", block_length - width), set_hl(config_table.hl) },
 					{ string.rep(config_table.pad_char or " ", config_table.pad_amount or 1), set_hl(config_table.hl) }
 				}
 			})
@@ -1194,7 +1246,7 @@ renderer.render_block_quotes = function (buffer, content, config_table)
 				qt_config = callout;
 			elseif vim.islist(callout.match_string) then
 				for _, alias in ipairs(callout.match_string --[[@as string[] ]]) do
-					if type(alias) == "string" and alias:upper() == content.callout.upper() then
+					if type(alias) == "string" and alias:upper() == content.callout:upper() then
 						qt_config = callout;
 					end
 				end
@@ -1340,6 +1392,12 @@ renderer.render_links = function (buffer, content, config_table)
 	end
 
 	lnk_conf = config_table.hyperlinks;
+
+	for _, conf in ipairs(config_table.hyperlinks.custom or {}) do
+		if conf.match and string.match(content.address or "", conf.match) then
+			lnk_conf = vim.tbl_extend("force", lnk_conf or {}, conf);
+		end
+	end
 
 	-- Do not render links with no config
 	if not lnk_conf then
@@ -1492,7 +1550,7 @@ renderer.render_lists = function (buffer, content, config_table)
 		ls_conf = config_table.marker_plus or {};
 	elseif string.match(content.marker_symbol, "*") then
 		ls_conf = config_table.marker_star or {};
-	elseif string.match(content.marker_symbol, "[.]") then
+	elseif string.match(content.marker_symbol, "[.%)]") then
 		ls_conf = config_table.marker_dot or {};
 	end
 
@@ -1520,7 +1578,7 @@ renderer.render_lists = function (buffer, content, config_table)
 
 				local level = math.floor(before / (config_table.indent_size or 2)) + 1;
 
-				vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, line_num, 0, {
+				vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, line_num, content.starts[l] or 0, {
 					virt_text_pos = "inline",
 					virt_text = {
 						{ string.rep(" ", level * shift) },
@@ -1535,13 +1593,14 @@ renderer.render_lists = function (buffer, content, config_table)
 
 				local level = math.floor(before / (config_table.indent_size or 2)) + 1;
 
-				vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, line_num, 0, {
+				vim.api.nvim_buf_set_extmark(buffer, renderer.namespace, line_num, content.starts[l] or 0, {
 					virt_text_pos = "inline",
 					virt_text = {
-						{ string.rep(" ", level * shift) }
+						{ string.rep(" ", level * shift) },
+						{ string.rep(" ", content.align_spaces[l] or 0) },
 					},
 
-					end_col = line_len < before and line_len or before,
+					end_col = line_len < before and line_len + (content.align_spaces[l] or 0) or before + (content.align_spaces[l] or 0),
 					conceal = ""
 				})
 			end
@@ -1573,6 +1632,12 @@ renderer.render_checkboxes = function (buffer, content, config_table)
 		chk_config = config_table.unchecked;
 	elseif content.state == "pending" then
 		chk_config = config_table.pending;
+	elseif vim.islist(config_table.custom) then
+		for _, config in ipairs(config_table.custom) do
+			if content.state == config.match then
+				chk_config = config;
+			end
+		end
 	end
 
 	if not chk_config or type(chk_config.text) ~= "string" then

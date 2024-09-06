@@ -13,6 +13,24 @@ local concat = function (chunks)
 	return _c;
 end
 
+local run = function (tbl, ...)
+	local _o = {};
+
+	for key, value in pairs(tbl) do
+		if type(value) == "function" then
+			if pcall(value, ...) then
+				_o[key] = value(...);
+			else
+				_o[key] = false;
+			end
+		else
+			_o[key] = value;
+		end
+	end
+
+	return _o;
+end
+
 cmd.conf = {
 	width = math.floor(0.6 * vim.o.columns),
 	cmp_height = 7,
@@ -21,8 +39,8 @@ cmd.conf = {
 		winopts = {
 			title = {
 				{ "", "CmdBlue" },
-				{ "  ", "CmdText" },
-				{ "v" .. vim.version().major .. "." .. vim.version().minor .. " ", "CmdText" },
+				{ "  ", "CmdBlueBg" },
+				{ "v" .. vim.version().major .. "." .. vim.version().minor .. " ", "CmdBlueBg" },
 				{ "", "CmdBlue" },
 			},
 			title_pos = "right"
@@ -33,6 +51,83 @@ cmd.conf = {
 		ft = "vim"
 	},
 	configs = {
+		{
+			input = true,
+			winopts = function (state)
+				local prompt = state.prompt;
+
+				if prompt:match("^Create:%s") then
+					return {
+						title = {
+							{ "", "CmdGreen" },
+							{ " 󰙴 Create ", "CmdGreenBg" },
+							{ "", "CmdGreen" },
+						},
+						footer = {
+							{ "╼", "CmdGreen" },
+							{ " Confirm: ", "Normal" },
+							{ "<CR> ", "Special" },
+							{ "╾", "CmdGreen" },
+						},
+						title_pos = "right"
+					};
+				elseif prompt:match("^Rename:%s") then
+					return {
+						title = {
+							{ "", "CmdYellow" },
+							{ " 󰬲 Rename ", "CmdYellowBg" },
+							{ "", "CmdYellow" },
+						},
+						footer = {
+							{ "╼", "CmdYellow" },
+							{ " Confirm: ", "Normal" },
+							{ "<CR> ", "Special" },
+							{ "╾", "CmdYellow" },
+						},
+						title_pos = "right"
+					};
+				elseif prompt:match("^Remove selection") then
+					local items = prompt:match("(%d+)");
+
+					return {
+						title = {
+							{ "", "CmdRed" },
+							{ " 󰆴 Delete: " .. items .. (tonumber(items) == 1 and " item " or " items "), "CmdRedBg" },
+							{ "", "CmdRed" },
+						},
+						footer = {
+							{ "╼", "CmdRed" },
+							{ " [y/N]", "Special" },
+							{ ", Confirm: ", "Normal" },
+							{ "<CR> ", "Special" },
+							{ "╾", "CmdRed" },
+						},
+						title_pos = "right"
+					};
+				else
+					return {
+						title = {
+							{ "", "CmdGrey" },
+							{ " " .. (state.prompt or "Input:") .. " ", "CmdGreyBg" },
+							{ "", "CmdGrey" },
+						}
+					};
+				end
+			end,
+			winhl = function (state)
+				local prompt = state.prompt;
+
+				if prompt:match("^Create:%s") then
+					return "FloatBorder:CmdGreen,Normal:Normal";
+				elseif prompt:match("^Rename:%s") then
+					return "FloatBorder:CmdYellow,Normal:Normal";
+				elseif prompt:match("^Remove selection") then
+					return "FloatBorder:CmdRed,Normal:Normal";
+				else
+					return "FloatBorder:CmdGrey,Normal:Normal";
+				end
+			end
+		},
 		{
 			firstc = ":",
 			match = "^s/",
@@ -60,7 +155,7 @@ cmd.conf = {
 			winopts = {
 				title = {
 					{ "", "CmdViolet" },
-					{ "  " .. _VERSION .. " ", "LuaText" },
+					{ "  " .. _VERSION .. " ", "CmdVioletBg" },
 					{ "", "CmdViolet" },
 				},
 				title_pos = "right"
@@ -90,7 +185,7 @@ cmd.conf = {
 			winopts = {
 				title = {
 					{ "", "CmdOrange" },
-					{ " 󰍉 Search ", "SearchUpText" },
+					{ " 󰍉 Search ", "CmdOrangeBg" },
 					{ "", "CmdOrange" },
 				},
 				title_pos = "right"
@@ -103,7 +198,7 @@ cmd.conf = {
 			winopts = {
 				title = {
 					{ "", "CmdYellow" },
-					{ " 󰍉 Search ", "SearchDownText" },
+					{ " 󰍉 Search ", "CmdYellowBg" },
 					{ "", "CmdYellow" },
 				},
 				title_pos = "right"
@@ -116,7 +211,7 @@ cmd.conf = {
 			winopts = {
 				title = {
 					{ "", "CmdGreen" },
-					{ "  Calculate ", "CalculateText" },
+					{ "  Calculate ", "CmdGreenBg" },
 					{ "", "CmdGreen" },
 				},
 				title_pos = "right"
@@ -192,6 +287,9 @@ cmd.update_state = function (state)
 			end
 		elseif not conf.firstc and conf.match and txt:match(conf.match) then
 			cmd.current_conf = conf;
+			return;
+		elseif state.prompt and state.prompt ~= "" and conf.input then
+			cmd.current_conf = run(conf, cmd.state);
 			return;
 		end
 	end
@@ -534,7 +632,7 @@ cmd.draw_completion = function ()
 		end
 	end
 
-	local last_str = cmd.comp_txt:match("(%S+)$");
+	local last_str = cmd.comp_txt:match("([^%s%.]+)$");
 
 	for c, completion in ipairs(cmd.comp_state.items) do
 		vim.fn.setbufline(cmd.comp_buf, c, { completion[1] });
@@ -596,6 +694,9 @@ vim.ui_attach(cmd.ns, { ext_cmdline = true, ext_popupmenu = true  }, function (e
 		vim.api.nvim__redraw({ win = cmd.win, flush = true })
 	elseif event == "cmdline_hide" then
 		cmd.close();
+
+		cmd.state = {};
+		cmd.comp_state = {};
 
 		vim.api.nvim__redraw({ win = cmd.win, flush = true })
 	elseif event == "cmdline_pos" then

@@ -2,7 +2,7 @@
 	Generated with 'conf-doc.nvim'
 
 	Author: OXY2DEV
-	Time: Thu Aug 22 19:43:59 2024
+	Time: Mon Sep  2 10:24:30 2024
 ]]--
 
 -- -+ ${link=func} from: KEYMAPS.md;range: 17,34;
@@ -85,7 +85,36 @@ keymap({ mode = "n", lhs = "<leader>,", rhs = "<Cmd>BufScrollLeft<CR>" })
 keymap({ mode = "n", lhs = "<leader>.", rhs = "<Cmd>TabScrollLeft<CR>" })
 
 
---from: KEYMAPS.md;range: 130,139;
+--from: KEYMAPS.md;range: 130,158;
+keymap({
+    mode = "n",
+    lhs = "<leader>d",
+    rhs = "",
+
+    opts = {
+        callback = function ()
+            local module_found, diagnostic = pcall(
+                require,
+                "scripts.diagnostic"
+            );
+
+            if module_found == false then
+                return;
+            end
+
+            if diagnostic.enable == true then
+                diagnostic.enable = false;
+                diagnostic.close();
+            else
+                diagnostic.enable = true;
+                diagnostic.show();
+            end
+        end
+    }
+})
+
+
+--from: KEYMAPS.md;range: 163,172;
 keymap({ mode = "n", lhs = "<leader>c", rhs = "<Cmd>CompilerOpen<CR>" })
 keymap({
     mode = "n",

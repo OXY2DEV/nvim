@@ -1,27 +1,97 @@
 local parser = {};
--- local renderer = require("markview/renderer");
+local lang = require("markview.languages")
 
 parser.cached_conf = {};
+parser.avoid_ranges = {};
 
-parser.fiter_lines = function (buffer, from, to)
+parser.get_md_len = function (text)
+	local final_string = text;
+	local len = vim.fn.strdisplaywidth(text);
+
+	for inline_code in final_string:gmatch("`([^`]+)`") do
+		len = len - 2;
+
+		local escaped = inline_code:gsub("%p", "%%%1");
+		final_string = final_string:gsub("`" .. escaped .. "`", inline_code:gsub(".", "|"));
+	end
+
+	for link, address in final_string:gmatch("!%[([^%]]+)%]%(([^%)]+)%)") do
+		len = len - vim.fn.strdisplaywidth("![]()" .. address);
+
+		final_string = final_string:gsub("%!%[" .. link .. "%]%(" .. address .. "%)", link);
+	end
+
+	for link, address in final_string:gmatch("%[([^%]]+)%]%(([^%)]+)%)") do
+		len = len - vim.fn.strdisplaywidth("[]()" .. address);
+
+		final_string = final_string:gsub("%[" .. link .. "%]%(" .. address .. "%)", link);
+	end
+
+	for link, address in final_string:gmatch("[^!]%[([^%]]+)%]%[([^%]]+)%]") do
+		len = len - vim.fn.strdisplaywidth("[" .. "][" .. address .. "]");
+
+		final_string = final_string:gsub("%[" .. link .. "%]%[" .. address .. "%]", link);
+	end
+
+	for pattern in final_string:gmatch("%[([^%]]+)%]") do
+		len = len - 2;
+		final_string = final_string:gsub( "[" .. pattern .. "]", pattern);
+	end
+
+	for str_a, internal, str_b in final_string:gmatch("([*_]+)([^*]+)([*_]+)") do
+		local valid_signs = math.max(vim.fn.strdisplaywidth(str_a), vim.fn.strdisplaywidth(str_b));
+
+		for s = 1, valid_signs do
+			local a = str_a:sub(s, s);
+			local b = str_b:reverse():sub(s, s);
+
+			if a == b then
+				len = len - 2;
+
+				final_string = final_string:gsub(a .. internal .. b, internal);
+			end
+		end
+	end
+
+	return len, final_string;
+end
+
+parser.filter_lines = function (buffer, from, to)
 	local captured_lines = vim.api.nvim_buf_get_lines(buffer, from, to, false);
 	local filtered_lines = {};
 	local indexes = {};
 	local spaces = {};
+	local align_spaces = {};
+	local start_pos = {};
 
-	local withinCodeBlock;
+	local withinCodeBlock, insideDescription;
 	local parent_marker;
 
 	local tolarence = 3;
 	local found = 0;
 
 	local code_block_indent = 0;
+	local desc_indent = 0;
+
+	local start = 0;
 
 	for l, line in ipairs(captured_lines) do
+		-- TODO: Find better conditions
+		if l == 1 and line:match(">%s-([+%-*])") then
+			local before = line:match("(.*>%s-)[+%-*]");
+			start = vim.fn.strchars(before);
+
+			line = line:gsub(before, "");
+			table.insert(start_pos, start)
+		else
+			line = line:sub(start, #line);
+			table.insert(start_pos, start);
+		end
+
 		if l ~= 1 then
 			if withinCodeBlock ~= true and line:match("^%s*([+%-*])") then
 				break;
-			elseif withinCodeBlock ~= true and line:match("^%s*(%d+%.)") then
+			elseif withinCodeBlock ~= true and line:match("^%s*(%d+[%.%)])") then
 				break;
 			end
 		end
@@ -32,27 +102,41 @@ parser.fiter_lines = function (buffer, from, to)
 
 		local spaces_before = vim.fn.strchars(line:match("^(%s*)"));
 
+		if line:match("^%s*([+%-*])") then
+			parent_marker = line:match("^%s*([+%-*])");
+		elseif line:match("^%s*(%d+[%.%)])") then
+			parent_marker = line:match("^%s*(%d+[%.%)])");
+		end
+
 		if line:match("(```)") and withinCodeBlock ~= true then
 			withinCodeBlock = true;
 			code_block_indent = spaces_before;
 		elseif line:match("(```)") and withinCodeBlock == true then
 			withinCodeBlock = false;
 		elseif withinCodeBlock == true then
-			spaces_before = spaces_before > code_block_indent and spaces_before - code_block_indent or spaces_before;
+			spaces_before = spaces_before > code_block_indent and
+				spaces_before - code_block_indent - 2 or
+				spaces_before
+			;
+
 			goto withinElement;
 		end
 
-		if line:match("^%s*([+%-*])") then
-			parent_marker = line:match("^%s*([+%-*])");
-		elseif line:match("^%s*(%d+%.)") then
-			parent_marker = line:match("^%s*(%d+%.)");
+		if withinCodeBlock ~= true and line:match("^%s*[+%-*](%s+%[.-%])") then
+			insideDescription = true;
+			desc_indent = vim.fn.strchars(line:match("^%s*[+%-*](%s+%[.-%])"));
+		elseif withinCodeBlock ~= true and insideDescription == true and spaces_before < desc_indent then
+			insideDescription = false;
 		end
 
-		if not line:match("^%s*([+%-*])") and not line:match("^%s*(%d+%.)") and parent_marker then
+		if not line:match("^%s*([+%-*])") and not line:match("^%s*(%d+[%.%)])") and parent_marker then
 			spaces_before = math.max(0, spaces_before - vim.fn.strchars((parent_marker or "") .. " "));
 
 			if line:match("(```)") then
 				code_block_indent = spaces_before;
+			elseif insideDescription == true then
+				align_spaces[l] = 2;
+				spaces_before = math.max(-10, spaces_before - desc_indent - 2);
 			end
 		end
 
@@ -60,14 +144,14 @@ parser.fiter_lines = function (buffer, from, to)
 
 		table.insert(filtered_lines, line);
 		table.insert(indexes, l);
-		table.insert(spaces, spaces_before)
+		table.insert(spaces, spaces_before);
 
 		if line == "" then
 			found = found + 1;
 		end
 	end
 
-	return filtered_lines, indexes, spaces;
+	return filtered_lines, indexes, spaces, align_spaces, start_pos;
 end
 
 parser.get_list_end_range = function (buffer, from, to, marker)
@@ -108,7 +192,10 @@ parser.parsed_content = {};
 ---@param buffer number
 ---@param TStree any
 parser.md = function (buffer, TStree, from, to)
-	if not parser.cached_conf or not parser.cached_conf.on_injected or parser.cached_conf.on_injected == false then
+	if not parser.cached_conf or
+	   not parser.cached_conf.on_injected or
+	   parser.cached_conf.on_injected == false
+	then
 		local root = TStree:root();
 		local root_r_start, _, root_r_end, _ = root:range();
 		local buf_lines = vim.api.nvim_buf_line_count(buffer);
@@ -170,7 +257,7 @@ parser.md = function (buffer, TStree, from, to)
 
 				col_start = col_start,
 				col_end = col_end
-			})
+			});
 		elseif capture_name == "heading" then
 			local parent = capture_node:parent();
 
@@ -200,18 +287,6 @@ parser.md = function (buffer, TStree, from, to)
 
 			local block_start = vim.api.nvim_buf_get_lines(buffer, row_start, row_start + 1, false)[1];
 
-			for i = 1,(row_end - row_start) - 2 do
-				local this_code = vim.api.nvim_buf_get_lines(buffer, row_start + i, row_start + i + 1, false)[1];
-				local len = vim.fn.strchars(this_code) or 0;
-
-				if len > highest_len then
-					highest_len = len;
-				end
-
-				table.insert(lines, this_code)
-				table.insert(line_lens, len);
-			end
-
 			local language_string, additional_info = "", nil;
 
 			if block_start:match("%s*```{{?([^}]*)}}?") then
@@ -223,6 +298,26 @@ parser.md = function (buffer, TStree, from, to)
 				language_string = block_start:match("%s*```(%S*)%s");
 				additional_info = block_start:match("%s*```%S*%s+(.*)$");
 			end
+
+			for i = 1,(row_end - row_start) - 2 do
+				local this_code = vim.api.nvim_buf_get_lines(buffer, row_start + i, row_start + i + 1, false)[1];
+				local len = vim.fn.strdisplaywidth(this_code) or 0;
+
+				if vim.list_contains(parser.cached_conf.filetypes or {}, string.lower(lang.get_name(language_string))) then
+					len = parser.get_md_len(this_code)
+				end
+
+				if len > highest_len then
+					highest_len = len;
+				end
+
+				table.insert(lines, this_code)
+				table.insert(line_lens, len);
+			end
+
+			-- So that we don't accidentally parse the wrong range
+			-- Note: We won't parse only the inside of the code block
+			table.insert(parser.avoid_ranges, { row_start + 1, row_end - 1 });
 
 			table.insert(parser.parsed_content, {
 				node = capture_node,
@@ -355,15 +450,20 @@ parser.md = function (buffer, TStree, from, to)
 					table.insert(table_structure, "unknown");
 				end
 
-				for col in vim.treesitter.get_node_text(row, buffer):gmatch("%s*|([^|\n]*)") do
-					if col ~= "" then
+				local t_col = nil;
+
+				for col in vim.treesitter.get_node_text(row, buffer):gmatch("|([^|\n]*)") do
+					if col:match("\\$") then
+						t_col =  col .. "|";
+					elseif col ~= "" then
 						table.insert(tmp, "|")
-						table.insert(tmp, col)
+						table.insert(tmp, (t_col or "") .. col)
+
+						t_col = nil;
 					end
 				end
 
 				table.insert(tmp, "|")
-
 				table.insert(rows, tmp)
 			end
 
@@ -409,9 +509,13 @@ parser.md = function (buffer, TStree, from, to)
 		elseif capture_name == "list_item" then
 			local marker = capture_node:named_child(0);
 			local marker_text = vim.treesitter.get_node_text(marker, buffer);
+
 			local symbol = marker_text:gsub("%s", "");
 
-			local list_lines, lines, spaces = parser.fiter_lines(buffer, row_start, row_end);
+			-- Escape special characters
+			symbol = symbol:gsub("%)", "%%)")
+
+			local list_lines, lines, spaces, align_spaces, starts = parser.filter_lines(buffer, row_start, row_end);
 			local spaces_before_marker = list_lines[1]:match("^(%s*)" .. symbol .. "%s*");
 
 			local c_end, _ = parser.get_list_end_range(buffer, row_start, row_end, symbol)
@@ -424,7 +528,9 @@ parser.md = function (buffer, TStree, from, to)
 				list_candidates = lines,
 				list_lines = list_lines,
 
+				starts = starts,
 				spaces = spaces,
+				align_spaces = align_spaces,
 				conceal_spaces = vim.fn.strchars(spaces_before_marker),
 
 				row_start = row_start,
@@ -466,6 +572,20 @@ end
 ---@param buffer number
 ---@param TStree any
 parser.md_inline = function (buffer, TStree, from, to)
+	if not parser.cached_conf or
+	   not parser.cached_conf.on_injected or
+	   parser.cached_conf.on_injected == false
+	then
+		local root = TStree:root();
+		local root_r_start, _, root_r_end, _ = root:range();
+
+		for _, range in ipairs(parser.avoid_ranges) do
+			if root_r_start >= range[1] and root_r_end <= range[2] then
+				return;
+			end
+		end
+	end
+
 	local scanned_queies = vim.treesitter.query.parse("markdown_inline", [[
 		((shortcut_link) @callout)
 
@@ -492,13 +612,15 @@ parser.md_inline = function (buffer, TStree, from, to)
 			local line = vim.api.nvim_buf_get_lines(buffer, row_start, row_start + 1, false);
 			local title = string.match(line ~= nil and line[1] or "", "%b[]%s*(.*)$")
 
-			if capture_text == "[-]" then
+			if capture_text:match("%[(.)%]") then
 				for _, extmark in ipairs(parser.parsed_content) do
 					if extmark.type == "list_item" and extmark.row_start == row_start then
-						local start_line = extmark.list_lines[1] or "";
-						local atStart = start_line:match("%-%s+(%[%-%])%s+");
+						local marker = capture_text:match("%[(.)%]");
 
-						local chk_start, _ = start_line:find("%[%-%]");
+						local start_line = extmark.list_lines[1] or "";
+						local atStart = start_line:match("[+%-*]%s+(%[%" .. marker .. "%])%s+");
+
+						local chk_start, _ = start_line:find("%[%" .. marker .. "%]");
 
 						if not atStart or not chk_start or chk_start - 1 ~= col_start then
 							goto invalid;
@@ -507,7 +629,7 @@ parser.md_inline = function (buffer, TStree, from, to)
 						table.insert(parser.parsed_content, {
 							node = capture_node,
 							type = "checkbox",
-							state = "pending",
+							state = capture_text:match("%[(.)%]") == "-" and "pending" or capture_text:match("%[(.)%]"),
 
 							row_start = row_start,
 							row_end = row_end,
@@ -562,7 +684,7 @@ parser.md_inline = function (buffer, TStree, from, to)
 				node = capture_node,
 				type = "email",
 
-				text = capture_text,
+				text = capture_text:gsub("^([<])", ""):gsub("([>])$", ""),
 
 				row_start = row_start,
 				row_end = row_end,
@@ -625,14 +747,17 @@ parser.md_inline = function (buffer, TStree, from, to)
 end
 
 parser.html = function (buffer, TStree, from, to)
-	if not parser.cached_conf or not parser.cached_conf.on_injected or parser.cached_conf.on_injected == false then
+	if not parser.cached_conf or
+	   not parser.cached_conf.on_injected or
+	   parser.cached_conf.on_injected == false
+	then
 		local root = TStree:root();
-		local root_r_start, _, _, _ = root:range();
+		local root_r_start, _, root_r_end, _ = root:range();
 
-		local start_line = vim.api.nvim_buf_get_lines(buffer, root_r_start - 1, root_r_start, false)[1] or "";
-
-		if start_line:match("```") then
-			return;
+		for _, range in ipairs(parser.avoid_ranges) do
+			if root_r_start >= range[1] and root_r_end <= range[2] then
+				return;
+			end
 		end
 	end
 

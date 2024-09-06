@@ -123,6 +123,39 @@ keymap({ mode = "n", lhs = "<leader>,", rhs = "<Cmd>BufScrollLeft<CR>" })
 keymap({ mode = "n", lhs = "<leader>.", rhs = "<Cmd>TabScrollLeft<CR>" })
 ```
 
+### 🚨 Diagnostic
+
+I have a script that handles `diagnostic messages` and I toggle it via `<Space>d`.
+
+```lua
+keymap({
+    mode = "n",
+    lhs = "<leader>d",
+    rhs = "",
+
+    opts = {
+        callback = function ()
+            local module_found, diagnostic = pcall(
+                require,
+                "scripts.diagnostic"
+            );
+
+            if module_found == false then
+                return;
+            end
+
+            if diagnostic.enable == true then
+                diagnostic.enable = false;
+                diagnostic.close();
+            else
+                diagnostic.enable = true;
+                diagnostic.show();
+            end
+        end
+    }
+})
+```
+
 ### 🌟 Compiler.nvim
 
 I use `compiler.nvim` for quickly compiling C programs. So, I have a few keymaps for that.

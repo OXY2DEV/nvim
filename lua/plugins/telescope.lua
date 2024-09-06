@@ -5,10 +5,11 @@
 return {
 	"nvim-telescope/telescope.nvim",
 	tag = "0.1.5",
+	enable = false,
 
 	dependencies = {
 		"nvim-lua/plenary.nvim",
-		"nvim-telescope/telescope-frecency.nvim",
+		-- "nvim-telescope/telescope-frecency.nvim",
 		"ghassan0/telescope-glyph.nvim",
 		"nvim-telescope/telescope-file-browser.nvim",
 		"debugloop/telescope-undo.nvim",
@@ -88,7 +89,7 @@ return {
 		})
 
 		-- Extensions
-		_t.load_extension "frecency"
+		-- _t.load_extension "frecency"
 		_t.load_extension "glyph"
 		_t.load_extension "file_browser"
 		_t.load_extension "undo"

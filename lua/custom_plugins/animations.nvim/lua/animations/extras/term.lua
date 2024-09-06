@@ -1,3 +1,0 @@
-local terminals = {};
-
-return terminals;

@@ -22,7 +22,7 @@ return {
 	},
 
 	{
-		-- "OXY2DEV/icons",
+		-- "OXY2DEV/markview.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/markview.nvim",
 		name = "markview",
 		priority = 100,

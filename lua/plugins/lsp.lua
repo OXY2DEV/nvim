@@ -112,7 +112,16 @@ return {
 					}
 				},
 				documentation = {
-					window = { border = 'single' }
+					window = { border = 'single' },
+					-- draw = function (data)
+					-- 	data.default_implementation();
+					-- 	local buf = data.window.buf;
+					--
+					-- 	if package.loaded["markview"] then
+					-- 		require("markview").strict_render:clear(buf);
+					-- 		require("markview").strict_render:render(buf, 999);
+					-- 	end
+					-- end
 				},
 				-- signature = {
 				-- 	window = { border = 'single' }

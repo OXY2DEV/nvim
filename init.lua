@@ -10,7 +10,6 @@ vim.cmd.colorscheme("catppuccin");
 --- Load scripts just before plugins.
 require("scripts.highlights").setup();
 require("scripts.bg_sync");
-require("scripts.autocmds");
 
 if pcall(require, "markview.highlights") then
 	local hls = require("markview.highlights");

@@ -5,7 +5,7 @@ require("editor.keymaps");
 
 require("editor.lazy");
 
-vim.cmd.colorscheme("catppuccin");
+-- vim.cmd.colorscheme("catppuccin");
 
 --- Load scripts just before plugins.
 require("scripts.highlights").setup();

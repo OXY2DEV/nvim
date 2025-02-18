@@ -1,12 +1,12 @@
 {
   "blink.cmp": { "branch": "main", "commit": "cc34be8ff1145264811e59b017f59676ad81000e" },
   "catppuccin": { "branch": "main", "commit": "4965db2d6155c25db4e8417465fc2703fdf4c2b7" },
-  "cyberdream.nvim": { "branch": "main", "commit": "5b42c2e6764312c166c25bc79dfcbaadac2d5425" },
+  "cyberdream.nvim": { "branch": "main", "commit": "05d44f6a0fa9c2690fd027424aea73eedf12956f" },
   "lazy.nvim": { "branch": "main", "commit": "7527af40ddd4a93a02911be570b32609b9d4ea53" },
   "nightfly": { "branch": "master", "commit": "58488be269a1f29819ce4b34f319269f11fe86b9" },
   "nvim-cmp": { "branch": "main", "commit": "12509903a5723a876abd65953109f926f4634c30" },
-  "nvim-lspconfig": { "branch": "master", "commit": "f98fa715acc975c2dd5fb5ba7ceddeb1cc725ad2" },
-  "nvim-treesitter": { "branch": "master", "commit": "4988b7068001b3a772c7cc738708341e612e3c26" },
+  "nvim-lspconfig": { "branch": "master", "commit": "66bc018936c6ff76beb75f89d986af6442db4001" },
+  "nvim-treesitter": { "branch": "master", "commit": "53a6b3993f5803378d4d031bf114c0b125a52ba8" },
   "onedarkpro.nvim": { "branch": "main", "commit": "44775f8206ee43b692e7f3dc894ddc47996ee523" },
   "solarized-osaka.nvim": { "branch": "main", "commit": "a655760409ec0e75a0868ca983f6077bf3c230f5" },
   "tokyonight.nvim": { "branch": "main", "commit": "dca4adba7dc5f09302a00b0e76078d54d82d2658" }

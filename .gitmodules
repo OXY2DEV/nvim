@@ -4,3 +4,9 @@
 [submodule "lua/custom_plugins/patterns.nvim"]
 	path = lua/custom_plugins/patterns.nvim
 	url = https://github.com/OXY2DEV/patterns.nvim
+[submodule "parsers/tree-sitter-lua_patterns"]
+	path = parsers/tree-sitter-lua_patterns
+	url = https://github.com/OXY2DEV/tree-sitter-lua_patterns.git
+[submodule "lua/custom_plugins/bars.nvim"]
+	path = lua/custom_plugins/bars.nvim
+	url = https://github.com/OXY2DEV/bars.nvim

@@ -18,7 +18,11 @@ return {
 
 				percentage = 0.10
 			},
-		}
+		},
+
+		config = function ()
+			vim.cmd.colorscheme("catppuccin");
+		end
 	},
 	{
 		"folke/tokyonight.nvim",

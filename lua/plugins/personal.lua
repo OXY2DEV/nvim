@@ -8,7 +8,7 @@ return {
 	},
 	{
 		-- "OXY2DEV/bars",
-		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/bars",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/bars.nvim",
 		name = "bars",
 		priority = 500,
 		lazy = false,
@@ -25,6 +25,14 @@ return {
 		-- "OXY2DEV/markview.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/markview.nvim",
 		name = "markview",
+		priority = 100,
+		lazy = false
+	},
+
+	{
+		-- "OXY2DEV/markview.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/patterns.nvim",
+		name = "patterns",
 		priority = 100,
 		lazy = false
 	},

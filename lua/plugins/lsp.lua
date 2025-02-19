@@ -57,10 +57,14 @@ return {
 	{
 		"Saghen/blink.cmp",
 		lazy = false,
-		build = "RUSTC_BOOTSTRAP=1 cargo build --release",
+		version = "*",
+		-- build = "RUSTC_BOOTSTRAP=1 cargo build --release",
 		opts = {
 			appearance = {
 				nerd_font_variant = "normal"
+			},
+			cmdline = {
+				keymap = {}
 			},
 			completion = {
 				menu = {
@@ -138,8 +142,6 @@ return {
 
 				["<Up>"] = { "scroll_documentation_up", "fallback" },
 				["<Down>"] = { "scroll_documentation_down", "fallback" },
-
-				cmdline = {}
 			}
 		},
 	},

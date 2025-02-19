@@ -1,6 +1,8 @@
 --- Checks if Neovim is within Termux.
 ---@return boolean
 _G.is_within_termux = function ()
+	---|fS
+
 	local PREFIX = vim.fn.getenv("PREFIX") or "";
 	local TERMUX_VERSION = vim.fn.getenv("TERMUX_APP__APP_VERSION_NAME") or "";
 
@@ -14,6 +16,8 @@ _G.is_within_termux = function ()
 	else
 		return false;
 	end
+
+	---|fE
 end
 
 --- Disables highlight group properties.
@@ -109,7 +113,7 @@ require("editor.lazy");
 
 --- Load scripts just before plugins.
 require("scripts.highlights").setup();
-require("scripts.bg_sync");
+require("scripts.color_sync");
 
 if pcall(require, "markview.highlights") then
 	local hls = require("markview.highlights");

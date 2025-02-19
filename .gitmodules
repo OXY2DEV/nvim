@@ -7,3 +7,6 @@
 [submodule "lua/custom_plugins/bars.nvim"]
 	path = lua/custom_plugins/bars.nvim
 	url = https://github.com/OXY2DEV/bars.nvim
+[submodule "lua/custom_plugins/icons.nvim"]
+	path = lua/custom_plugins/icons.nvim
+	url = https://github.com/OXY2DEV/icons.nvim.git

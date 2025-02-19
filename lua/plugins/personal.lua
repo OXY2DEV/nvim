@@ -10,6 +10,7 @@ return {
 		-- "OXY2DEV/bars",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/bars.nvim",
 		name = "bars",
+		branch = "dev",
 		priority = 500,
 		lazy = false,
 

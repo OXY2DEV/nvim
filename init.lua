@@ -1,3 +1,103 @@
+--- Checks if Neovim is within Termux.
+---@return boolean
+_G.is_within_termux = function ()
+	local PREFIX = vim.fn.getenv("PREFIX") or "";
+	local TERMUX_VERSION = vim.fn.getenv("TERMUX_APP__APP_VERSION_NAME") or "";
+
+	if string.match(PREFIX, "com%.termux") then
+		--- $PREFIX has `com.termux` in it's
+		--- path.
+		return true;
+	elseif TERMUX_VERSION then
+		--- Termux version variable detected.
+		return true;
+	else
+		return false;
+	end
+end
+
+--- Disables highlight group properties.
+---@param ignore string[] | nil
+---@param properties table | nil
+_G.disable_properties = function (ignore, properties)
+	---|fS
+
+	if _G.is_within_termux() == false then
+		--- Only run inside Termux.
+		return;
+	end
+
+	ignore = ignore or {
+		"catppuccin-frappe", "catppuccin-latte",
+		"catppuccin-mocha", "catppuccin-macchiato"
+	};
+	properties = properties or {
+		cterm = { italic = false },
+		italic = false
+	};
+
+	local colorscheme = vim.g.colors_name;
+
+	if vim.list_contains(ignore, colorscheme) then
+		--- Colorscheme is ignored.
+		return;
+	end
+
+	--- Checks if given properties exist in a table
+	--- or not.
+	---@param val table
+	---@return table | nil
+	local function change_properties (val, tmp_properties)
+		tmp_properties = tmp_properties or properties;
+
+		local has_key = false;
+		local _o = {};
+
+		for key, value in pairs(val) do
+			if type(value) == "table" and tmp_properties[key] then
+				local _n = change_properties(value, tmp_properties[key]);
+
+				if _n ~= nil then
+					has_key = true;
+					_o[key] = _n;
+				end
+			elseif tmp_properties[key] ~= nil and tmp_properties[key] ~= value then
+				has_key = true;
+				_o[key] = tmp_properties[key];
+			else
+				_o[key] = value;
+			end
+		end
+
+		return has_key == true and _o or nil;
+	end
+
+	local groups = vim.fn.getcompletion("", "highlight");
+
+	for _, group in ipairs(groups) do
+		local val = vim.api.nvim_get_hl(0, {
+			name = group
+		});
+
+		if val.link then
+			--- Linked group. Do
+			--- not modify.
+			goto continue;
+		end
+
+		local _m = change_properties(val);
+
+		if _m ~= nil then
+			--- Only apply changes if
+			--- we have modified the value.
+			pcall(vim.api.nvim_set_hl, 0, group, _m);
+		end
+
+	    ::continue::
+	end
+
+	---|fE
+end
 
 --- Load the options first;
 require("editor.options");
@@ -17,4 +117,11 @@ if pcall(require, "markview.highlights") then
 	hls.destroy();
 	hls.create(hls.groups);
 end
+
+--- Autocmd for the colorscheme.
+vim.api.nvim_create_autocmd("ColorScheme", {
+	callback = function ()
+		_G.disable_properties();
+	end
+})
 

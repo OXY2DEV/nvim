@@ -7,20 +7,20 @@ return {
 		lazy = false,
 		priority = 1000,
 
-		opts = {
-			flavour = "mocha",
-			no_italic = true,
-			-- transparent_background = true,
-
-			dim_inactive = {
-				enabled = true,
-				shade = "dark",
-
-				percentage = 0.10
-			},
-		},
-
 		config = function ()
+			require("catppuccin").setup({
+				flavour = "mocha",
+				no_italic = _G.is_within_termux(),
+				transparent_background = _G.is_within_termux() == false,
+
+				dim_inactive = {
+					enabled = true,
+					shade = "dark",
+
+					percentage = 0.10
+				},
+			});
+
 			vim.cmd.colorscheme("catppuccin");
 		end
 	},
@@ -29,9 +29,10 @@ return {
 		lazy = false,
 		priority = 1000,
 
-		opts = {
-			style = "night",
-		}
+		config = function ()
+			require("tokyonight").setup({
+			});
+		end,
 	},
 	{
 		"scottmckendry/cyberdream.nvim",

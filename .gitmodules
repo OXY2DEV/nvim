@@ -1,6 +1,3 @@
-[submodule "lua/custom_plugins/bars"]
-	path = lua/custom_plugins/bars
-	url = https://github.com/OXY2DEV/bars-N-lines.nvim.git
 [submodule "lua/custom_plugins/patterns.nvim"]
 	path = lua/custom_plugins/patterns.nvim
 	url = https://github.com/OXY2DEV/patterns.nvim

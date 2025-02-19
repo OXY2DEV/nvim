@@ -17,7 +17,7 @@ return {
 		dependencies = {
 			{
 				-- "OXY2DEV/icons",
-				dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons",
+				dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons.nvim",
 			}
 		}
 	},

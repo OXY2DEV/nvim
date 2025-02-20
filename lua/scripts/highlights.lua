@@ -642,6 +642,28 @@ highlights.groups = {
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
 
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
+
 		return {
 			{
 				group_name = "Color0",
@@ -668,7 +690,16 @@ highlights.groups = {
 					bg = highlights.rgb_to_hex(buf_bg),
 					fg = highlights.rgb_to_hex(h_fg)
 				}
-			}
+			},
+
+			{
+				group_name = "Color0T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -689,6 +720,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -716,7 +769,16 @@ highlights.groups = {
 					bg = highlights.rgb_to_hex(buf_bg),
 					fg = highlights.rgb_to_hex(h_fg)
 				}
-			}
+			},
+
+			{
+				group_name = "Color1T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -737,6 +799,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -765,6 +849,15 @@ highlights.groups = {
 					fg = highlights.rgb_to_hex(h_fg)
 				}
 			},
+
+			{
+				group_name = "Color2T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -785,6 +878,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -813,6 +928,15 @@ highlights.groups = {
 					fg = highlights.rgb_to_hex(h_fg)
 				}
 			},
+
+			{
+				group_name = "Color3T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -833,6 +957,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -862,6 +1008,14 @@ highlights.groups = {
 				}
 			},
 
+			{
+				group_name = "Color4T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -882,6 +1036,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -910,6 +1086,15 @@ highlights.groups = {
 					fg = highlights.rgb_to_hex(h_fg)
 				}
 			},
+
+			{
+				group_name = "Color5T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -930,6 +1115,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -958,6 +1165,15 @@ highlights.groups = {
 					fg = highlights.rgb_to_hex(h_fg)
 				}
 			},
+
+			{
+				group_name = "Color6T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -978,6 +1194,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -1006,6 +1244,15 @@ highlights.groups = {
 					fg = highlights.rgb_to_hex(h_fg)
 				}
 			},
+
+			{
+				group_name = "Color7T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 		---_
 	end,
@@ -1028,6 +1275,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -1054,6 +1323,15 @@ highlights.groups = {
 
 					bg = highlights.rgb_to_hex(buf_bg),
 					fg = highlights.rgb_to_hex(h_fg)
+				}
+			},
+
+			{
+				group_name = "Color8T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
 				}
 			},
 
@@ -1090,6 +1368,28 @@ highlights.groups = {
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
 
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
+
 		return {
 			{
 				group_name = "Color9",
@@ -1117,6 +1417,15 @@ highlights.groups = {
 					fg = highlights.rgb_to_hex(h_fg)
 				}
 			},
+
+			{
+				group_name = "Color9T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
+				}
+			},
 		};
 
 		---|fE
@@ -1140,6 +1449,28 @@ highlights.groups = {
 
 		local lumen = highlights.lumen(h_fg);
 		local FG = lumen > 0.5 and is_dark("#EFF1F5", "#1E1E2E") or is_dark("#1E1E2E", "#EFF1F5");
+
+		--- LAB color of Background.
+		---@type number[]
+		local _LAB_BG = highlights.rgb_to_lab(highlights.get_property(
+			"bg",
+			{ "Normal" },
+			"#EFF1F5",
+			"#1E1E2E"
+		));
+		--- LAB color of Foreground.
+		---@type number[]
+		local _LAB_FG = highlights.rgb_to_lab(h_fg);
+
+		--- Tint %.
+		---@type number
+		local alpha = lumen > 0.5 and 0.15 or 0.25;
+
+		--- Tinted color.
+		---@type number[]
+		local TINT_BG = highlights.lab_to_rgb(
+			highlights.mix(_LAB_FG, _LAB_BG, alpha, 1 - alpha)
+		);
 
 		return {
 			{
@@ -1166,6 +1497,15 @@ highlights.groups = {
 
 					bg = highlights.rgb_to_hex(buf_bg),
 					fg = highlights.rgb_to_hex(h_fg)
+				}
+			},
+
+			{
+				group_name = "Color10T",
+				value = {
+					default = true,
+
+					bg = highlights.rgb_to_hex(TINT_BG)
 				}
 			},
 		};

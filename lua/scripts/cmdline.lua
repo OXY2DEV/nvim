@@ -214,8 +214,7 @@ cmdline.config = {
 				return title;
 			end,
 
-			filetype = "text",
-			cursor_hl = "Color7R"
+			filetype = "text"
 		}
 	},
 
@@ -305,6 +304,10 @@ cmdline.__state = nil;
 --- Is the statusline visible?
 ---@type boolean
 cmdline.__statualine_visible = true;
+
+--- Should the statusline be redrawn?
+---@type boolean
+cmdline.__redraw = false;
 
 --- Updates cmdline state.
 ---@param new_state table
@@ -485,7 +488,7 @@ cmdline.__update_ui = function ()
 		end
 	end
 
-	if cmdline.__get_state("text", nil) == text then
+	if cmdline.__redraw ~= true and cmdline.__get_state("text", nil) == text then
 		cmdline.__update_cursor(h, config);
 
 		vim.api.nvim__redraw({
@@ -521,6 +524,8 @@ cmdline.__update_ui = function ()
 	vim.api.nvim__redraw({
 		flush = true,
 	});
+
+	cmdline.__redraw = false;
 
 	---|fE
 end
@@ -609,6 +614,8 @@ cmdline.__enabled = false;
 cmdline.__cmd_leave = nil;
 cmdline.__win_enter = nil;
 
+cmdline.__augroup = vim.api.nvim_create_augroup("cmdline", { clear = true });
+
 cmdline.attach = function ()
 	vim.o.cmdheight = 0;
 	cmdline.__enabled = true;
@@ -628,22 +635,45 @@ cmdline.attach = function ()
 		-- end
 	end);
 
-	cmdline.__cmd_leave = vim.api.nvim_create_autocmd("CmdlineLeave", {
+	vim.api.nvim_create_autocmd("CmdlineLeave", {
+		group = cmdline.__augroup,
+
 		callback = function ()
 			pcall(cmdline.__close_ui);
 		end
 	});
 
-	cmdline.__win_enter = vim.api.nvim_create_autocmd("WinEnter", {
+	vim.api.nvim_create_autocmd("WinEnter", {
+		group = cmdline.__augroup,
+
 		callback = function ()
 			local win = vim.api.nvim_get_current_win();
 			local config = vim.api.nvim_win_get_config(win);
 
-			if (config.row and config.col) and (config.width == vim.o.columns and config.height == vim.o.lines) then
+			if config.relative ~= "" then
+				--- Floats do not have a statusline.
 				cmdline.__statualine_visible = false;
-			else
+			elseif vim.o.laststatus > 1 then
 				cmdline.__statualine_visible = true;
+			elseif #vim.api.nvim_list_wins() > 1 then
+				--- laststatus == 1 and multiple
+				--- windows exist.
+				cmdline.__statualine_visible = true;
+			else
+				cmdline.__statualine_visible = false;
 			end
+		end
+	});
+
+	vim.api.nvim_create_autocmd("VimResized", {
+		group = cmdline.__augroup,
+
+		callback = function ()
+			if not cmdline.window or vim.api.nvim_win_is_valid(cmdline.window) == false then
+				return;
+			end
+
+			cmdline.__redraw = true;
 		end
 	});
 end
@@ -653,7 +683,7 @@ cmdline.detach = function ()
 	cmdline.__enabled = false;
 
 	vim.ui_detach(cmdline.namespace);
-	pcall(vim.api.nvim_del_autocmd, cmdline.__cmd_leave);
+	cmdline.__augroup = vim.api.nvim_create_augroup("cmdline", { clear = true });
 end
 
 --- Setup function.

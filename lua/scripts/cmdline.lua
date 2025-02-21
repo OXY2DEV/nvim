@@ -569,9 +569,14 @@ end
 
 --- Hides the cmdline.
 cmdline.cmdline_hide = function ()
+	local text = cmdline.__get_state("text", "");
 	cmdline.__state = nil;
 
 	cmdline.__close_ui();
+
+	if string.match(text, "^set%s.*") then
+		vim.cmd(text);
+	end
 end
 
 --- Cursor position change.

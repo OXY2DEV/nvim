@@ -574,7 +574,7 @@ cmdline.cmdline_hide = function ()
 
 	cmdline.__close_ui();
 
-	if string.match(text, "^set%s.*") then
+	if string.match(text, "^set%s.+[a-z]+?$") then
 		vim.cmd(text);
 	end
 end

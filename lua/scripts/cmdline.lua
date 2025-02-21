@@ -302,6 +302,10 @@ cmdline.buffer, cmdline.window = nil, nil;
 ---@type cmdline.state
 cmdline.__state = nil;
 
+--- Is the statusline visible?
+---@type boolean
+cmdline.__statualine_visible = true;
+
 --- Updates cmdline state.
 ---@param new_state table
 cmdline.__update_state = function (new_state)
@@ -499,7 +503,7 @@ cmdline.__update_ui = function ()
 		style = "minimal",
 		zindex = 300,
 
-		row = vim.o.lines - (vim.o.cmdheight + 1 + h),
+		row = vim.o.lines - (cmdline.__statualine_visible and 1 or 0) - (vim.o.cmdheight + h),
 		col = 0,
 
 		width = vim.o.columns,
@@ -601,7 +605,9 @@ end
 --- Is the custom cmdline Attached?
 ---@type boolean
 cmdline.__enabled = false;
-cmdline.__auid = nil;
+
+cmdline.__cmd_leave = nil;
+cmdline.__win_enter = nil;
 
 cmdline.attach = function ()
 	vim.o.cmdheight = 0;
@@ -622,9 +628,22 @@ cmdline.attach = function ()
 		-- end
 	end);
 
-	cmdline.__auid = vim.api.nvim_create_autocmd("CmdlineLeave", {
+	cmdline.__cmd_leave = vim.api.nvim_create_autocmd("CmdlineLeave", {
 		callback = function ()
 			pcall(cmdline.__close_ui);
+		end
+	});
+
+	cmdline.__win_enter = vim.api.nvim_create_autocmd("WinEnter", {
+		callback = function ()
+			local win = vim.api.nvim_get_current_win();
+			local config = vim.api.nvim_win_get_config(win);
+
+			if (config.row and config.col) and (config.width == vim.o.columns and config.height == vim.o.lines) then
+				cmdline.__statualine_visible = false;
+			else
+				cmdline.__statualine_visible = true;
+			end
 		end
 	});
 end
@@ -634,7 +653,7 @@ cmdline.detach = function ()
 	cmdline.__enabled = false;
 
 	vim.ui_detach(cmdline.namespace);
-	pcall(vim.api.nvim_del_autocmd, cmdline.__auid);
+	pcall(vim.api.nvim_del_autocmd, cmdline.__cmd_leave);
 end
 
 --- Setup function.

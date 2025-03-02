@@ -3,11 +3,13 @@
 _G.is_within_termux = function ()
 	---|fS
 
-	local PREFIX = vim.fn.getenv("PREFIX") or "";
+	--- $PREFIX may not be set.
+	--- $HOME should be set.
+	local HOME = vim.fn.getenv("HOME") or "";
 	local TERMUX_VERSION = vim.fn.getenv("TERMUX_APP__APP_VERSION_NAME") or "";
 
-	if string.match(PREFIX, "com%.termux") then
-		--- $PREFIX has `com.termux` in it's
+	if string.match(HOME, "com%.termux") then
+		--- $HOME has `com.termux` in it's
 		--- path.
 		return true;
 	elseif TERMUX_VERSION then

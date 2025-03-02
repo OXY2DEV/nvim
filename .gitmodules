@@ -10,3 +10,6 @@
 [submodule "lua/custom_plugins/icons.nvim"]
 	path = lua/custom_plugins/icons.nvim
 	url = https://github.com/OXY2DEV/icons.nvim.git
+[submodule "lua/custom_plugins/markview.nvim"]
+	path = lua/custom_plugins/markview.nvim
+	url = https://github.com/OXY2DEV/markview.nvim.git

@@ -64,7 +64,7 @@ return {
 				nerd_font_variant = "normal"
 			},
 			cmdline = {
-				keymap = {}
+				enabled = false,
 			},
 			completion = {
 				menu = {

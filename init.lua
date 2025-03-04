@@ -117,6 +117,7 @@ require("editor.lazy");
 require("scripts.highlights").setup();
 require("scripts.color_sync");
 require("scripts.cmdline").setup();
+require("scripts.lsp_hover").setup();
 
 if pcall(require, "markview.highlights") then
 	local hls = require("markview.highlights");

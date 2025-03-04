@@ -305,6 +305,10 @@ cmdline.__state = nil;
 ---@type boolean
 cmdline.__statualine_visible = true;
 
+--- CmdlineEnter autocmd.
+---@type integer
+cmdline.__enter_au = nil;
+
 --- Should the statusline be redrawn?
 ---@type boolean
 cmdline.__redraw = false;
@@ -670,6 +674,15 @@ cmdline.attach = function ()
 		end
 	});
 
+	cmdline.__enter_au = vim.api.nvim_create_autocmd("CmdlineEnter", {
+		callback = function ()
+			vim.print(os.time())
+			pcall(vim.api.nvim__redraw, {
+				flush = true,
+			});
+		end
+	});
+
 	vim.api.nvim_create_autocmd("VimResized", {
 		group = cmdline.__augroup,
 
@@ -688,6 +701,8 @@ cmdline.detach = function ()
 	cmdline.__enabled = false;
 
 	vim.ui_detach(cmdline.namespace);
+
+	pcall(vim.api.nvim_del_autocmd, cmdline.__enter_au);
 	cmdline.__augroup = vim.api.nvim_create_augroup("cmdline", { clear = true });
 end
 

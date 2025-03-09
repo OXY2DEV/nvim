@@ -37,4 +37,15 @@ return {
 		priority = 100,
 		lazy = false
 	},
+	{
+		-- "OXY2DEV/markview.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/oops.nvim",
+		name = "oops",
+		priority = 100,
+		lazy = false,
+
+		config = function ()
+			vim.api.nvim_set_keymap("n", "O", "<CMD>Oops<CR>", {});
+		end
+	},
 };

@@ -16,3 +16,6 @@
 [submodule "parsers/tree-sitter-vhs"]
 	path = parsers/tree-sitter-vhs
 	url = https://github.com/OXY2DEV/tree-sitter-vhs.git
+[submodule "lua/custom_plugins/oops.nvim"]
+	path = lua/custom_plugins/oops.nvim
+	url = https://github.com/OXY2DEV/oops.nvim.git

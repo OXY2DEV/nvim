@@ -676,7 +676,6 @@ cmdline.attach = function ()
 
 	cmdline.__enter_au = vim.api.nvim_create_autocmd("CmdlineEnter", {
 		callback = function ()
-			vim.print(os.time())
 			pcall(vim.api.nvim__redraw, {
 				flush = true,
 			});
@@ -707,7 +706,7 @@ cmdline.detach = function ()
 end
 
 --- Setup function.
----@param user_config cmdline.config
+---@param user_config? cmdline.config
 cmdline.setup = function (user_config)
 	cmdline.config = vim.tbl_deep_extend("force", cmdline.config, user_config or {})
 	cmdline.attach();

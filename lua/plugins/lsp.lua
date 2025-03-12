@@ -3,6 +3,8 @@ return {
 		"hrsh7th/nvim-cmp",
 		enabled = false,
 
+		priority = 750,
+
 		dependencies = {
 			"hrsh7th/cmp-nvim-lsp",
 			"hrsh7th/cmp-nvim-lua",
@@ -59,6 +61,9 @@ return {
 		lazy = false,
 		version = "*",
 		-- build = "RUSTC_BOOTSTRAP=1 cargo build --release",
+
+		priority = 750,
+
 		opts = {
 			appearance = {
 				nerd_font_variant = "normal"
@@ -147,6 +152,9 @@ return {
 	},
 	{
 		"neovim/nvim-lspconfig",
+
+		priority = 750,
+
 		dependencies = {
 			"Saghen/blink.cmp",
 			-- "hrsh7th/nvim-cmp",

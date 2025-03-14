@@ -12,7 +12,7 @@ _G.is_within_termux = function ()
 		--- $HOME has `com.termux` in it's
 		--- path.
 		return true;
-	elseif TERMUX_VERSION then
+	elseif TERMUX_VERSION ~= vim.NIL then
 		--- Termux version variable detected.
 		return true;
 	else

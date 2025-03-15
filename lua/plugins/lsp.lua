@@ -123,13 +123,52 @@ return {
 				documentation = {
 					window = { border = 'single' },
 					-- draw = function (data)
-					-- 	data.default_implementation();
+					-- 	---|fS
+					--
+					-- 	if not data.item.documentation then
+					-- 		-- Documentation not available.
+					-- 		return;
+					-- 	elseif data.item.documentation.kind ~= "markdown" then
+					-- 		-- Documentation isn't in markdown.
+					-- 		data.default_implementation();
+					-- 		return;
+					-- 	elseif package.loaded["markview"] == nil then
+					-- 		-- markview.nvim not available.
+					-- 		data.default_implementation();
+					-- 		return;
+					-- 	end
+					--
+					-- 	---@type integer
 					-- 	local buf = data.window.buf;
+					-- 	---@type string[]
+					-- 	local lines = vim.split(data.item.documentation.value or "", "\n", { trimempty = true });
+					-- 	---@type string[]
+					-- 	local details = vim.split(data.item.detail or "", "\n", { trimempty = false });
+					-- 	table.insert(details, "");
+					--
+					-- 	vim.print(data)
+					-- 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.list_extend(details, lines));
+					--
+					-- 	if vim.g.__reg_doc ~= true then
+					-- 		vim.treesitter.language.register("markdown", "blink-cmp-documentation");
+					-- 		vim.g.__reg_doc = true;
+					-- 	end
 					--
 					-- 	if package.loaded["markview"] then
-					-- 		require("markview").strict_render:clear(buf);
-					-- 		require("markview").strict_render:render(buf, 999);
+					-- 		local utils = package.loaded["markview.utils"];
+					-- 		vim.defer_fn(function ()
+					-- 			local window = utils.buf_getwin(buf);
+					-- 			vim.wo[window].signcolumn = "no";
+					-- 			vim.api.nvim_win_set_config(window, {
+					-- 				border = "rounded",
+					-- 			});
+					--
+					-- 			require("markview").strict_render:clear(buf);
+					-- 			require("markview").strict_render:render(buf, 999);
+					-- 		end, 25)
 					-- 	end
+					--
+					-- 	---|fE
 					-- end
 				},
 				-- signature = {
@@ -139,7 +178,8 @@ return {
 			keymap = {
 				preset = "none",
 
-				["<Tab>"] = { "show", "show_documentation", "hide_documentation", "fallback" },
+				["<C-Tab>"] = { "show", "show_documentation", "hide_documentation", "fallback" },
+				["<Tab>"] = { "show_documentation", "hide_documentation", "fallback" },
 				["<CR>"] = { "accept", "fallback" },
 
 				["<Left>"] = { "snippet_backward", "cancel", "fallback" },
@@ -147,7 +187,13 @@ return {
 
 				["<Up>"] = { "scroll_documentation_up", "fallback" },
 				["<Down>"] = { "scroll_documentation_down", "fallback" },
-			}
+			},
+			sources = {
+				default = { "lsp", "path", "snippets", "buffer" },
+				per_filetype = {
+					markdown = { "markview" }
+				}
+			},
 		},
 	},
 	{
@@ -164,16 +210,21 @@ return {
 			local loaded_cmp, lsp_cmp = pcall(require, "cmp-nvim-lsp");
 			local loaded_blink, blink = pcall(require, "blink.cmp");
 
-			if loaded_blink then
-				require("lspconfig")["lua_ls"].setup({
-					capabilities = blink.get_lsp_capabilities()
-				});
-			elseif loaded_cmp == true then
-				require("lspconfig")["lua_ls"].setup({
-					capabilities = lsp_cmp["lua_ls"].default_capabilities()
-				});
-			else
-				require("lspconfig")["lua_ls"].setup({})
+			---@type string[] LSP client names.
+			local clients = { "lua_ls" };
+
+			for _, client in ipairs(clients) do
+				if loaded_blink then
+					require("lspconfig")[client].setup({
+						capabilities = blink.get_lsp_capabilities()
+					});
+				elseif loaded_cmp == true then
+					require("lspconfig")[client].setup({
+						capabilities = lsp_cmp["lua_ls"].default_capabilities()
+					});
+				else
+					require("lspconfig")[client].setup({})
+				end
 			end
 		end
 	},

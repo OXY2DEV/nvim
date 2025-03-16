@@ -31,7 +31,7 @@ return {
 				},
 
 				completion = {
-					 completeopt = "menu,menuone,noinsert"
+					 completeopt = "menu,menuone,noinsert",
 				},
 
 				experimental = {
@@ -60,6 +60,10 @@ return {
 		"Saghen/blink.cmp",
 		lazy = false,
 		version = "*",
+
+		dependencies = {
+			"rafamadriz/friendly-snippets",
+		},
 		-- build = "RUSTC_BOOTSTRAP=1 cargo build --release",
 
 		priority = 750,
@@ -73,9 +77,7 @@ return {
 			},
 			completion = {
 				menu = {
-					auto_show = function(ctx)
-						return ctx.mode ~= "cmdline";
-					end,
+					auto_show = false,
 
 					border = "rounded",
 					-- max_width = math.floor(vim.o.columns * 0.5),
@@ -178,8 +180,7 @@ return {
 			keymap = {
 				preset = "none",
 
-				["<C-Tab>"] = { "show", "show_documentation", "hide_documentation", "fallback" },
-				["<Tab>"] = { "show_documentation", "hide_documentation", "fallback" },
+				["<C-Space>"] = { "show", "show_documentation", "hide_documentation", "fallback" },
 				["<CR>"] = { "accept", "fallback" },
 
 				["<Left>"] = { "snippet_backward", "cancel", "fallback" },
@@ -211,7 +212,7 @@ return {
 			local loaded_blink, blink = pcall(require, "blink.cmp");
 
 			---@type string[] LSP client names.
-			local clients = { "lua_ls" };
+			local clients = { "lua_ls", "html", "ts_ls", "emmet_ls", "css_ls" };
 
 			for _, client in ipairs(clients) do
 				if loaded_blink then
@@ -220,7 +221,7 @@ return {
 					});
 				elseif loaded_cmp == true then
 					require("lspconfig")[client].setup({
-						capabilities = lsp_cmp["lua_ls"].default_capabilities()
+						capabilities = lsp_cmp[client].default_capabilities()
 					});
 				else
 					require("lspconfig")[client].setup({})

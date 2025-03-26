@@ -61,12 +61,12 @@ return {
 		lazy = false,
 		version = "*",
 
+		priority = 750,
+
 		dependencies = {
 			"rafamadriz/friendly-snippets",
 		},
 		-- build = "RUSTC_BOOTSTRAP=1 cargo build --release",
-
-		priority = 750,
 
 		opts = {
 			appearance = {
@@ -191,9 +191,6 @@ return {
 			},
 			sources = {
 				default = { "lsp", "path", "snippets", "buffer" },
-				per_filetype = {
-					markdown = { "markview" }
-				}
 			},
 		},
 	},

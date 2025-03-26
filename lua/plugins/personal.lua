@@ -34,7 +34,11 @@ return {
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/patterns.nvim",
 		name = "patterns",
 		priority = 100,
-		lazy = false
+		lazy = false,
+
+		dependencies = {
+			"Saghen/blink.cmp"
+		}
 	},
 	{
 		-- "OXY2DEV/markview.nvim",

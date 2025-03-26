@@ -109,15 +109,18 @@ end
 require("editor.options");
 require("editor.keymaps");
 
-require("editor.lazy");
-
 -- vim.cmd.colorscheme("catppuccin");
+
+require("scripts.cmdline").setup();
+--- Not stable enough.
+-- require("scripts.messages").setup();
+require("scripts.lsp_hover").setup();
+
+require("editor.lazy");
 
 --- Load scripts just before plugins.
 require("scripts.highlights").setup();
 require("scripts.color_sync");
-require("scripts.cmdline").setup();
-require("scripts.lsp_hover").setup();
 
 if pcall(require, "markview.highlights") then
 	local hls = require("markview.highlights");

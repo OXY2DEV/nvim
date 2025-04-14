@@ -326,7 +326,20 @@ hover.setup = function (config)
 		hover.config = vim.tbl_deep_extend("force", hover.config, config);
 	end
 
-	vim.lsp.handlers["textDocument/hover"] = hover.hover;
+	if vim.fn.has("nvim-0.11") == 1 then
+		vim.api.nvim_create_autocmd("LspAttach", {
+			callback = function (ev)
+				vim.api.nvim_buf_set_keymap(ev.buf, "n", "K", "", {
+					callback = function ()
+						vim.lsp.buf_request(0, 'textDocument/hover', vim.lsp.util.make_position_params(), hover.hover);
+					end
+				});
+			end
+		});
+	else
+		--- We don't need this *yet* in 0.11
+		vim.lsp.handlers["textDocument/hover"] = hover.hover;
+	end
 
 	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
 		callback = function (event)

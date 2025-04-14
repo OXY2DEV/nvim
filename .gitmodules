@@ -19,3 +19,6 @@
 [submodule "lua/custom_plugins/oops.nvim"]
 	path = lua/custom_plugins/oops.nvim
 	url = https://github.com/OXY2DEV/oops.nvim.git
+[submodule "lua/custom_plugins/ui.nvim"]
+	path = lua/custom_plugins/ui.nvim
+	url = https://github.com/OXY2DEV/ui.nvim.git

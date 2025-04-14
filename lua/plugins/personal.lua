@@ -1,5 +1,12 @@
 return {
 	{
+		-- "OXY2DEV/ui",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/ui.nvim",
+		name = "ui",
+		priority = 500,
+		lazy = false
+	},
+	{
 		-- "OXY2DEV/icons",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons.nvim",
 		name = "icons",

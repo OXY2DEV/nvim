@@ -1,6 +1,7 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
 	build = ":TSUpdate",
+	priority = 200,
 
 	--- `opts` doesn't work for this plugin
 	opts = {},

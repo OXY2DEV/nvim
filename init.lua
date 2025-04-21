@@ -111,9 +111,6 @@ require("editor.keymaps");
 
 -- vim.cmd.colorscheme("catppuccin");
 
--- require("scripts.cmdline").setup();
---- Not stable enough.
--- require("scripts.messages").setup();
 require("scripts.lsp_hover").setup();
 
 require("editor.lazy");
@@ -134,5 +131,5 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 	callback = function ()
 		_G.disable_properties();
 	end
-})
+});
 

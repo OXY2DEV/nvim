@@ -69,6 +69,9 @@ return {
 		-- build = "RUSTC_BOOTSTRAP=1 cargo build --release",
 
 		opts = {
+			fuzzy = {
+				implementation = "lua",
+			},
 			appearance = {
 				nerd_font_variant = "normal"
 			},
@@ -209,7 +212,7 @@ return {
 			local loaded_blink, blink = pcall(require, "blink.cmp");
 
 			---@type string[] LSP client names.
-			local clients = { "lua_ls", "html", "ts_ls", "emmet_ls", "css_ls" };
+			local clients = { "lua_ls", "html", "ts_ls", "emmet_ls" };
 
 			for _, client in ipairs(clients) do
 				if loaded_blink then

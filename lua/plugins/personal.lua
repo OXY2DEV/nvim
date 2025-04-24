@@ -33,7 +33,13 @@ return {
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/markview.nvim",
 		name = "markview",
 		priority = 100,
-		lazy = false
+		lazy = false,
+
+		opts = {
+			preview = {
+				enable = false
+			}
+		}
 	},
 
 	{

@@ -9,3 +9,6 @@ cmdheight
 keymaps
 param
 Lua
+extmark
+Popupmenu
+Neovim's

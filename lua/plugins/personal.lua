@@ -41,6 +41,13 @@ return {
 			}
 		}
 	},
+	{
+		-- "OXY2DEV/helpview.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/helpview.nvim",
+		name = "helpview",
+		priority = 100,
+		lazy = false,
+	},
 
 	{
 		-- "OXY2DEV/markview.nvim",

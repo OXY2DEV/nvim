@@ -65,10 +65,10 @@ vim.o.shiftwidth = 4;
 
 --- Do not show partial commands. It bugs out on Termux.
 --- Also slows down stuff in Visual mode.
-vim.o.showcmd = false;
+--- vim.o.showcmd = false;
 
 --- No point in showing the mode(use custom statusline).
-vim.o.showmode = false;
+--- vim.o.showmode = false;
 
 --- This isn't required. It's here just for completeness.
 vim.o.softtabstop = 4;

@@ -52,7 +52,9 @@ return {
 				"query",
 
 				"lua_patterns",
-				"vhs"
+				"vhs",
+
+				"python"
 			},
 			highlight = {
 				enable = true,

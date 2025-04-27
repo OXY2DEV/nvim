@@ -212,7 +212,11 @@ return {
 			local loaded_blink, blink = pcall(require, "blink.cmp");
 
 			---@type string[] LSP client names.
-			local clients = { "lua_ls", "html", "ts_ls", "emmet_ls" };
+			local clients = {
+				"lua_ls",
+				"html", "ts_ls", "emmet_ls",
+				"basedpyright"
+			};
 
 			for _, client in ipairs(clients) do
 				if loaded_blink then

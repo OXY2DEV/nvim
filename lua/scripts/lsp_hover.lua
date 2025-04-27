@@ -1,359 +1,318 @@
-local quadrants = require("scripts.quadrants");
+--- Custom LSP hover for Neovim.
 local hover = {};
 
---- LSP hover buffer.
----@type integer
-hover.buffer = nil;
-
---- LSP hover window.
----@type integer
-hover.window = nil;
-
---- LSP hover quadrant.
----@type
----| "center"
----| "top_left" 
----| "top_right"
----| "bottom_left"
----| "bottom_right"
-hover.quad = nil;
-
---- Hover options.
----@class hover.opts
----
----@field border_hl? string | fun(): string
----
----@field name? [ string, string ][] | string | fun(): (string | [ string, string ][])
----
----@field min_width? integer | fun(): integer
----@field max_width? integer | fun(): integer
+---|fS "Type definitions"
 
 
----@class hover.opts_static
+---@class hover.style Style for the hover window.
 ---
----@field border_hl string
+---@field condition? fun(client_name: string, result: table, context: table): boolean Condition for this style.
 ---
----@field name [ string, string ][] | string
+---@field width? integer | fun(client_name: string, result: table, context: table): integer Window width.
+---@field height? integer | fun(client_name: string, result: table, context: table): integer Window height.
+---@field winhl? string | fun(client_name: string, result: table, context: table): string Window's winhighlight.
 ---
----@field min_width integer
----@field max_width integer
+---@field winopts? table | fun(client_name: string, result: table, context: table): table Options for `nvim_open_win()`.
 
---- Hover configuration.
----@type { default: hover.opts, [string]: hover.opts  }
+
+---@class hover.style__static Static style, made after evaluating `hover.style`.
+---
+---@field width? integer Window width.
+---@field height? integer Window height.
+---@field winhl? string Window's winhighlight.
+---
+---@field winopts? table Options for `nvim_open_win()`.
+
+
+---|fE
+
+---@type table<string, hover.style>
 hover.config = {
 	default = {
-		min_width = 5,
-		max_width = function ()
-			return math.floor(vim.o.columns * 0.75);
+		width = function ()
+			return math.floor(vim.o.columns * 0.5)
+		end,
+	},
+
+	lua_ls = {
+		condition = function (client_name)
+			return client_name == "lua_ls";
 		end,
 
-		name = {
-			{ " " },
-			{ "  LSP", "FloatBorder" },
-			{ " " },
-		},
-		border_hl = "FloatBorder"
+		winopts = {
+			footer_pos = "right",
+			footer = {
+				{ " 󰢱 LuaLS ", "@function" }
+			}
+		}
 	},
 
-	harper_ls = {
-		name = {
-			{ " " },
-			{ "  Harper", "FloatBorder" },
-			{ " " },
-		},
-		border_hl = "Color0"
-	},
-	clangd = {
-		name = {
-			{ " " },
-			{ " Clangd", "FloatBorder" },
-			{ " " },
+	basedpyright = {
+		condition = function (client_name)
+			return client_name == "basedpyright";
+		end,
+
+		winopts = {
+			footer_pos = "right",
+			footer = {
+				{ " 󰌠 BasedPyright ", "@constant" }
+			}
 		}
 	},
-	lua_ls = {
-		name = {
-			{ " " },
-			{ " Lua", "Color5" },
-			{ " " },
-		},
-		border_hl = "Color5"
-	},
-	ts_ls = {
-		name = {
-			{ " " },
-			{ "󰖟 Tsserver", "FloatBorder" },
-			{ " " },
-		}
-	},
-	cssls = {
-		name = {
-			{ " " },
-			{ " CSS", "FloatBorder" },
-			{ " " },
-		}
-	},
-	html = {
-		name = {
-			{ " " },
-			{ " HTML", "FloatBorder" },
-			{ " " },
-		}
-	}
 };
 
---- Gets configuration for an LSP client.
----@param client_id integer
----@return hover.opts_static
-hover.get_config = function (client_id)
-	local client = vim.lsp.get_client_by_id(client_id);
-	local keys = vim.tbl_keys(hover.config);
+--- Gets LSP style
+---@param ... any
+---@return hover.style__static
+local function get_style (...)
+	---|fS
 
-	keys = vim.tbl_filter(function (val)
-		return val ~= "default";
-	end, keys);
+	local keys = vim.tbl_keys(hover.config);
+	local result = hover.config.default;
+
 	table.sort(keys);
 
-	---@type hover.opts
-	local _c = hover.config.default or {};
-
 	for _, key in ipairs(keys) do
-		if string.match(client.name, key) then
-			_c = vim.tbl_extend("force", _c, hover.config[key]);
-			break;
-		end
-	end
+		if key ~= "default" then
+			local val = hover.config[key];
+			local ran_cond, cond = pcall(val.condition, ...);
 
-	for k, v in pairs(_c) do
-		if type(v) == "function" then
-			local can_call, value = pcall(v);
-
-			if can_call then
-				_c[k] = value;
-			else
-				_c[k] = nil;
+			if ran_cond and cond then
+				result = vim.tbl_deep_extend("force", result, val);
+				break;
 			end
 		end
 	end
 
-	return _c;
+	local final_val = {};
+
+	for k, v in pairs(result) do
+		if type(v) ~= "function" then
+			final_val[k] = v;
+		elseif k ~= "condition" then
+			local can_eval, value = pcall(v, ...);
+
+			if can_eval then
+				final_val[k] = value;
+			end
+		end
+	end
+
+	return final_val;
+
+	---|fE
 end
 
-hover.hover = function (error, result, context)
-	if error then
-		return;
-	elseif hover.window and vim.api.nvim_win_is_valid(hover.window) then
-		vim.api.nvim_set_current_win(hover.window);
-	elseif vim.api.nvim_get_current_buf() ~= context.bufnr then
-		return;
-	elseif not result or not result.contents then
-		return;
-	else
-		---@type string[]
-		local lines = vim.split(result.contents.value, "\n", { trimempty = true });
-		---@type hover.opts_static
-		local config = hover.get_config(context.client_id);
+---@type integer, integer Hover buffer & window.
+hover.buffer, hover.window = nil, nil;
 
-		local max_w = config.max_width or 40;
+--- Prepares the buffer for the hover window.
+hover.__prepare = function ()
+	---|fS
 
-		---@type integer
-		local width = config.min_width;
-		local height = 0;
-
-		for _, line in ipairs(lines) do
-			if vim.fn.strdisplaywidth(line) > width then
-				width = math.min(config.max_width, vim.fn.strdisplaywidth(line));
-				height = math.ceil(vim.fn.strdisplaywidth(line) / max_w);
-			else
-				height = height + 1;
-			end
-		end
-
-		local ft;
-
-		if type(result.contents) == "table" and result.contents.kind == "plaintext" then
-			ft = "text";
-		else
-			ft = "markdown";
-		end
-
-		if not hover.buffer or vim.api.nvim_buf_is_valid(hover.buffer) == false then
-			hover.buffer = vim.api.nvim_create_buf(false, true);
-		end
-
-		vim.bo[hover.buffer].ft = ft;
-		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
+	if not hover.buffer or not vim.api.nvim_buf_is_valid(hover.buffer) then
+		hover.buffer = vim.api.nvim_create_buf(false, true);
 
 		vim.api.nvim_buf_set_keymap(hover.buffer, "n", "q", "", {
-			desc = "Close hover window",
 			callback = function ()
+				vim.api.nvim_set_current_win(
+					vim.fn.win_getid(
+						vim.fn.winnr("#")
+					)
+				);
 				pcall(vim.api.nvim_win_close, hover.window, true);
 			end
 		});
-
-		local winpos = vim.fn.getwinpos();
-
-		width = width + 2;
-		height = height + 2;
-
-		hover.quad = quadrants.get_available_quadrant(nil, width, height, winpos[2], winpos[1]);
-		quadrants.register(hover.quad);
-
-		local win_config = {
-			width = width,
-			height = height - 1,
-
-			style = "minimal"
-		};
-
-		if hover.quad == "center" then
-			win_config.relative = "editor";
-
-			win_config.row = math.ceil((vim.o.lines - height) / 2);
-			win_config.col = math.ceil((vim.o.columns - width) / 2);
-
-			win_config.title = config.name;
-			win_config.title_pos = "left";
-
-			win_config.border = {
-				{ "╭", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╮", config.border_hl },
-				{ "│", config.border_hl },
-				{ "╯", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╰", config.border_hl },
-				{ "│", config.border_hl },
-			};
-		elseif hover.quad == "top_left" then
-			win_config.relative = "cursor";
-
-			win_config.row = (-1 * height) - 1;
-			win_config.col = (-1 * width) - 1;
-
-			win_config.title = config.name;
-			win_config.title_pos = "left";
-
-			win_config.border = {
-				{ "╭", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╮", config.border_hl },
-				{ "│", config.border_hl },
-				{ "┤", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╰", config.border_hl },
-				{ "│", config.border_hl },
-			};
-		elseif hover.quad == "top_right" then
-			win_config.relative = "cursor";
-
-			win_config.row = (-1 * height) - 1;
-			win_config.col = 0;
-
-			win_config.title = config.name;
-			win_config.title_pos = "right";
-
-			win_config.border = {
-				{ "╭", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╮", config.border_hl },
-				{ "│", config.border_hl },
-				{ "╯", config.border_hl },
-				{ "─", config.border_hl },
-				{ "├", config.border_hl },
-				{ "│", config.border_hl },
-			};
-		elseif hover.quad == "bottom_left" then
-			win_config.relative = "cursor";
-
-			win_config.row = 1;
-			win_config.col = (-1 * width) - 1;
-
-			win_config.footer = config.name;
-			win_config.footer_pos = "left";
-
-			win_config.border = {
-				{ "╭", config.border_hl },
-				{ "─", config.border_hl },
-				{ "┤", config.border_hl },
-				{ "│", config.border_hl },
-				{ "╯", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╰", config.border_hl },
-				{ "│", config.border_hl },
-			};
-		elseif hover.quad == "bottom_right" then
-			win_config.relative = "cursor";
-
-			win_config.row = 1;
-			win_config.col = 0;
-
-			win_config.footer = config.name;
-			win_config.footer_pos = "right";
-
-			win_config.border = {
-				{ "├", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╮", config.border_hl },
-				{ "│", config.border_hl },
-				{ "╯", config.border_hl },
-				{ "─", config.border_hl },
-				{ "╰", config.border_hl },
-				{ "│", config.border_hl },
-			};
-		end
-
-		if not hover.window or vim.api.nvim_win_is_valid(hover.window) == false then
-			hover.window = vim.api.nvim_open_win(hover.buffer, false, win_config);
-		end
-
-		vim.wo[hover.window].conceallevel = 3;
-		vim.wo[hover.window].concealcursor = "n";
-		vim.wo[hover.window].signcolumn = "no";
-
-		vim.wo[hover.window].wrap = true;
-		vim.wo[hover.window].linebreak = true;
-
-		if package.loaded["markview"] and package.loaded["markview"].render then
-			--- If markview is available use it to render stuff.
-			--- This is for `v25`.
-			require("markview").render(hover.buffer, { enable = true, hybrid_mode = false });
-		end
 	end
+
+	---|fE
 end
 
-hover.setup = function (config)
-	if type(config) == "table" then
-		hover.config = vim.tbl_deep_extend("force", hover.config, config);
-	end
+---@param window integer
+---@param w integer
+---@param h integer
+---@return string[]
+---@return "NE" | "NW" | "SE" | "SW"
+---@return integer
+---@return integer
+hover.__win_args = function (window, w, h)
+	---|fS
 
-	if vim.fn.has("nvim-0.11") == 1 then
-		vim.api.nvim_create_autocmd("LspAttach", {
-			callback = function (ev)
-				vim.api.nvim_buf_set_keymap(ev.buf, "n", "K", "", {
-					callback = function ()
-						vim.lsp.buf_request(0, 'textDocument/hover', vim.lsp.util.make_position_params(), hover.hover);
-					end
-				});
-			end
-		});
+	---@type [ integer, integer ]
+	local cursor = vim.api.nvim_win_get_cursor(window);
+	---@type table<string, integer>
+	local screenpos = vim.fn.screenpos(window, cursor[1], cursor[2]);
+
+	local screen_width = vim.o.columns;
+	local screen_height = vim.o.lines - vim.o.cmdheight - 1;
+
+	if screenpos.row + h >= screen_height then
+		if screenpos.curscol + w >= screen_width then
+			return { "╭", "─", "╮", "│", "┤", "─", "╰", "│" }, "SE", 0, 2;
+		else
+			return { "╭", "─", "╮", "│", "╯", "─", "├", "│" }, "SW", 0, 1;
+		end
 	else
-		--- We don't need this *yet* in 0.11
-		vim.lsp.handlers["textDocument/hover"] = hover.hover;
+		if screenpos.curscol + w >= screen_width then
+			return { "╭", "─", "┤", "│", "╯", "─", "╰", "│" }, "NE", 1, 1;
+		else
+			return { "├", "─", "╮", "│", "╯", "─", "╰", "│" }, "NW", 1, 0;
+		end
 	end
 
-	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-		callback = function (event)
-			if event.buf == hover.buffer then
-				--- Don't do anything if the current buffer
-				--- is the hover buffer.
-				return;
-			elseif hover.window and vim.api.nvim_win_is_valid(hover.window) then
+	---|fE
+end
+
+--- Custom hover function
+---@param window? integer
+hover.hover = function (window)
+	---|fS
+
+	window = window or vim.api.nvim_get_current_win();
+
+	if hover.window and vim.api.nvim_win_is_valid(hover.window) then
+		vim.api.nvim_set_current_win(hover.window);
+		return;
+	end
+
+	---@type boolean, table
+	local got_position_params, position_params = pcall(vim.lsp.util.make_position_params, window, "utf-8");
+	---@type integer
+	local buf = vim.api.nvim_win_get_buf(window);
+
+	if not got_position_params then
+		vim.api.nvim_echo({
+			{ "  Lsp hover: ", "DiagnosticVirtualTextWarn" },
+			{ " " },
+			{ "Couldn't get position parameters!", "Comment" }
+		}, false, {})
+		return;
+	end
+
+	vim.lsp.buf_request(buf, "textDocument/hover", position_params, function (err, result, ctx, config)
+		if err then
+			--- Error getting hover information.
+			vim.api.nvim_echo({
+				{ "  Lsp hover: ", "DiagnosticVirtualTextError" },
+				{ " " },
+				{ err.message, "Comment" }
+			}, true, {})
+			return;
+		elseif not result then
+			vim.api.nvim_echo({
+				{ "  Lsp hover: ", "DiagnosticVirtualTextError" },
+				{ " " },
+				{ "No information available!", "Comment" }
+			}, false, {})
+			return;
+		end
+
+		hover.__prepare();
+
+		---@type integer
+		local client_id = ctx.client_id;
+		local client = vim.lsp.get_client_by_id(client_id) or {};
+		local client_name = client.name or "";
+
+		local _config = get_style(client_name, result, ctx);
+		local W, H = _config.width or math.floor(vim.o.columns * 0.25), _config.height or math.floor(vim.o.lines * 0.5);
+
+		_config.winopts = vim.tbl_extend("force", config or {}, _config.winopts or {});
+
+		local contents = result.contents or {};
+		---@type string[]
+		local lines = vim.split(contents.value or "", "\n", { trimempty = true });
+
+		-- Set content
+		vim.bo[hover.buffer].ft = contents.kind or "markdown";
+		vim.bo[hover.buffer].tw = W;
+
+		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
+
+		-- Get wrapped width.
+		vim.api.nvim_buf_call(hover.buffer, function ()
+			vim.api.nvim_command("silent %normal gqq");
+			H = math.min(
+				vim.api.nvim_buf_line_count(hover.buffer),
+				H,
+				math.floor(vim.o.lines * 0.5)
+			);
+		end);
+
+		-- Reset old text, otherwise it may break syntax highlighting.
+		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
+
+		local border, anchor, row, col = hover.__win_args(window, W, H);
+
+		-- Open window
+		hover.window = vim.api.nvim_open_win(hover.buffer, false, vim.tbl_extend("force", {
+			relative = "cursor",
+
+			row = row or 1, col = col or 0,
+			width = W, height = H,
+
+			anchor = anchor,
+
+			border = border or "rounded",
+			style = "minimal"
+		}, _config.winopts));
+
+		-- Set necessary options.
+		vim.wo[hover.window].wrap = true;
+		vim.wo[hover.window].linebreak = true;
+		vim.wo[hover.window].breakindent = true;
+
+		vim.wo[hover.window].signcolumn = "no";
+		vim.wo[hover.window].conceallevel = 3;
+		vim.wo[hover.window].concealcursor = "ncv";
+
+		if type(_config.winhl) == "string" then
+			vim.wo[hover.window].winhl = _config.winhl;
+		end
+
+		vim.api.nvim_win_set_cursor(hover.window, { 1, 0 });
+
+		-- Markdown rendering.
+		if package.loaded["markview"] then
+			package.loaded["markview"].render(hover.buffer, {
+				enable = true,
+				hybrid_mode = false
+			});
+		end
+	end);
+
+	---|fE
+end
+
+---@param config? table<string, hover.style>
+hover.setup = function (config)
+	---|fS
+
+	if type(config) == "table" then
+		hover.config = vim.tbl_extend("force", hover.config, config);
+	end
+
+	vim.api.nvim_create_autocmd("LspAttach", {
+		callback = function (ev)
+			vim.api.nvim_buf_set_keymap(ev.buf, "n", "K", "", {
+				callback = hover.hover
+			});
+		end
+	});
+
+	vim.api.nvim_create_autocmd({
+		"CursorMoved", "CursorMovedI"
+	}, {
+		callback = function ()
+			local win = vim.api.nvim_get_current_win();
+
+			if hover.window and win ~= hover.window then
 				pcall(vim.api.nvim_win_close, hover.window, true);
-				quadrants.clear(hover.quad);
-				hover.window = nil;
 			end
 		end
 	});
+
+	---|fE
 end
 
 return hover;

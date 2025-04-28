@@ -217,19 +217,39 @@ return {
 				"html", "ts_ls", "emmet_ls",
 				"basedpyright"
 			};
+			local custom_settings = {
+				lua_ls = {
+					settings = {
+						Lua = {
+							runtime = {
+								version = 'LuaJIT', -- Neovim uses LuaJIT
+							},
+							diagnostics = {
+								globals = {'vim'}, -- recognize `vim` global
+							},
+							workspace = {
+								library = _G.is_within_termux() and _G.BASE_RUNTIME or vim.aoi.nvim_get_runtime_file("", true),
+								checkThirdParty = false, -- optional, to prevent prompts
+							},
+						}
+					},
+				}
+			};
 
 			for _, client in ipairs(clients) do
+				local settings = custom_settings[client] or {};
+
 				if loaded_blink then
-					require("lspconfig")[client].setup({
+					settings = vim.tbl_deep_extend("keep", settings, {
 						capabilities = blink.get_lsp_capabilities()
 					});
 				elseif loaded_cmp == true then
-					require("lspconfig")[client].setup({
+					settings = vim.tbl_deep_extend("keep", settings, {
 						capabilities = lsp_cmp[client].default_capabilities()
 					});
-				else
-					require("lspconfig")[client].setup({})
 				end
+
+				require("lspconfig")[client].setup(settings);
 			end
 		end
 	},

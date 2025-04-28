@@ -1,3 +1,8 @@
+---@type string[] Main runtime files.
+_G.BASE_RUNTIME = vim.tbl_filter(function (item)
+	return string.match(item, "runtime$") ~= nil;
+end, vim.api.nvim_get_runtime_file("", true));
+
 --- Checks if Neovim is within Termux.
 ---@return boolean
 _G.is_within_termux = function ()
@@ -112,6 +117,7 @@ require("editor.keymaps");
 -- vim.cmd.colorscheme("catppuccin");
 
 require("scripts.lsp_hover").setup();
+require("scripts.diagnostics").setup();
 
 require("editor.lazy");
 

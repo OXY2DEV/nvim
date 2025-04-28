@@ -102,6 +102,20 @@ if vim.fn.has("nvim-0.9.5") == 0 then
 	vim.cmd.colorscheme("habamax");
 end
 
+-- Configuration for diagnostics.
+vim.diagnostic.config({
+	severity_sort = true,
+
+	signs = {
+		text = {
+			[vim.diagnostic.severity.INFO] = "󰀨 ",
+			[vim.diagnostic.severity.HINT] = "󰁨 ",
+			[vim.diagnostic.severity.WARN] = " ",
+			[vim.diagnostic.severity.ERROR] = "󰅙 ",
+		}
+	}
+});
+
 ---|fS "Completion types"
 vim.g.__completion_kinds = {
 	default = {
@@ -211,4 +225,3 @@ vim.g.__completion_kinds = {
 	},
 };
 ---|fE
-

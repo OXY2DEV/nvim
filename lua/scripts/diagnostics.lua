@@ -1,6 +1,37 @@
+--- Custom diagnostics viewer for Neovim.
 local diagnostics = {};
 
+---|fS "Type definitions"
+
+--- Configuration for diagnostics.
+---@class diagnostics.config
+---
+---@field width integer | fun(items: table[]): integer Width for the diagnostics window.
+---@field max_height integer | fun(items: table[]): integer Maximum height for the diagnostics window.
+---
+---@field decorations table<integer, diagnostics.decorations> Decorations for each diagnostic severity.
+
+
+---@class diagnostics.decorations
+---
+---@field width integer Width of the decoration.
+---
+---@field line_hl_group? string | fun(item: table, current: boolean): string Highlight group for the line.
+---@field icon diagnostics.decoration_fragment[] | fun(item: table, current: boolean): diagnostics.decoration_fragment[] Decoration for the start line.
+---@field padding? diagnostics.decoration_fragment[] | fun(item: table, current: boolean): diagnostics.decoration_fragment[] Decoration for the other line(s).
+
+
+---@class diagnostics.decoration_fragment Virtual text fragment.
+---
+---@field [1] string
+---@field [2] string?
+
+---|fE
+
+---@class diagnostics.config
 diagnostics.config = {
+	---|fS
+
 	width = function (items)
 		local max_w = math.floor(vim.o.columns * 0.4);
 		local W = 1
@@ -22,6 +53,8 @@ diagnostics.config = {
 	end,
 
 	decorations = {
+		---|fS
+
 		[vim.diagnostic.severity.INFO] = {
 			width = 3,
 
@@ -76,7 +109,6 @@ diagnostics.config = {
 		[vim.diagnostic.severity.ERROR] = {
 			width = 3,
 
-
 			line_hl_group = function (_, current)
 				return current and "DiagnosticError" or "@comment";
 			end,
@@ -91,10 +123,20 @@ diagnostics.config = {
 				}
 			end
 		},
-	};
+
+		---|fE
+	},
+
+	---|fE
 };
 
+--- Evaluates `val`.
+---@param val any
+---@param ... any
+---@return any
 local function eval(val, ...)
+	---|fS
+
 	if type(val) ~= "function" then
 		return val;
 	else
@@ -104,9 +146,17 @@ local function eval(val, ...)
 			return new_val;
 		end
 	end
+
+	---|fE
 end
 
+--- Gets decorations.
+---@param level integer
+---@param ... any
+---@return diagnostics.decorations
 local function get_decorations (level, ...)
+	---|fS
+
 	local output = {};
 
 	for k, v in pairs(diagnostics.config.decorations[level]) do
@@ -114,6 +164,8 @@ local function get_decorations (level, ...)
 	end
 
 	return output;
+
+	---|fE
 end
 
 ------------------------------------------------------------------------------
@@ -350,11 +402,13 @@ end
 
 ------------------------------------------------------------------------------
 
+--- Closes diagnostics window.
 diagnostics.__close = function ()
 	---|fS
 
 	if diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window) then
-		pcall(vim.api.nvim_close_win, diagnostics.window, true);
+		pcall(vim.api.nvim_win_close, diagnostics.window, true);
+		diagnostics.window = nil;
 
 		if diagnostics.quad then
 			diagnostics.update_quad(diagnostics.quad, false);
@@ -365,6 +419,8 @@ diagnostics.__close = function ()
 	---|fE
 end
 
+--- Hover function for diagnostics.
+---@param window integer
 diagnostics.hover = function (window)
 	---|fS
 
@@ -382,6 +438,9 @@ diagnostics.hover = function (window)
 		diagnostics.__close();
 		return;
 	end
+
+	---@type boolean Is the window already open?
+	local already_open = diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window);
 
 	if diagnostics.quad then
 		-- If the old quadrant wasn't free we
@@ -458,6 +517,7 @@ diagnostics.hover = function (window)
 			if ranges[_cursor[1] - 1] then
 				vim.api.nvim_win_set_cursor(window, ranges[_cursor[1] - 1]);
 				vim.api.nvim_set_current_win(window);
+
 				diagnostics.__close();
 			end
 
@@ -483,6 +543,10 @@ diagnostics.hover = function (window)
 		vim.api.nvim_win_set_config(diagnostics.window, win_config);
 	end
 
+	if already_open then
+		vim.api.nvim_set_current_win(diagnostics.window);
+	end
+
 	-- Update quadrant state.
 	diagnostics.update_quad(diagnostics.quad, true);
 
@@ -505,14 +569,37 @@ diagnostics.hover = function (window)
 	---|fE
 end
 
-diagnostics.setup = function ()
+--- Configuration for the diagnostics module.
+---@param config diagnostics.config
+diagnostics.setup = function (config)
 	---|fS
+
+	if type(config) == "table" then
+		diagnostics.config = vim.tbl_extend("force", diagnostics.config, config);
+	end
 
 	vim.api.nvim_create_autocmd("LspAttach", {
 		callback = function (ev)
 			vim.api.nvim_buf_set_keymap(ev.buf, "n", "D", "", {
 				callback = diagnostics.hover
 			});
+		end
+	});
+
+	vim.api.nvim_create_autocmd({
+		"CursorMoved", "CursorMovedI"
+	}, {
+		callback = function ()
+			local win = vim.api.nvim_get_current_win();
+
+			if diagnostics.window and win ~= diagnostics.window then
+				diagnostics.__close();
+
+				if diagnostics.quad then
+					diagnostics.update_quad(diagnostics.quad, false);
+					diagnostics.quad = nil;
+				end
+			end
 		end
 	});
 

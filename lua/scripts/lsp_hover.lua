@@ -103,8 +103,13 @@ local function get_style (...)
 	---|fE
 end
 
+------------------------------------------------------------------------------
+
 ---@type integer, integer Hover buffer & window.
 hover.buffer, hover.window = nil, nil;
+
+---@type "top_left" | "top_right" | "bottom_left" | "bottom_right"
+hover.quad = nil;
 
 --- Prepares the buffer for the hover window.
 hover.__prepare = function ()
@@ -121,9 +126,32 @@ hover.__prepare = function ()
 					)
 				);
 				pcall(vim.api.nvim_win_close, hover.window, true);
+
+				hover.update_quad(hover.quad, false);
+				hover.quad = nil;
 			end
 		});
 	end
+
+	---|fE
+end
+
+---@param quad "top_left" | "top_right" | "bottom_left" | "bottom_right"
+---@param state boolean
+hover.update_quad = function (quad, state)
+	---|fS
+
+	if not vim.g.__used_quads then
+		vim.g.__used_quads = {
+			top_left = false,
+			top_right = false,
+
+			bottom_left = false,
+			bottom_right = false
+		};
+	end
+
+	vim.g.__used_quads[quad] = state;
 
 	---|fE
 end
@@ -146,22 +174,83 @@ hover.__win_args = function (window, w, h)
 	local screen_width = vim.o.columns;
 	local screen_height = vim.o.lines - vim.o.cmdheight - 1;
 
-	if screenpos.row + h >= screen_height then
-		if screenpos.curscol + w >= screen_width then
-			return { "╭", "─", "╮", "│", "┤", "─", "╰", "│" }, "SE", 0, 2;
-		else
-			return { "╭", "─", "╮", "│", "╯", "─", "├", "│" }, "SW", 0, 1;
+	local quad_pref = { "bottom_right", "bottom_left", "top_right", "top_left" };
+	local quads = {
+		---|fS
+
+		top_left = {
+			condition = function ()
+				return screenpos.row + h >= screen_height and screenpos.curscol + w >= screen_width;
+			end,
+
+			border = { "╭", "─", "╮", "│", "┤", "─", "╰", "│" },
+			anchor = "SE",
+			row = 0,
+			col = 1
+		},
+		top_right = {
+			condition = function ()
+				return screenpos.row + h >= screen_height and screenpos.curscol + w < screen_width;
+			end,
+
+			border = { "╭", "─", "╮", "│", "╯", "─", "├", "│" },
+			anchor = "SW",
+			row = 0,
+			col = 0
+		},
+
+		bottom_left = {
+			condition = function ()
+				return screenpos.row + h < screen_height and screenpos.curscol + w >= screen_width;
+			end,
+
+			border = { "╭", "─", "┤", "│", "╯", "─", "╰", "│" },
+			anchor = "NE",
+			row = 1,
+			col = 1
+		},
+		bottom_right = {
+			condition = function ()
+				return screenpos.row + h < screen_height and screenpos.curscol + w < screen_width;
+			end,
+
+			border = { "├", "─", "╮", "│", "╯", "─", "╰", "│" },
+			anchor = "NW",
+			row = 1,
+			col = 0
+		}
+
+		---|fE
+	};
+
+	for _, pref in ipairs(quad_pref) do
+		if vim.g.__used_quads and vim.g.__used_quads[pref] == true then
+			goto continue;
 		end
-	else
-		if screenpos.curscol + w >= screen_width then
-			return { "╭", "─", "┤", "│", "╯", "─", "╰", "│" }, "NE", 1, 1;
-		else
-			return { "├", "─", "╮", "│", "╯", "─", "╰", "│" }, "NW", 1, 0;
+
+		if not quads[pref] then
+			goto continue;
 		end
+
+		local quad = quads[pref];
+		local ran_cond, cond = pcall(quad.condition);
+
+		if ran_cond and cond then
+			hover.quad = pref;
+			return quad.border, quad.anchor, quad.row, quad.col;
+		end
+
+		::continue::
 	end
+
+	hover.quad = "bottom_right";
+	local fallback = quads.bottom_right;
+	return fallback.border, fallback.anchor, fallback.row, fallback.col;
 
 	---|fE
 end
+
+------------------------------------------------------------------------------
 
 --- Custom hover function
 ---@param window? integer
@@ -215,7 +304,7 @@ hover.hover = function (window)
 		local client_name = client.name or "";
 
 		local _config = get_style(client_name, result, ctx);
-		local W, H = _config.width or math.floor(vim.o.columns * 0.25), _config.height or math.floor(vim.o.lines * 0.5);
+		local W, H = _config.width or math.floor(vim.o.columns * 0.25), _config.height or math.floor(vim.o.lines * 0.4);
 
 		_config.winopts = vim.tbl_extend("force", config or {}, _config.winopts or {});
 
@@ -271,6 +360,7 @@ hover.hover = function (window)
 		end
 
 		vim.api.nvim_win_set_cursor(hover.window, { 1, 0 });
+		hover.update_quad(hover.quad, true);
 
 		-- Markdown rendering.
 		if package.loaded["markview"] then
@@ -308,6 +398,11 @@ hover.setup = function (config)
 
 			if hover.window and win ~= hover.window then
 				pcall(vim.api.nvim_win_close, hover.window, true);
+
+				if hover.quad then
+					hover.update_quad(hover.quad, false);
+					hover.quad = nil;
+				end
 			end
 		end
 	});

@@ -108,7 +108,7 @@ end
 ---@type integer, integer Hover buffer & window.
 hover.buffer, hover.window = nil, nil;
 
----@type "top_left" | "top_right" | "bottom_left" | "bottom_right"
+---@type "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
 hover.quad = nil;
 
 --- Prepares the buffer for the hover window.
@@ -136,13 +136,13 @@ hover.__prepare = function ()
 	---|fE
 end
 
----@param quad "top_left" | "top_right" | "bottom_left" | "bottom_right"
+---@param quad "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
 ---@param state boolean
 hover.update_quad = function (quad, state)
 	---|fS
 
-	if not vim.g.__used_quads then
-		vim.g.__used_quads = {
+	if not _G.__used_quads then
+		_G.__used_quads = {
 			top_left = false,
 			top_right = false,
 
@@ -151,7 +151,9 @@ hover.update_quad = function (quad, state)
 		};
 	end
 
-	vim.g.__used_quads[quad] = state;
+	if quad ~= "center" then
+		_G.__used_quads[quad] = state;
+	end
 
 	---|fE
 end
@@ -160,6 +162,7 @@ end
 ---@param w integer
 ---@param h integer
 ---@return string[]
+---@return "editor" | "cursor"
 ---@return "NE" | "NW" | "SE" | "SW"
 ---@return integer
 ---@return integer
@@ -171,18 +174,36 @@ hover.__win_args = function (window, w, h)
 	---@type table<string, integer>
 	local screenpos = vim.fn.screenpos(window, cursor[1], cursor[2]);
 
-	local screen_width = vim.o.columns;
-	local screen_height = vim.o.lines - vim.o.cmdheight - 1;
+	local screen_width = vim.o.columns - 2;
+	local screen_height = vim.o.lines - vim.o.cmdheight - 2;
 
 	local quad_pref = { "bottom_right", "bottom_left", "top_right", "top_left" };
 	local quads = {
 		---|fS
 
+		center = {
+			relative = "editor",
+			anchor = "NW",
+
+			row = math.ceil((vim.o.lines - h) / 2),
+			col = math.ceil((vim.o.columns - w) / 2),
+			border = "rounded"
+		},
+
 		top_left = {
 			condition = function ()
-				return screenpos.row + h >= screen_height and screenpos.curscol + w >= screen_width;
+				if h >= screenpos.row then
+					-- Not enough space above.
+					return false;
+				elseif screenpos.curscol <= w then
+					-- Not enough space before.
+					return false;
+				end
+
+				return true;
 			end,
 
+			relative = "cursor",
 			border = { "╭", "─", "╮", "│", "┤", "─", "╰", "│" },
 			anchor = "SE",
 			row = 0,
@@ -190,9 +211,18 @@ hover.__win_args = function (window, w, h)
 		},
 		top_right = {
 			condition = function ()
-				return screenpos.row + h >= screen_height and screenpos.curscol + w < screen_width;
+				if h >= screenpos.row then
+					-- Not enough space above.
+					return false;
+				elseif screenpos.curscol + w > screen_width then
+					-- Not enough space after.
+					return false;
+				end
+
+				return true;
 			end,
 
+			relative = "cursor",
 			border = { "╭", "─", "╮", "│", "╯", "─", "├", "│" },
 			anchor = "SW",
 			row = 0,
@@ -201,9 +231,18 @@ hover.__win_args = function (window, w, h)
 
 		bottom_left = {
 			condition = function ()
-				return screenpos.row + h < screen_height and screenpos.curscol + w >= screen_width;
+				if screenpos.row + h > screen_height then
+					-- Not enough space below.
+					return false;
+				elseif screenpos.curscol <= w then
+					-- Not enough space before.
+					return false;
+				end
+
+				return true;
 			end,
 
+			relative = "cursor",
 			border = { "╭", "─", "┤", "│", "╯", "─", "╰", "│" },
 			anchor = "NE",
 			row = 1,
@@ -211,9 +250,18 @@ hover.__win_args = function (window, w, h)
 		},
 		bottom_right = {
 			condition = function ()
-				return screenpos.row + h < screen_height and screenpos.curscol + w < screen_width;
+				if screenpos.row + h > screen_height then
+					-- Not enough space below.
+					return false;
+				elseif screenpos.curscol + w > screen_width then
+					-- Nor enough space after.
+					return false;
+				end
+
+				return true;
 			end,
 
+			relative = "cursor",
 			border = { "├", "─", "╮", "│", "╯", "─", "╰", "│" },
 			anchor = "NW",
 			row = 1,
@@ -224,7 +272,7 @@ hover.__win_args = function (window, w, h)
 	};
 
 	for _, pref in ipairs(quad_pref) do
-		if vim.g.__used_quads and vim.g.__used_quads[pref] == true then
+		if _G.__used_quads and _G.__used_quads[pref] == true then
 			goto continue;
 		end
 
@@ -237,15 +285,15 @@ hover.__win_args = function (window, w, h)
 
 		if ran_cond and cond then
 			hover.quad = pref;
-			return quad.border, quad.anchor, quad.row, quad.col;
+			return quad.border, quad.relative, quad.anchor, quad.row, quad.col;
 		end
 
 		::continue::
 	end
 
-	hover.quad = "bottom_right";
-	local fallback = quads.bottom_right;
-	return fallback.border, fallback.anchor, fallback.row, fallback.col;
+	hover.quad = "center";
+	local fallback = quads.center;
+	return fallback.border, fallback.relative, fallback.anchor, fallback.row, fallback.col;
 
 	---|fE
 end
@@ -331,11 +379,11 @@ hover.hover = function (window)
 		-- Reset old text, otherwise it may break syntax highlighting.
 		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
 
-		local border, anchor, row, col = hover.__win_args(window, W, H);
+		local border, relative, anchor, row, col = hover.__win_args(window, W, H);
 
 		-- Open window
 		hover.window = vim.api.nvim_open_win(hover.buffer, false, vim.tbl_extend("force", {
-			relative = "cursor",
+			relative = relative or "cursor",
 
 			row = row or 1, col = col or 0,
 			width = W, height = H,

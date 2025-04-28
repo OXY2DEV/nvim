@@ -228,7 +228,7 @@ return {
 								globals = {'vim'}, -- recognize `vim` global
 							},
 							workspace = {
-								library = _G.is_within_termux() and _G.BASE_RUNTIME or vim.aoi.nvim_get_runtime_file("", true),
+								library = _G.is_within_termux() and nil or _G.BASE_RUNTIME,
 								checkThirdParty = false, -- optional, to prevent prompts
 							},
 						}

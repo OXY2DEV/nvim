@@ -1,20 +1,20 @@
 return {
 	{
-		-- "OXY2DEV/ui",
+		-- "OXY2DEV/ui.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/ui.nvim",
 		name = "ui",
 		priority = 500,
 		lazy = false
 	},
 	{
-		-- "OXY2DEV/icons",
+		-- "OXY2DEV/icons.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons.nvim",
 		name = "icons",
 		priority = 500,
 		lazy = false
 	},
 	{
-		-- "OXY2DEV/bars",
+		-- "OXY2DEV/bars.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/bars.nvim",
 		name = "bars",
 		priority = 500,
@@ -22,10 +22,18 @@ return {
 
 		dependencies = {
 			{
-				-- "OXY2DEV/icons",
+				-- "OXY2DEV/icons.nvim",
 				dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons.nvim",
 			}
 		}
+	},
+
+	{
+		-- "OXY2DEV/foldtext.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/foldtext.nvim",
+		name = "foldtext",
+		priority = 500,
+		lazy = false
 	},
 
 	{
@@ -50,7 +58,7 @@ return {
 	},
 
 	{
-		-- "OXY2DEV/markview.nvim",
+		-- "OXY2DEV/patterns.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/patterns.nvim",
 		name = "patterns",
 		priority = 100,
@@ -61,7 +69,7 @@ return {
 		}
 	},
 	{
-		-- "OXY2DEV/markview.nvim",
+		-- "OXY2DEV/oops.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/oops.nvim",
 		name = "oops",
 		priority = 100,

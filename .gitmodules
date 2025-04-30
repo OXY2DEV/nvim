@@ -25,3 +25,6 @@
 [submodule "lua/custom_plugins/helpview.nvim"]
 	path = lua/custom_plugins/helpview.nvim
 	url = https://github.com/OXY2DEV/helpview.nvim.git
+[submodule "lua/custom_plugins/foldtext.nvim"]
+	path = lua/custom_plugins/foldtext.nvim
+	url = https://github.com/OXY2DEV/foldtext.nvim

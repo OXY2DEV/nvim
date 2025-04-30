@@ -17,8 +17,18 @@ local diagnostics = {};
 ---@field width integer Width of the decoration.
 ---
 ---@field line_hl_group? string | fun(item: table, current: boolean): string Highlight group for the line.
+---
 ---@field icon diagnostics.decoration_fragment[] | fun(item: table, current: boolean): diagnostics.decoration_fragment[] Decoration for the start line.
 ---@field padding? diagnostics.decoration_fragment[] | fun(item: table, current: boolean): diagnostics.decoration_fragment[] Decoration for the other line(s).
+
+
+---@class diagnostics.decorations__static
+---
+---@field width integer Width of the decoration.
+---
+---@field line_hl_group? string Highlight group for the line.
+---@field icon diagnostics.decoration_fragment[] Decoration for the start line.
+---@field padding? diagnostics.decoration_fragment[] Decoration for the other line(s).
 
 
 ---@class diagnostics.decoration_fragment Virtual text fragment.
@@ -151,9 +161,9 @@ local function eval(val, ...)
 end
 
 --- Gets decorations.
----@param level integer
+---@param level integer | vim.diagnostic.Severity
 ---@param ... any
----@return diagnostics.decorations
+---@return diagnostics.decorations__static
 local function get_decorations (level, ...)
 	---|fS
 
@@ -220,7 +230,7 @@ end
 ---@param window integer
 ---@param w integer
 ---@param h integer
----@return string[]
+---@return  string | string[]
 ---@return "editor" | "cursor"
 ---@return "NE" | "NW" | "SE" | "SW"
 ---@return integer
@@ -495,7 +505,8 @@ diagnostics.hover = function (window)
 				virt_text_pos = "inline",
 				virt_text = l == H and decorations.icon or (decorations.padding or decorations.icon),
 
-				line_hl_group = current and decorations.current_line_hl_group or decorations.line_hl_group,
+				right_gravity = false,
+				line_hl_group = decorations.line_hl_group,
 			});
 		end
 

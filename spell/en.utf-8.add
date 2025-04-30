@@ -21,3 +21,4 @@ Neovim
 LSP
 winhighlight
 filetype
+foldtext

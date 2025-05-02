@@ -118,6 +118,7 @@ require("editor.keymaps");
 
 require("scripts.lsp_hover").setup();
 require("scripts.diagnostics").setup();
+require("scripts.quickfix").setup();
 
 require("editor.lazy");
 

@@ -22,3 +22,9 @@ LSP
 winhighlight
 filetype
 foldtext
+autocmd
+pcall
+swapfile
+tabpage
+statuscolumn
+TODO

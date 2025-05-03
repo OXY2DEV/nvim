@@ -1,19 +1,62 @@
 local quickfix = {};
 
 quickfix.config = {
-	location_format = "Ranege: %d-%d, %s",
-	location_pos = "right_align",
-
 	context_lines = 0,
-	decorations = {
-		default = {},
+	decorations = function (i, item)
+		local separator = {
+			virt_text_pos = "overlay",
+			virt_text = {
+				{ string.rep("─", vim.o.columns - 2), "@comment" }
+			}
+		};
 
-		E = {},
-		W = {},
-		I = {},
-		N = {},
-		C = {},
-	},
+		local buffer = item.bufnr;
+		local path = vim.fn.fnamemodify(
+			vim.api.nvim_buf_get_name(buffer),
+			":~:."
+		);
+
+		local top = {
+			virt_text_pos = "right_align",
+			virt_text = {
+				{ path or "", "@string.special.path" }
+			}
+		};
+
+		---|fS "style: Handle file icon & hl"
+		if package.loaded["icons"] then
+			local icon = package.loaded["icons"].get(
+				vim.fn.fnamemodify(path, ":e"),
+				{
+					"@comment",
+					"DiagnosticError",
+					"@constant",
+					"DiagnosticWarn",
+					"DiagnosticOk",
+					"@function",
+					"@property"
+				}
+			);
+
+			top.virt_text = {
+				{ icon.icon, icon.hl },
+				{ path or "", "@string.special.path" }
+			};
+		end
+		---|fE
+
+		local kind_configs = {
+			default = {
+				{ "  Unknown " }
+			},
+
+			E = {
+				{ "  Unknown " }
+			},
+		};
+
+		return top, i ~= #quickfix.items and separator or nil, nil;
+	end,
 };
 
 ---@type integer, integer
@@ -37,6 +80,8 @@ quickfix.prepare = function ()
 
 		vim.api.nvim_buf_set_keymap(quickfix.buffer, "n", "<CR>", "", {
 			callback = function ()
+				---|fS
+
 				local cursor = vim.api.nvim_win_get_cursor(quickfix.window);
 				cursor[1] = cursor[1] - 1;
 
@@ -49,6 +94,8 @@ quickfix.prepare = function ()
 						break;
 					end
 				end
+
+				---|fE
 			end
 		});
 
@@ -114,6 +161,8 @@ quickfix.render = function ()
 		local start_delimier_ext, end_delimiter_ext;
 		local context_lines = quickfix.context_lines[i] or 0;
 
+		local has_decors, top, bottom, middle = pcall(quickfix.config.decorations, i, item);
+
 		local buffer = item.bufnr;
 		vim.fn.bufload(buffer);
 
@@ -131,7 +180,13 @@ quickfix.render = function ()
 			end_col = #start_delimiter,
 			conceal = "",
 		});
-		L = L + 1;
+
+		-- Add top decorations.
+		if has_decors and type(top) == "table" then
+			vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, L, 0, vim.tbl_extend("keep", {
+				end_col = #start_delimiter
+			}, top));
+		end
 
 		local line_count = vim.api.nvim_buf_line_count(buffer);
 		local lines = vim.api.nvim_buf_get_lines(
@@ -144,13 +199,29 @@ quickfix.render = function ()
 		);
 		table.insert(lines, "```")
 
+		L = L + 1;
 		vim.api.nvim_buf_set_lines(quickfix.buffer, L, -1, false, lines);
+
+		-- Add range decorations.
+		if has_decors and type(middle) == "table" then
+			vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, L - 1, 0, vim.tbl_extend("keep", {
+				end_row = L + #lines;
+			}, middle));
+		end
+
 		L = L + #lines;
 
 		end_delimiter_ext = vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, L - 1, 0, {
 			end_col = 3,
 			conceal = "",
 		});
+
+		-- Add bottom decorations.
+		if has_decors and type(bottom) == "table" then
+			vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, L - 1, 0, vim.tbl_extend("keep", {
+				end_col = 3;
+			}, bottom));
+		end
 
 		table.insert(quickfix.item_data, { start_delimier_ext, end_delimiter_ext });
 
@@ -185,11 +256,18 @@ quickfix.open = function ()
 	end
 
 	local L = quickfix.render();
-
-	quickfix.window = vim.api.nvim_open_win(quickfix.buffer, false, {
+	local win_config = {
 		split = "below",
 		height = math.min(10, L)
-	});
+	};
+
+	if quickfix.window and vim.api.nvim_win_is_valid(quickfix.window) then
+		vim.api.nvim_win_set_config(quickfix.window, win_config)
+	else
+		quickfix.window = vim.api.nvim_open_win(quickfix.buffer, false, win_config);
+	end
+
+	vim.api.nvim_set_current_win(quickfix.window);
 
 	vim.wo[quickfix.window].conceallevel = 3;
 	vim.wo[quickfix.window].concealcursor = "nvc";

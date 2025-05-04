@@ -4,7 +4,7 @@ vim.o.timeoutlen = 500;
 
 --- Fancy notification helper.
 ---@param level integer?
----@param ms string
+---@param msg string
 local function keymap_alert(level, msg)
 	level = level or 1;
 	local hls = {
@@ -69,7 +69,7 @@ vim.api.nvim_set_keymap("n", "<leader>z", "<CMD>tabprevious<CR>", {
 
 vim.api.nvim_set_keymap("n", "<leader>l", "", {
 	desc = "Run [l]ua",
-	callback = function (...)
+	callback = function ()
 		local buffer = vim.api.nvim_get_current_buf();
 		local ft = vim.bo[buffer].filetype;
 
@@ -156,6 +156,9 @@ vim.api.nvim_set_keymap("i", "<Tab>", "", {
 
 			---@type integer
 			local win = vim.api.nvim_get_current_win();
+
+			---@type integer
+			local buffer = vim.api.nvim_get_current_buf();
 
 			---@type [ integer, integer ]
 			local cursor = vim.api.nvim_win_get_cursor(win);

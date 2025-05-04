@@ -581,7 +581,7 @@ diagnostics.hover = function (window)
 end
 
 --- Configuration for the diagnostics module.
----@param config diagnostics.config
+---@param config? diagnostics.config
 diagnostics.setup = function (config)
 	---|fS
 

@@ -29,3 +29,6 @@ tabpage
 statuscolumn
 TODO
 whitespace
+quickfix
+acwrite
+cursorline

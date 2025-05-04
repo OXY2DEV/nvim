@@ -135,7 +135,15 @@ end
 
 ------------------------------------------------------------------------------
 
+--- Gets visible foreground color
+--- from luminosity.
+---@param lumen number
+---@return number
+---@return number
+---@return number
 hl.visible_fg = function (lumen)
+	---|fS
+
 	local BL, BA, BB = hl.rgb_to_oklab(
 		hl.num_to_rgb(
 			hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
@@ -161,10 +169,49 @@ hl.visible_fg = function (lumen)
 			return FL, FA, FB;
 		end
 	end
+
+	---|fE
 end
 
 ---@type table<string, fun(): table[]>
-hl.groups = {};
+hl.groups = {
+	qf = function ()
+		local iR, iG, iB = hl.num_to_rgb(
+			hl.get_attr("bg", { "DiagnosticVirtualTextInfo" }) or hl.choice(14281459, 2633792)
+		);
+
+		local hR, hG, hB = hl.num_to_rgb(
+			hl.get_attr("bg", { "DiagnosticVirtualTextHint" }) or hl.choice(14346476, 2699582)
+		);
+
+		local wR, wG, wB = hl.num_to_rgb(
+			hl.get_attr("bg", { "DiagnosticVirtualTextWarn" }) or hl.choice(15591648, 3354938)
+		);
+
+		local eR, eG, eB = hl.num_to_rgb(
+			hl.get_attr("bg", { "DiagnosticVirtualTextError" }) or hl.choice(15523043, 3287098)
+		);
+
+		return {
+			{
+				group_name = "QuickfixRangeInfo",
+				value = { bg = string.format("#%x%x%x", iR, iG, iB) }
+			},
+			{
+				group_name = "QuickfixRangeHint",
+				value = { bg = string.format("#%x%x%x", hR, hG, hB) }
+			},
+			{
+				group_name = "QuickfixRangeWarn",
+				value = { bg = string.format("#%x%x%x", wR, wG, wB) }
+			},
+			{
+				group_name = "QuickfixRangeError",
+				value = { bg = string.format("#%x%x%x", eR, eG, eB) }
+			}
+		};
+	end,
+};
 
 hl.setup = function ()
 	for _, entry in pairs(hl.groups) do

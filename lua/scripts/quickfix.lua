@@ -70,27 +70,43 @@ quickfix.config = {
 		---|fE
 
 		local type_configs = {
+			---|fS
+
 			default = {
-				{ "  Unknown ", "@comment" },
-				{ " " }
+				{ " Unknown", "@comment" },
+				{ " " },
 			},
 
 			I = {
-				{ " 󰀨 Info ", "DiagnosticVirtualTextsInfo" },
-				{ " " }
+				{ "󰀨 Info", "DiagnosticInfo" },
+				{ " " },
 			},
 			H = {
-				{ " 󰁨 Hint ", "DiagnosticVirtualTextsHint" },
-				{ " " }
+				{ "󰁨 Hint", "DiagnosticHint" },
+				{ " " },
 			},
 			W = {
-				{ "  Warn ", "DiagnosticVirtualTextWarn" },
-				{ " " }
+				{ " Warn", "DiagnosticWarn" },
+				{ " " },
 			},
 			E = {
-				{ " 󰅙 Error ", "DiagnosticVirtualTextError" },
-				{ " " }
+				{ "󰅙 Error", "DiagnosticError" },
+				{ " " },
 			},
+
+			---|fE
+		};
+		local type_hls = {
+			---|fS
+
+			default = "QuickfixRangeInfo",
+
+			I = "QuickfixRangeInfo",
+			H = "QuickfixRangeHint",
+			W = "QuickfixRangeWarn",
+			E = "QuickfixRangeError",
+
+			---|fE
 		};
 
 		top.virt_text = vim.list_extend(
@@ -108,7 +124,7 @@ quickfix.config = {
 			top = top,
 			bottom = i ~= #quickfix.items and separator or nil,
 
-			line = { line_hl_group = "CursorLine" }
+			line = { line_hl_group = type_hls[item.type] or type_hls.default }
 		};
 
 		---|fE
@@ -363,6 +379,8 @@ quickfix.render = function ()
 	quickfix.item_data = {};
 	local L = 0;
 
+	local diagnostics = {};
+
 	--- Gets severity.
 	---@param level "E" | "W" | "H" | "I" | string
 	---@return integer
@@ -453,24 +471,22 @@ quickfix.render = function ()
 			vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, L + ((item.lnum - 1) - code_start), 0, decors.line);
 		end
 
-		vim.diagnostic.set(quickfix.ns, quickfix.buffer, {
-			{
-				bufnr = item.bufnr,
+		table.insert(diagnostics, {
+			bufnr = item.bufnr,
 
-				lnum = L + ((item.lnum - 1) - code_start),
-				end_lnum = L + ((item.end_lnum - 1) - code_start),
+			lnum = L + ((item.lnum - 1) - code_start),
+			end_lnum = L + ((item.end_lnum - 1) - code_start),
 
-				col = item.col - 1,
-				end_col = item.end_col - 1,
+			col = item.col - 1,
+			end_col = item.end_col - 1,
 
-				severity = get_severity(item.type),
+			severity = get_severity(item.type),
 
-				namesace = quickfix.ns,
-				source = "quickfix",
+			namesace = quickfix.ns,
+			source = "quickfix",
 
-				message = item.text or "Hello"
-			}
-		}, {});
+			message = item.text or "Hello"
+		});
 
 		---|fE
 
@@ -511,6 +527,8 @@ quickfix.render = function ()
 		process_item(i, item);
 	end
 
+	vim.diagnostic.set(quickfix.ns, quickfix.buffer, diagnostics, {});
+
 	vim.bo[quickfix.buffer].modified = false;
 	vim.bo[quickfix.buffer].undolevels = 100;
 
@@ -538,7 +556,10 @@ quickfix.open = function (items)
 	local L = quickfix.render();
 	local win_config = {
 		split = "below",
-		height = math.min(10, L),
+		height = math.max(
+			math.min(quickfix.config.max_height or vim.o.lines * 0.4, L),
+			quickfix.config.min_height or 3
+		)
 	};
 
 	if quickfix.window and vim.api.nvim_win_is_valid(quickfix.window) then
@@ -589,7 +610,7 @@ end
 ------------------------------------------------------------------------------
 
 --- Setup function for the quickfix menu.
----@param config quickfix.config
+---@param config? quickfix.config
 quickfix.setup = function (config)
 	---|fS
 

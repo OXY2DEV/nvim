@@ -134,9 +134,13 @@ if pcall(require, "markview.highlights") then
 end
 
 --- Autocmd for the colorscheme.
-vim.api.nvim_create_autocmd("ColorScheme", {
+vim.api.nvim_create_autocmd({
+	"VimEnter",
+	"ColorScheme"
+}, {
 	callback = function ()
 		_G.disable_properties();
+		require("scripts.highlights").setup();
 	end
 });
 

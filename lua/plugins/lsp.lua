@@ -215,7 +215,8 @@ return {
 			local clients = {
 				"lua_ls",
 				"html", "ts_ls", "emmet_ls",
-				"basedpyright"
+				"basedpyright",
+				"clangd"
 			};
 			local custom_settings = {
 				lua_ls = {

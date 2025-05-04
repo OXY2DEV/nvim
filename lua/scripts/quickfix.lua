@@ -25,7 +25,7 @@ quickfix.config = {
 		local separator = {
 			virt_text_pos = "overlay",
 			virt_text = {
-				{ string.rep("─", vim.o.columns - 2), "@comment" }
+				{ string.rep("─", vim.o.columns), "@comment" }
 			}
 		};
 

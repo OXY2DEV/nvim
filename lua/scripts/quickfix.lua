@@ -1,8 +1,11 @@
+--- Custom quickfix menu for Neovim.
 local quickfix = {};
 
 quickfix.config = {
 	context_lines = 0,
 	decorations = function (i, item)
+		---|fS
+
 		local separator = {
 			virt_text_pos = "overlay",
 			virt_text = {
@@ -40,22 +43,54 @@ quickfix.config = {
 
 			top.virt_text = {
 				{ icon.icon, icon.hl },
+				{ path or "", icon.hl }
+			};
+		else
+			top.virt_text = {
+				{ " ", "@string.special.path" },
 				{ path or "", "@string.special.path" }
 			};
 		end
 		---|fE
 
-		local kind_configs = {
+		local type_configs = {
 			default = {
-				{ "  Unknown " }
+				{ "  Unknown ", "@comment" },
+				{ " " }
 			},
 
+			I = {
+				{ " 󰀨 Info ", "DiagnosticVirtualTextsInfo" },
+				{ " " }
+			},
+			H = {
+				{ " 󰁨 Hint ", "DiagnosticVirtualTextsHint" },
+				{ " " }
+			},
+			W = {
+				{ "  Warn ", "DiagnosticVirtualTextWarn" },
+				{ " " }
+			},
 			E = {
-				{ "  Unknown " }
+				{ " 󰅙 Error ", "DiagnosticVirtualTextError" },
+				{ " " }
 			},
 		};
 
+		top.virt_text = vim.list_extend(
+			type_configs[item.type] or type_configs.default,
+			top.virt_text
+		);
+
+		-- Add text Range.
+		table.insert(top.virt_text, 1, {
+			string.format(" %d,%d-%d,%d ", item.lnum, item.col, item.end_lnum, item.end_col),
+			"@comment"
+		})
+
 		return top, i ~= #quickfix.items and separator or nil, nil;
+
+		---|fE
 	end,
 };
 
@@ -74,9 +109,90 @@ quickfix.context_lines = {};
 quickfix.prepare = function ()
 	---|fS
 
+	local function goto_buf (buffer)
+		---|fS
+
+		local wins = vim.fn.win_findbuf(buffer);
+
+		if wins[1] then
+			vim.api.nvim_set_current_win(wins[1]);
+		else
+			vim.api.nvim_open_win(buffer, true, vim.tbl_extend("force", {
+				win = -1,
+				split = "right"
+			}, quickfix.config.open_winconfig or {}));
+		end
+
+		---|fE
+	end
+
+	local function apply_change (src, src_from, src_to, qf_from, qf_to)
+		local src_txt = vim.api.nvim_buf_get_lines(src, src_from, src_to + (src_from == src_to and 1 or 0), false);
+		local qf_txt = vim.api.nvim_buf_get_lines(quickfix.buffer, qf_from, qf_to, false);
+
+		table.remove(qf_txt, 1);
+		table.remove(qf_txt);
+
+		if vim.deep_equal(src_txt, qf_txt) == false then
+			return {
+				buf = src,
+
+				from = src_from,
+				to = src_to + (src_from == src_to and 1 or 0),
+
+				lines = qf_txt
+			}
+		end
+	end
+
 	if not quickfix.buffer or not vim.api.nvim_buf_is_valid(quickfix.buffer) then
 		quickfix.buffer = vim.api.nvim_create_buf(false, true);
+
 		vim.bo[quickfix.buffer].ft = "markdown";
+		vim.bo[quickfix.buffer].bt = "acwrite";
+
+		vim.b[quickfix.buffer].bars_statuscolumn = false;
+
+		vim.api.nvim_buf_set_name(quickfix.buffer, "quickfix")
+		vim.api.nvim_create_autocmd("BufWriteCmd", {
+			buffer = quickfix.buffer,
+			callback = function ()
+				---|fS
+
+				vim.bo[quickfix.buffer].modified = false;
+				local changes = {};
+
+				for i, item in ipairs(quickfix.item_data) do
+					local start = vim.api.nvim_buf_get_extmark_by_id(quickfix.buffer, quickfix.ns, item[1], {});
+					local stop  = vim.api.nvim_buf_get_extmark_by_id(quickfix.buffer, quickfix.ns, item[2], {});
+
+					if start[1] and stop[1] then
+						local qfx_item = quickfix.items[i];
+
+						local context_lines = quickfix.context_lines[i];
+						local line_count = vim.api.nvim_buf_line_count(qfx_item.bufnr);
+
+						local src_from = math.max((qfx_item.lnum - 1) - context_lines, 0);
+						local src_to = math.min(qfx_item.end_lnum + (qfx_item.lnum == qfx_item.end_lnum and 0 or -1) + context_lines, line_count);
+
+						local change = apply_change(qfx_item.bufnr, src_from, src_to, start[1], stop[1] + 1)
+
+						if change then
+							table.insert(changes, change);
+						end
+					end
+				end
+
+				for _, entry in ipairs(changes) do
+					vim.api.nvim_buf_set_lines(entry.buf, entry.from, entry.to, false, entry.lines);
+					vim.api.nvim_buf_call(entry.buf, function ()
+						vim.cmd("write");
+					end);
+				end
+
+				---|fE
+			end
+		});
 
 		vim.api.nvim_buf_set_keymap(quickfix.buffer, "n", "<CR>", "", {
 			callback = function ()
@@ -90,7 +206,13 @@ quickfix.prepare = function ()
 					local stop  = vim.api.nvim_buf_get_extmark_by_id(quickfix.buffer, quickfix.ns, item[2], {});
 
 					if cursor[1] >= start[1] and cursor[1] <= stop[1] then
-						vim.print(quickfix.items[i])
+						local qfx_item = quickfix.items[i];
+
+						goto_buf(qfx_item.bufnr);
+						vim.api.nvim_win_set_cursor(
+							vim.api.nvim_get_current_win(),
+							{ qfx_item.lnum, qfx_item.col - 1 }
+						);
 						break;
 					end
 				end
@@ -116,7 +238,9 @@ quickfix.prepare = function ()
 					end
 				end
 
-				quickfix.render();
+				local L = quickfix.render();
+
+				pcall(vim.api.nvim_win_set_config, quickfix.window, { height = L });
 				pcall(vim.api.nvim_win_set_cursor, quickfix.window, { cursor[1] + 1, cursor[2] });
 
 				---|fE
@@ -140,7 +264,9 @@ quickfix.prepare = function ()
 					end
 				end
 
-				quickfix.render();
+				local L = quickfix.render();
+
+				pcall(vim.api.nvim_win_set_config, quickfix.window, { height = L });
 				pcall(vim.api.nvim_win_set_cursor, quickfix.window, { cursor[1] + 1, cursor[2] });
 
 				---|fE
@@ -152,6 +278,7 @@ quickfix.prepare = function ()
 end
 
 quickfix.render = function ()
+	quickfix.item_data = {};
 	local L = 0;
 
 	local function process_item (i, item)
@@ -229,6 +356,7 @@ quickfix.render = function ()
 	end
 
 	quickfix.prepare();
+	vim.bo[quickfix.buffer].undolevels = -1;
 
 	vim.api.nvim_buf_clear_namespace(quickfix.buffer, quickfix.ns, 0, -1);
 	vim.api.nvim_buf_set_lines(quickfix.buffer, 0, -1, false, {});
@@ -241,13 +369,15 @@ quickfix.render = function ()
 		process_item(i, item);
 	end
 
+	vim.bo[quickfix.buffer].modified = false;
+	vim.bo[quickfix.buffer].undolevels = 100;
+
 	return L;
 end
 
-quickfix.open = function ()
+quickfix.open = function (items)
 	quickfix.context_lines = {};
-	quickfix.item_data = {};
-	quickfix.items = vim.fn.getqflist();
+	quickfix.items = items or vim.fn.getqflist();
 
 	if #quickfix.items == 0 then
 		-- No item available.
@@ -258,7 +388,7 @@ quickfix.open = function ()
 	local L = quickfix.render();
 	local win_config = {
 		split = "below",
-		height = math.min(10, L)
+		height = math.min(10, L),
 	};
 
 	if quickfix.window and vim.api.nvim_win_is_valid(quickfix.window) then
@@ -296,6 +426,13 @@ quickfix.setup = function ()
 				)
 			);
 			quickfix.open();
+		end
+	});
+	vim.api.nvim_set_keymap("n", "L", "", {
+		callback = function ()
+			quickfix.open(
+				vim.fn.getloclist(vim.api.nvim_get_current_win())
+			);
 		end
 	});
 end

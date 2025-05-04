@@ -207,8 +207,9 @@ quickfix.prepare = function ()
 		-- callback.
 		vim.bo[quickfix.buffer].bt = "acwrite";
 
-		-- Do not add statuscolumn from `bars.nvim`.
+		-- Do not add statuscolumn & winbar from `bars.nvim`.
 		vim.b[quickfix.buffer].bars_statuscolumn = false;
+		vim.b[quickfix.buffer].bars_winbar = false;
 
 		-- A name is needed for the `BufWriteCmd` to work
 		vim.api.nvim_buf_set_name(quickfix.buffer, "quickfix");

@@ -306,7 +306,6 @@ quickfix.prepare = function ()
 		-- Use `q` to exit out of quickfix.
 		vim.api.nvim_buf_set_keymap(quickfix.buffer, "n", "q", "", {
 			callback = function ()
-				vim.diagnostic.reset(quickfix.ns, quickfix.buffer);
 				pcall(vim.api.nvim_win_close, quickfix.window, true);
 			end
 		});
@@ -527,6 +526,7 @@ quickfix.render = function ()
 		process_item(i, item);
 	end
 
+	vim.diagnostic.reset(quickfix.ns, quickfix.buffer);
 	vim.diagnostic.set(quickfix.ns, quickfix.buffer, diagnostics, {});
 
 	vim.bo[quickfix.buffer].modified = false;
@@ -557,7 +557,7 @@ quickfix.open = function (items)
 	local win_config = {
 		split = "below",
 		height = math.max(
-			math.min(quickfix.config.max_height or vim.o.lines * 0.4, L),
+			math.min(quickfix.config.max_height or math.floor(vim.o.lines * 0.4), L),
 			quickfix.config.min_height or 3
 		)
 	};

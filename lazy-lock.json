@@ -1,16 +1,16 @@
 {
-  "blink.cmp": { "branch": "main", "commit": "cb5e346d9e0efa7a3eee7fd4da0b690c48d2a98e" },
-  "catppuccin": { "branch": "main", "commit": "b7bbdf93b42866f166af98d39a2563eedb7cabac" },
-  "cyberdream.nvim": { "branch": "main", "commit": "4aa7c64b0b18a542d6587632efa93c3bea469979" },
+  "blink.cmp": { "branch": "main", "commit": "4f38ce99a472932d5776337f08f7a8180f1f571a" },
+  "catppuccin": { "branch": "main", "commit": "1bf070129c0b6f77cc23f6a2212dcdc868308c52" },
+  "cyberdream.nvim": { "branch": "main", "commit": "8407e80415aebd6b052773d751dda7cd9cfc6835" },
   "friendly-snippets": { "branch": "main", "commit": "572f5660cf05f8cd8834e096d7b4c921ba18e175" },
-  "gitsigns.nvim": { "branch": "main", "commit": "ee28ba3e70ecea811b8f6d7b51d81976e94b121c" },
+  "gitsigns.nvim": { "branch": "main", "commit": "7ce11abbb8b038a9de4fb6f75d8289c58d81aed7" },
   "kanagawa.nvim": { "branch": "master", "commit": "cc3b68b08e6a0cb6e6bf9944932940091e49bb83" },
   "lazy.nvim": { "branch": "main", "commit": "6c3bda4aca61a13a9c63f1c1d1b16b9d3be90d7a" },
-  "nightfly": { "branch": "master", "commit": "033e0240479126267deae2f9a4a1b0864f14bba6" },
+  "nightfly": { "branch": "master", "commit": "3fee8c331b790e349fc4cac9705d484d68e20f73" },
   "nvim-cmp": { "branch": "main", "commit": "12509903a5723a876abd65953109f926f4634c30" },
-  "nvim-lspconfig": { "branch": "master", "commit": "94d0fec9135719e046903bbbbf8f39e3d3436d4e" },
+  "nvim-lspconfig": { "branch": "master", "commit": "4bc481b6f0c0cf3671fc894debd0e00347089a4e" },
   "nvim-treesitter": { "branch": "master", "commit": "94ea4f436d2b59c80f02e293466c374584f03b8c" },
-  "onedarkpro.nvim": { "branch": "main", "commit": "01fd661713d2d1c337576ece5ced1cd2b7293b77" },
+  "onedarkpro.nvim": { "branch": "main", "commit": "88a69356c104f85c1794bc28522d8b939ab0a15e" },
   "solarized-osaka.nvim": { "branch": "main", "commit": "f796014c14b1910e08d42cc2077fef34f08e0295" },
   "tokyonight.nvim": { "branch": "main", "commit": "057ef5d260c1931f1dffd0f052c685dcd14100a3" }
 }

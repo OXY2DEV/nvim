@@ -1,7 +1,7 @@
 --- Custom diagnostics viewer for Neovim.
 local diagnostics = {};
 
----|fS "Type definitions"
+---|fS "doc: Type definitions"
 
 --- Configuration for diagnostics.
 ---@class diagnostics.config

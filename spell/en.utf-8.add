@@ -32,3 +32,11 @@ whitespace
 quickfix
 acwrite
 cursorline
+buftype
+bufline
+undolist
+buftypes
+filetypes
+foldtexts
+popup
+hl

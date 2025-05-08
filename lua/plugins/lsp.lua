@@ -39,14 +39,13 @@ return {
 				},
 				mapping = {
 					["<CR>"] = require("cmp").mapping.confirm({ select = true }),
-					-- ["<Tab>"] = require("cmp").mapping.complete(),
+					["<BS>"] = require("cmp").mapping.close(),
 
-					["<Up>"] = require("cmp").mapping.select_prev_item({ behavior = require("cmp").SelectBehavior.select }),
-					["<Down>"] = require("cmp").mapping.select_next_item({ behavior = require("cmp").SelectBehavior.select }),
+					["<left>"] = require("cmp").mapping.select_prev_item({ behavior = require("cmp").SelectBehavior.select }),
+					["<right>"] = require("cmp").mapping.select_next_item({ behavior = require("cmp").SelectBehavior.select }),
 
-					["<C-Up>"] = require("cmp").mapping.scroll_docs(-4),
-					["<C-Down>"] = require("cmp").mapping.scroll_docs(4),
-					["<Left>"] = require("cmp").mapping.close(),
+					["<Up>"] = require("cmp").mapping.scroll_docs(-4),
+					["<Down>"] = require("cmp").mapping.scroll_docs(4),
 				},
 
 				window = {
@@ -63,27 +62,16 @@ return {
 
 		priority = 750,
 
-		dependencies = {
-			"rafamadriz/friendly-snippets",
-		},
-		-- build = "RUSTC_BOOTSTRAP=1 cargo build --release",
-
 		opts = {
-			fuzzy = {
-				implementation = "lua",
-			},
-			appearance = {
-				nerd_font_variant = "normal"
-			},
-			cmdline = {
-				enabled = false,
-			},
+			fuzzy = { implementation = "prefer_rust" },
+			appearance = { nerd_font_variant = "normal" },
+			cmdline = { enabled = false },
+
 			completion = {
 				menu = {
 					auto_show = false,
 
 					border = "rounded",
-					-- max_width = math.floor(vim.o.columns * 0.5),
 					max_height = math.floor(vim.o.lines * 0.5),
 
 					winhighlight = "",
@@ -95,6 +83,8 @@ return {
 						},
 						components = {
 							custom_kinds = {
+								---|fS "style: Completion item types"
+
 								text = function (context)
 									local kind_config = vim.g.__completion_kinds or {
 										default = {
@@ -121,10 +111,13 @@ return {
 
 									return config.hl;
 								end
+
+								---|fE
 							}
 						}
 					}
 				},
+
 				documentation = {
 					auto_show = true,
 					auto_show_delay_ms = 0,
@@ -203,17 +196,18 @@ return {
 			keymap = {
 				preset = "none",
 
-				["<C-Space>"] = { "show", "show_documentation", "hide_documentation", "fallback" },
+				["<C-Space>"] = { "show", "fallback" },
 				["<CR>"] = { "accept", "fallback" },
+				["<BS>"] = { "cancel", "fallback" },
 
-				["<Left>"] = { "snippet_backward", "cancel", "fallback" },
+				["<Left>"] = { "select_prev", "snippet_backward", "fallback" },
 				["<Right>"] = { "select_next", "snippet_forward", "fallback" },
 
 				["<Up>"] = { "scroll_documentation_up", "fallback" },
 				["<Down>"] = { "scroll_documentation_down", "fallback" },
 			},
 			sources = {
-				default = { "lsp", "path", "snippets", "buffer" },
+				default = { "lsp", "path", "snippets", "omni", "buffer" },
 			},
 		},
 	},
@@ -228,6 +222,8 @@ return {
 		},
 
 		config = function ()
+			---|fS "feat: Configuring LSP servers based on completion plugin"
+
 			local loaded_cmp, lsp_cmp = pcall(require, "cmp-nvim-lsp");
 			local loaded_blink, blink = pcall(require, "blink.cmp");
 
@@ -238,6 +234,8 @@ return {
 				"basedpyright",
 				"clangd"
 			};
+
+			---@type table<string, table> Additional configurations for LSP servers.
 			local custom_settings = {
 				lua_ls = {
 					settings = {
@@ -258,6 +256,7 @@ return {
 			};
 
 			for _, client in ipairs(clients) do
+				---@type table Additional settings for this server.
 				local settings = custom_settings[client] or {};
 
 				if loaded_blink then
@@ -272,6 +271,8 @@ return {
 
 				require("lspconfig")[client].setup(settings);
 			end
+
+			---|fE
 		end
 	},
 };

@@ -116,112 +116,162 @@ vim.diagnostic.config({
 	}
 });
 
----|fS "Completion types"
+---|fS "feat: Completion types"
 vim.g.__completion_kinds = {
 	default = {
 		icon = "󰘎 ",
-		hl = "Special"
+		hl = "CompletionDefault",
+
+		border_hl = "CompletionDefaultBg"
 	},
 
 	text = {
-		icon = "󰉿 ",
-		hl = "Color0"
+		icon = " 󰉿 ",
+		hl = "CompletionDefault",
+
+		border_hl = "CompletionDefaultBg"
 	},
 	method = {
-		icon = "󰆦 ",
+		icon = " 󰆦 ",
 		hl = "Color6"
 	},
 	["function"] = {
-		icon = "󰡱 ",
-		hl = "Color4"
+		icon = " 󰡱 ",
+		hl = "CompletionFunction",
+
+		border_hl = "CompletionFunctionBg"
 	},
 	constructor = {
-		icon = "󰌗 ",
-		hl = "Color2"
+		icon = " 󰌗 ",
+		hl = "CompletionConstructor",
+
+		border_hl = "CompletionConstructorBg"
 	},
 	field = {
-		icon = "󱏒 ",
-		hl = "Color7"
+		icon = " 󱏒 ",
+		hl = "CompletionField",
+
+		border_hl = "CompletionFieldBg"
 	},
 	variable = {
-		icon = "󰏖 ",
-		hl = "Color5"
+		icon = " 󰏖 ",
+		hl = "CompletionVariable",
+
+		border_hl = "CompletionVariableBg"
 	},
 	class = {
-		icon = " ",
-		hl = "Color1"
+		icon = "  ",
+		hl = "CompletionClass",
+
+		border_hl = "CompletionClassBg"
 	},
 	interface = {
-		icon = " ",
-		hl = "Color6"
+		icon = " 󰴠 ",
+		hl = "CompletionInterface",
+
+		border_hl = "CompletionInterfaceBg"
 	},
 	module = {
-		icon = "󰆧 ",
-		hl = "Color0"
+		icon = " 󰆧 ",
+		hl = "CompletionModule",
+
+		border_hl = "CompletionModuleBg"
 	},
 	property = {
-		icon = " ",
-		hl = "Color4"
+		icon = "  ",
+		hl = "CompletionProperty",
+
+		border_hl = "CompletionPropertyBg"
 	},
 	unit = {
-		icon = "󰓅 ",
-		hl = "Color4"
+		icon = " 󰓅 ",
+		hl = "CompletionUnit",
+
+		border_hl = "CompletionUnitBg"
 	},
 	value = {
-		icon = "󰔌 ",
-		hl = "Color6"
+		icon = " 󰔌 ",
+		hl = "CompletionValue",
+
+		border_hl = "CompletionValueBg"
 	},
 	enum = {
-		icon = "󰕠 ",
-		hl = "Color7"
+		icon = " 󰕠 ",
+		hl = "CompletionEnum",
+
+		border_hl = "CompletionEnumBg"
 	},
 	keyword = {
-		icon = "󰗗 ",
-		hl = "Color4"
+		icon = " 󰗗 ",
+		hl = "CompletionKeyword",
+
+		border_hl = "CompletionKeywordBg"
 	},
 	snippet = {
-		icon = " ",
-		hl = "Color0"
+		icon = "  ",
+		hl = "CompletionSnippet",
+
+		border_hl = "CompletionSnippetBg"
 	},
 	color = {
-		icon = "󱥚 ",
-		hl = "Color5"
+		icon = " 󱥚 ",
+		hl = "CompletionColor",
+
+		border_hl = "CompletionColorBg"
 	},
 	file = {
-		icon = " ",
-		hl = "Color6"
+		icon = "  ",
+		hl = "CompletionFile",
+
+		border_hl = "CompletionFileBg"
 	},
 	reference = {
-		icon = " ",
-		hl = "Color2"
+		icon = "  ",
+		hl = "CompletionReference",
+
+		border_hl = "CompletionReferenceBg"
 	},
 	folder = {
-		icon = " ",
-		hl = "Color4"
+		icon = "  ",
+		hl = "CompletionFolder",
+
+		border_hl = "CompletionFolderBg"
 	},
 	enummember = {
-		icon = "󱁉 ",
-		hl = "Color7"
+		icon = " 󱁉 ",
+		hl = "CompletionEnum",
+
+		border_hl = "CompletionEnumBg"
 	},
 	constant = {
-		icon = " ",
-		hl = "Color1"
+		icon = "  ",
+		hl = "CompletionConst",
+
+		border_hl = "CompletionConstBg"
 	},
 	struct = {
-		icon = "󰐫 ",
-		hl = "Color5"
+		icon = " 󰐫 ",
+		hl = "CompletionStruct",
+
+		border_hl = "CompletionStructBg"
 	},
 	event = {
-		icon = "󰔎 ",
-		hl = "Color6"
+		icon = " 󰔎 ",
+		hl = "CompletionConst",
+
+		border_hl = "CompletionConstBg"
 	},
 	operator = {
-		icon = "󰙴 ",
-		hl = "Color2"
+		icon = " 󰙴 ",
+		hl = "CompletionOperator",
+
+		border_hl = "CompletionOperatorBg"
 	},
 	typeparameter = {
-		icon = "󰮄 ",
-		hl = "Color6"
+		icon = " 󰮄 ",
+		hl = "CompletionType",
+
+		border_hl = "CompletionTypeBg"
 	},
 };
 ---|fE

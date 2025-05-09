@@ -176,6 +176,8 @@ end
 ---@type table<string, fun(): table[]>
 hl.groups = {
 	qf = function ()
+		---|fS "style: Quickfix diagnostic groups."
+
 		local iR, iG, iB = hl.num_to_rgb(
 			hl.get_attr("bg", { "DiagnosticVirtualTextInfo" }) or hl.choice(14281459, 2633792)
 		);
@@ -210,7 +212,685 @@ hl.groups = {
 				value = { bg = string.format("#%x%x%x", eR, eG, eB) }
 			}
 		};
+
+		---|fE
 	end,
+
+	---|fS "style: Highlight group for completions"
+
+	completion_default = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@comment" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionDefault",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionDefaultBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_function = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@function" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionFunction",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionFunctionBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_const = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@constant" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionConst",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionConstBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_interface = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@define" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionInterface",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionInterfaceBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_method = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@function.method" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionMethod",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionMethodBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_constructor = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@constructor" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionConstructor",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionConstructorBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_field = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@field" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionField",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionFieldBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_variable = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@variable" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionVariable",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionVariableBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_class = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@class" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionClass",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionClassBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_module = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@module" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionModule",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionModuleBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_property = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@property" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionProperty",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionPropertyBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_unit = function ()
+		---|fS
+
+		return {
+			{
+				group_name = "CompletionUnit",
+				value = {
+					link = "CompletionConst"
+				}
+			},
+			{
+				group_name = "CompletionUnitBg",
+				value = {
+					link = "CompletionConstBg"
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_value = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@constant.macro" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionValue",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionValueBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_enum = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@keyword.type" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionEnum",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionEnumBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_keyword = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@keyword" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionKeyword",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionKeywordBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_snippet = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@comment" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionSnippet",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionSnippetBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_color = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@string" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionColor",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionColorBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_file = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@keyword.import" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionFile",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionFileBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_reference = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@string.special.url" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionReference",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionReferenceBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_folder = function ()
+		---|fS
+
+		return {
+			{
+				group_name = "CompletionFolder",
+				value = {
+					link = "CompletionFile"
+				}
+			},
+			{
+				group_name = "CompletionFolderBg",
+				value = {
+					link = "CompletionFileBg"
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_struct = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@variable.member" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionStruct",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionStructBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_operator = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@keyword.operator" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionOperator",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionOperatorBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	completion_type = function ()
+		---|fS
+
+		local bL, bA, bB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@type" }) or hl.choice(nil, nil)
+			)
+		);
+
+		local fL, fA, fB = hl.visible_fg(bL);
+
+		return {
+			{
+				group_name = "CompletionType",
+				value = {
+					bg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(fL, fA, fB)),
+				}
+			},
+			{
+				group_name = "CompletionTypeBg",
+				value = {
+					fg = string.format("#%x%x%x", hl.oklab_to_rgb(bL, bA, bB)),
+				}
+			}
+		};
+
+		---|fE
+	end,
+
+	---|fE
 };
 
 hl.setup = function ()

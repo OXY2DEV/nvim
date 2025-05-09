@@ -64,7 +64,7 @@ return {
 
 		opts = {
 			fuzzy = { implementation = "prefer_rust" },
-			appearance = { nerd_font_variant = "normal" },
+			appearance = { nerd_font_variant = "mono" },
 			cmdline = { enabled = false },
 
 			completion = {
@@ -77,12 +77,50 @@ return {
 					winhighlight = "",
 
 					draw = {
+						cursorline_priority = 1,
+
 						columns = {
+							{ "custom_kinds", "custom_border" },
 							{ "label", "label_description", gap = 1 },
-							{ "custom_kinds" }
 						},
 						components = {
 							custom_kinds = {
+								---|fS "style: Completion item types"
+
+								text = function (context)
+									local kind_config = vim.g.__completion_kinds or {
+										default = {
+											icon = "󰘎 ",
+											hl = "CompletionDefault",
+
+											border_hl = "CompletionDefaultBg"
+										},
+									};
+
+									local kind = string.lower(context.kind or "");
+									local config = kind_config[kind] or kind_config.default;
+
+									return config.icon;
+								end,
+								highlight = function (context)
+									local kind_config = vim.g.__completion_kinds or {
+										default = {
+											icon = "󰘎 ",
+											hl = "CompletionDefault",
+
+											border_hl = "CompletionDefaultBg"
+										},
+									};
+
+									local kind = string.lower(context.kind or "");
+									local config = kind_config[kind] or kind_config.default;
+
+									return config.hl;
+								end
+
+								---|fE
+							},
+							custom_border = {
 								---|fS "style: Completion item types"
 
 								text = function (context)
@@ -96,7 +134,7 @@ return {
 									local kind = string.lower(context.kind or "");
 									local config = kind_config[kind] or kind_config.default;
 
-									return config.icon;
+									return "▌";
 								end,
 								highlight = function (context)
 									local kind_config = vim.g.__completion_kinds or {
@@ -109,11 +147,11 @@ return {
 									local kind = string.lower(context.kind or "");
 									local config = kind_config[kind] or kind_config.default;
 
-									return config.hl;
+									return config.border_hl;
 								end
 
 								---|fE
-							}
+							},
 						}
 					}
 				},

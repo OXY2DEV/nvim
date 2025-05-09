@@ -125,7 +125,7 @@ quickfix.config = {
 			top = top,
 			bottom = i ~= #quickfix.items and separator or nil,
 
-			line = { line_hl_group = type_hls[item.type] or type_hls.default }
+			line = { line_hl_group = type_hls[item.type] or type_hls.default, invalidate = true }
 		};
 
 		---|fE

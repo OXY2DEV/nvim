@@ -110,19 +110,19 @@ _G.disable_properties = function (ignore, properties)
 	---|fE
 end
 
---- Load the options first;
+-- Load the options first;
 require("editor.options");
 require("editor.keymaps");
 
--- vim.cmd.colorscheme("catppuccin");
-
+-- Hover, Diagnostics & Quickfix should be loaded first.
 require("scripts.lsp_hover").setup();
 require("scripts.diagnostics").setup();
 require("scripts.quickfix").setup();
 
+-- Now, we load the plugins.
 require("editor.lazy");
 
---- Load scripts just before plugins.
+--- Load scripts that rely on plugins.
 require("scripts.highlights").setup();
 require("scripts.color_sync");
 
@@ -133,7 +133,7 @@ if pcall(require, "markview.highlights") then
 	hls.create(hls.groups);
 end
 
---- Autocmd for the colorscheme.
+-- Autocmd for the custom dynamic highlight groups.
 vim.api.nvim_create_autocmd({
 	"VimEnter",
 	"ColorScheme"

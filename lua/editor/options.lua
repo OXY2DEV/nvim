@@ -1,6 +1,6 @@
 --- Option configuration for Neovim
 
----|fS
+---|fS "doc: Neovim options"
 
 --- Prefer dark background.
 vim.o.background = "dark";
@@ -23,8 +23,6 @@ vim.o.confirm = true;
 --- last line.
 vim.o.fillchars = "fold: ,eob: ,lastline: ";
 
---- Close all folds that aren't under the cursor.
-vim.o.foldclose = "all";
 --- Use markers for folding.
 vim.o.foldmethod = "marker";
 vim.o.foldmarker = "|fS,|fE";

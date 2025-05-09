@@ -206,7 +206,7 @@ vim.g.__completion_kinds = {
 		border_hl = "CompletionKeywordBg"
 	},
 	snippet = {
-		icon = "  ",
+		icon = "  ",
 		hl = "CompletionSnippet",
 
 		border_hl = "CompletionSnippetBg"
@@ -273,3 +273,4 @@ vim.g.__completion_kinds = {
 	},
 };
 ---|fE
+

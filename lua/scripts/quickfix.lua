@@ -17,6 +17,7 @@ local quickfix = {};
 
 ---@type quickfix.config
 quickfix.config = {
+	min_height = 10,
 	context_lines = 0,
 
 	decorations = function (i, item)
@@ -329,8 +330,13 @@ quickfix.prepare = function ()
 				end
 
 				local L = quickfix.render();
+				local height = math.max(
+					L,
+					math.min(quickfix.config.max_height or math.floor(vim.o.lines * 0.4), L),
+					quickfix.config.min_height or 3
+				)
 
-				pcall(vim.api.nvim_win_set_config, quickfix.window, { height = L });
+				pcall(vim.api.nvim_win_set_config, quickfix.window, { height = height });
 				pcall(vim.api.nvim_win_set_cursor, quickfix.window, { cursor[1] + 1, cursor[2] });
 
 				---|fE
@@ -356,8 +362,13 @@ quickfix.prepare = function ()
 				end
 
 				local L = quickfix.render();
+				local height = math.max(
+					L,
+					math.min(quickfix.config.max_height or math.floor(vim.o.lines * 0.4), L),
+					quickfix.config.min_height or 3
+				)
 
-				pcall(vim.api.nvim_win_set_config, quickfix.window, { height = L });
+				pcall(vim.api.nvim_win_set_config, quickfix.window, { height = height });
 				pcall(vim.api.nvim_win_set_cursor, quickfix.window, { cursor[1] + 1, cursor[2] });
 
 				---|fE
@@ -545,7 +556,10 @@ quickfix.open = function (items)
 	---|fS
 
 	quickfix.context_lines = {};
-	quickfix.items = items or vim.fn.getqflist();
+	quickfix.items = vim.tbl_filter(function (item)
+		-- Do not include items from the quickfix window itself.
+		return item.bufnr ~= quickfix.buffer;
+	end, items or vim.fn.getqflist());
 
 	if #quickfix.items == 0 then
 		-- No item available.
@@ -603,6 +617,8 @@ quickfix.close = function ()
 	quickfix.items = {};
 	quickfix.item_data = {};
 	quickfix.context_lines = {};
+
+	pcall(vim.diagnostic.reset, quickfix.ns, quickfix.buffer);
 
 	---|fE
 end

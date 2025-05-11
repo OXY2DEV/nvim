@@ -891,6 +891,15 @@ hl.groups = {
 	end,
 
 	---|fE
+
+	overwrite = function ()
+		return {
+			{
+				group_name = "StatusLine",
+				value = { link = "Normal" }
+			}
+		};
+	end,
 };
 
 hl.setup = function ()

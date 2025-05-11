@@ -44,6 +44,7 @@ return {
 				"lua",
 
 				"regex",
+				"html",
 				"markdown",
 				"markdown_inline",
 				"yaml",

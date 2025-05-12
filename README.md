@@ -61,5 +61,7 @@ Run `nvim`,
 nvim
 ```
 
-Everything else should be installed automatically! And you should be good to go!
+Everything else should be installed automatically and you should be good to go!
+
+### 🌋 Gallery
 

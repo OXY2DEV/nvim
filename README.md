@@ -15,7 +15,7 @@ A general-purpose setup for `Neovim`.
     + [tree-sitter-vhs](https://github.com/OXY2DEV/tree-sitter-vhs/tree/main), Tree-sitter parser for VHS with improved syntax tree & highlighting!
     + [tree-sitter-lua_patterns](https://github.com/OXY2DEV/tree-sitter-lua_patterns/tree/main), Tree-sitter parser for `Lua patterns` with improved syntax tree, more nodes & bug fixes.
 
-- Spell files with common words
+- Spell files with common words.
 - Completion setup for `nvim-cmp` & `blink.cmp`.
 - LSP setup for various languages(e.g. Lua, Javascript, Python etc.)
 - Multiple colorscheme setup.
@@ -28,60 +28,38 @@ A general-purpose setup for `Neovim`.
     + `OXY2DEV/icons.nvim`, Custom icon set.
     + `OXY2DEV/ui.nvim`, Fancy `Cmdline`, `Pop-up menu` & `Messages`.
 
-## 📥 Installation
+## ✨ Usage
 
->[!NOTE]
-> You must have `git` installed on your system.
+If you have used `nvim` before, backup your old files!
+
+```bash
+mkdir ~/nvim.backup
+
+mv ~/.config/nvim ~/nvim.backup/config
+mv ~/.local/share/nvim ~/nvim.backup/share
+mv ~/.local/state/nvim ~/nvim.backup/state
+```
+
+>[!TIP]
+> Alternatively, you can use `NVIM_APPNAME` variable.
 >
-> On Termux install it via `pkg`,
-> ```shell
->  pkg install git -y
-> ```
->
-> On MacOS use `homebrew`,
-> ```shell
-> brew install git
-> ```
+> For example, if you cloned the repo to `~/.config/new_vim` then you can set the app name to `new_vim`.
 
-1. Backup your previous config.
+------
 
-```shell
-mv ~/.config/nvim/ ~/.config/nvim_backup/
+Clone the repository to your machine(use any 1 of those commands),
+
+```bash
+git clone https://github.com/OXY2DEV/nvim.git
+# git clone git@github.com:OXY2DEV/nvim.git
+# gh repo clone OXY2DEV/nvim
 ```
 
-2. Go to `~/.config`.
+Run `nvim`,
 
-```shell
-cd ~/.config/
-```
-
-3. Clone this repository.
-
-```shell
-git clone https://www.github.com/OXY2DEV/nvim/
-```
-
-4. Open Neovim.
-
-```shell
+```bash
 nvim
 ```
 
-And you should be good to go!
-
-## 📂 File structure
-
-```txt
-🔩 nvim
-├─ 📜 init.lua
-├─ 📂 lua
-│  ├─ 📂 editor   # Editor configuration
-│  ├─ 📂 scripts  # Standalone scripts for Neovim
-│  ├─ 🔖 plugins  # Plugin configurtion(lazy.nvim is used)
-│  └─ 📂 custom   # Custom plugins
-└─ 📑 README.md
-```
-
-
-
+Everything else should be installed automatically! And you should be good to go!
 

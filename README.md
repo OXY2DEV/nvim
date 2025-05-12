@@ -1,5 +1,7 @@
 # 💻 OXY2DEV's setup for **Android** & **MacOS**
 
+![Preview image](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-main.png)
+
 A general-purpose setup for `Neovim`.
 
 ## 📦 What's included?
@@ -64,4 +66,34 @@ nvim
 Everything else should be installed automatically and you should be good to go!
 
 ### 🌋 Gallery
+
+![Main demo](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-main.png)
+
+<sub>
+	Custom quickfix(with diagnostic hover), markdown preview, custom statuscolumn/statusline/foldtext.
+</sub>
+
+![Demo 2](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-fold-hover.png)
+
+<sub>
+	Custom LSP hover, tree-sitter node hierarchy, different foldtext based on fold method(markers & expression).
+</sub>
+
+![Demo 3](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-help-message.png)
+
+<sub>
+	Decorated help files, custom message window(output of <code>:ls!</code>).
+</sub>
+
+![Demo 4](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-blink.png)
+
+<sub>
+	Completion(via <code>blink.cmp</code>) with documentation window(with markdown preview).
+</sub>
+
+![Demo 5](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-ui.png)
+
+<sub>
+	Custom UI for the cmdline, popup menu & messages.
+</sub>
 

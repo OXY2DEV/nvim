@@ -1,6 +1,6 @@
 # 💻 OXY2DEV's setup for **Android** & **MacOS**
 
-![Preview image](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/nvim-main.png)
+![Preview image](https://raw.githubusercontent.com/OXY2DEV/nvim/refs/heads/images/images/mockup.png)
 
 A general-purpose setup for `Neovim`.
 

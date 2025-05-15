@@ -93,7 +93,14 @@ vim.api.nvim_set_keymap("n", "<leader>l", "", {
 	end
 });
 
+-- vim.api.nvim_set_keymap("v", "<leader>l", "", {
+-- 	desc = "Run [l]ua",
+-- 	callback = function ()
+-- 		pcall(vim.cmd --[[ @as function ]], "'<,'>lua");
+-- 	end
+-- });
 
+---|fE
 
 ---|fS "feat: Completion"
 

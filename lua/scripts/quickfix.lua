@@ -110,6 +110,10 @@ quickfix.config = {
 			---|fE
 		};
 
+		-- Hints have type `N`.
+		type_configs.N = type_configs.H;
+		type_hls.N = type_hls.H;
+
 		top.virt_text = vim.list_extend(
 			type_configs[item.type] or type_configs.default,
 			top.virt_text

@@ -22,7 +22,7 @@ local function keymap_alert(level, msg)
 	}, true, {});
 end
 
----|fS "Writing & Quitting"
+---|fS "feat: Writing & Quitting"
 
 vim.api.nvim_set_keymap("n", "<leader>q", "<CMD>q<CR>", {
 	desc = "[q]uit Neovim."
@@ -42,7 +42,7 @@ vim.api.nvim_set_keymap("n", "<leader>wq", "<CMD>wq<CR>", {
 
 ---|fE
 
----|fS "Undo & Redo"
+---|fS "refactor: Undo & Redo"
 
 vim.api.nvim_set_keymap("n", "<leader>u", "<CMD>undo<CR>", {
 	desc = "[u]ndo changes"
@@ -54,7 +54,7 @@ vim.api.nvim_set_keymap("n", "<leader>r", "<CMD>redo<CR>", {
 
 ---|fE
 
----|fS "Tab movement"
+---|fS "feat: Tab movement"
 
 vim.api.nvim_set_keymap("n", "<leader>m", "<CMD>tabnext<CR>", {
 	desc = "Go to next Tab."
@@ -66,7 +66,7 @@ vim.api.nvim_set_keymap("n", "<leader>z", "<CMD>tabprevious<CR>", {
 
 ---|fE
 
----|fS "Lua related"
+---|fS "refactor: Lua related"
 
 vim.api.nvim_set_keymap("n", "<leader>l", "", {
 	desc = "Run [l]ua",
@@ -110,7 +110,7 @@ local function get_window (buffer)
 	---|fE
 end
 
----|fS "Completion"
+---|fS "feat: Completion"
 
 --- Completion function.
 local function complete ()

@@ -93,22 +93,7 @@ vim.api.nvim_set_keymap("n", "<leader>l", "", {
 	end
 });
 
----|fE
 
---- Gets a single window that contains {buffer}.
----@param buffer integer Buffer ID.
----@return integer The window ID.
-local function get_window (buffer)
-	---|fS
-	local wins = vim.fn.win_findbuf(buffer);
-
-	if vim.list_contains(wins, vim.api.nvim_get_current_win()) then
-		return vim.api.nvim_get_current_win();
-	else
-		return wins[1];
-	end
-	---|fE
-end
 
 ---|fS "feat: Completion"
 
@@ -119,7 +104,11 @@ local function complete ()
 	---@type integer
 	local buffer = vim.api.nvim_get_current_buf();
 	---@type integer
-	local win = get_window(buffer);
+	local win = vim.fn.win_findbuf(buffer)[1];
+
+	if not win then
+		return;
+	end
 
 	---@type [ integer, integer ]
 	local cursor = vim.api.nvim_win_get_cursor(win);
@@ -140,7 +129,7 @@ local function complete ()
 		vim.api.nvim_win_set_cursor(win, { cursor[1] + 1, cursor[2] + #("	") });
 	else
 		--- Otherwise, trigger completion.
-		local keys = vim.api.nvim_replace_termcodes("<C-n>", true, true, true);
+		local keys = vim.api.nvim_replace_termcodes(vim.bo[buffer].omnifunc ~= "" and "<C-x><C-o>" or "<C-n>", true, true, true);
 		vim.api.nvim_feedkeys(keys, "i", true);
 	end
 
@@ -167,15 +156,13 @@ vim.api.nvim_set_keymap("i", "<Tab>", "", {
 
 			vim.api.nvim_buf_set_text(buffer, cursor[1], cursor[2], cursor[1], cursor[2], { "	" });
 			vim.api.nvim_win_set_cursor(win, { cursor[1] + 1, cursor[2] + #("	") });
-		elseif package.loaded["cmp"] then
-			pcall(require("cmp").mapping.close);
 		end
 	end
 });
 
 ---|fE
 
----|fS "Overwrites"
+---|fS "refactor: Overwrites"
 
 vim.api.nvim_set_keymap("n", "u", "<nop>", {
 	desc = "Disable default [u]ndo"

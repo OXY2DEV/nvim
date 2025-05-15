@@ -8,16 +8,17 @@ vim.o.timeoutlen = 500;
 local function keymap_alert(level, msg)
 	level = level or 1;
 	local hls = {
-		"DiagnosticOk",
-		"DiagnosticWarn",
-		"DiagnosticError",
-		"DiagnosticHint",
-		"DiagnosticInfo"
+		"DiagnosticVirtualTextOk",
+		"DiagnosticVirtualTextWarn",
+		"DiagnosticVirtualTextError",
+		"DiagnosticVirtualTextHint",
+		"DiagnosticVirtualTextInfo"
 	};
 
 	vim.api.nvim_echo({
-		{ " keymaps.lua: ", "Special" },
-		{ msg, hls[level] }
+		{ "  keymaps.lua ", hls[level] },
+		{ ": ", "@comment" },
+		{ msg, "@comment" }
 	}, true, {});
 end
 

@@ -57,3 +57,6 @@ cmd
 config
 cmdline
 Catppuccin
+splitview
+yaml
+typst

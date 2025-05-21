@@ -126,13 +126,6 @@ require("editor.lazy");
 require("scripts.highlights").setup();
 require("scripts.color_sync");
 
-if pcall(require, "markview.highlights") then
-	local hls = require("markview.highlights");
-
-	hls.destroy();
-	hls.create(hls.groups);
-end
-
 -- Autocmd for the custom dynamic highlight groups.
 vim.api.nvim_create_autocmd({
 	"VimEnter",

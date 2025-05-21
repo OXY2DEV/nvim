@@ -73,7 +73,7 @@ return {
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/oops.nvim",
 		name = "oops",
 		priority = 100,
-		lazy = false,
+		enabled = false,
 
 		config = function ()
 			vim.api.nvim_set_keymap("n", "O", "<CMD>Oops<CR>", {});

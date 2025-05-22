@@ -131,7 +131,9 @@ vim.g.__completion_kinds = {
 	},
 	method = {
 		icon = " 󰆦 ",
-		hl = "Color6"
+		hl = "CompletionFunction",
+
+		border_hl = "CompletionFunctionBg"
 	},
 	["function"] = {
 		icon = " 󰡱 ",

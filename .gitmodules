@@ -28,3 +28,6 @@
 [submodule "lua/custom_plugins/foldtext.nvim"]
 	path = lua/custom_plugins/foldtext.nvim
 	url = ../foldtext.nvim
+[submodule "parsers/tree-sitter-qf"]
+	path = parsers/tree-sitter-qf
+	url = ../tree-sitter-qf.git

@@ -113,6 +113,7 @@ end
 -- Load the options first;
 require("editor.options");
 require("editor.keymaps");
+require("editor.ts_directives");
 
 -- Hover, Diagnostics & Quickfix should be loaded first.
 require("scripts.lsp_hover").setup();

@@ -38,6 +38,14 @@ return {
 			}
 		};
 
+		parser_configs.qf = {
+			install_info = {
+				url = get_path("/parsers/tree-sitter-qf", "https://github.com/OXY2DEV/tree-sitter-qf.git"),
+				files = { "src/parser.c" }
+			},
+			filetype = "qf"
+		};
+
 		require("nvim-treesitter.configs").setup({
 			ensure_installed = {
 				"vim",

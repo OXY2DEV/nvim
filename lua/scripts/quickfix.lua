@@ -400,6 +400,29 @@ quickfix.add_decor = function (name, TSNode)
 					local type = string.lower(item.type or "");
 
 					virt_text = kinds[type] or kinds.default;
+
+					if item.text and item.text ~= "" and text ~= " " .. item.text then
+						---|fS
+
+						-- Show the actual message below if the buffer
+						-- text is being shown instead of the message.
+						vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, range[1], range[2], {
+							virt_lines = {
+								{
+									{ " ╰╴", "@comment" },
+									{ item.text, virt_text[2] }
+								}
+							},
+						});
+
+						---|fE
+					elseif item.text and item.text ~= "" then
+						-- Unloaded buffer's show the item text.
+						-- Change the icon as an indicator.
+						virt_text = {
+							"󰵅 ", virt_text[2]
+						};
+					end
 				end
 			end
 

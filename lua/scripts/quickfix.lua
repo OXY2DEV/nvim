@@ -566,6 +566,17 @@ quickfix.setup = function ()
 				vim.wo[win].conceallevel = 3;
 				vim.wo[win].concealcursor = "nc";
 
+				---|fS "fix: Disable statuscolumn"
+
+				vim.wo[win].number = false;
+				vim.wo[win].relativenumber = false;
+				vim.wo[win].numberwidth = 1;
+
+				vim.wo[win].signcolumn = "no";
+				vim.wo[win].foldcolumn = "0";
+
+				---|fE
+
 				H = vim.api.nvim_win_get_height(win);
 			end
 

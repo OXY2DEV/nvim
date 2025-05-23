@@ -83,6 +83,9 @@ quickfix.buffer = nil;
 ---@type integer
 quickfix.winid = nil;
 
+---@type boolean Should the quickfix be decorated?
+quickfix.should_decorate = true;
+
 ------------------------------------------------------------------------------
 
 --- Text to show for the location list.
@@ -494,6 +497,14 @@ quickfix.decorate = function (from, to)
 	end
 
 	vim.api.nvim_buf_clear_namespace(quickfix.buffer, quickfix.ns, 0, -1);
+	local valid_modes = { "n", "c" };
+
+	if quickfix.should_decorate ~= true then
+		return
+	elseif vim.list_contains(valid_modes, vim.api.nvim_get_mode().mode) == false then
+		return;
+	end
+
 	local TSTree = get_tstree();
 
 	if not TSTree then
@@ -570,7 +581,10 @@ quickfix.setup = function ()
 		end
 	});
 
-	vim.api.nvim_create_autocmd("CursorMoved", {
+	vim.api.nvim_create_autocmd({
+		"CursorMoved",
+		"ModeChanged",
+	}, {
 		callback = function ()
 			---|fS
 
@@ -593,6 +607,13 @@ quickfix.setup = function ()
 
 			---|fE
 		end
+	});
+
+	vim.api.nvim_create_user_command("QfToggleDecors", function ()
+		quickfix.should_decorate = not quickfix.should_decorate;
+		quickfix.decorate();
+	end, {
+		desc = "Allows toggling decorations of the quickfix list"
 	});
 
 	---|fE

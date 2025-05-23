@@ -352,7 +352,9 @@ quickfix.add_decor = function (name, TSNode)
 			local range = { TSNode:range() };
 			local char = "│";
 
-			if range[1] == 0 then
+			if not TSNode:parent():next_sibling() and not TSNode:parent():prev_sibling() then
+				char = "◆";
+			elseif range[1] == 0 then
 				char = "╷";
 			elseif range[1] == line_count - 1 then
 				char = "╵";

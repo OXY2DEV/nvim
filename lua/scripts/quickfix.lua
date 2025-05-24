@@ -72,7 +72,7 @@ local function center (text, width)
 end
 
 ---@type "quickfix" | "location" Currently visible list type.
-quickfix.list = nil;
+quickfix.list = "quickfix";
 
 ---@type integer Decoration namespace.
 quickfix.ns = vim.api.nvim_create_namespace("quickfix");
@@ -308,6 +308,23 @@ quickfix.add_decor = function (name, TSNode, injection_lines)
 	local line_count = vim.api.nvim_buf_line_count(quickfix.buffer);
 
 	local callbacks = {
+		qf_toc_conceal = function ()
+			local win = vim.fn.win_findbuf(quickfix.buffer)[1];
+
+			if not win then
+				return;
+			elseif not vim.w[win].qf_toc and vim.w[win].quickfix_title ~= "Table of contents" then
+				return;
+			end
+
+			local range = { TSNode:range() };
+
+			vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, range[1], 0, {
+				end_col = range[4],
+				conceal = ""
+			});
+		end,
+
 		qf_filename = function ()
 			---|fS
 
@@ -350,6 +367,12 @@ quickfix.add_decor = function (name, TSNode, injection_lines)
 		qf_separator = function ()
 			---|fS
 
+			local win = vim.fn.win_findbuf(quickfix.buffer)[1];
+
+			if win and (vim.w[win].qf_toc or vim.w[win].quickfix_title == "Table of contents") then
+				return;
+			end
+
 			local text = vim.treesitter.get_node_text(TSNode, quickfix.buffer, {});
 			local whitespaces = string.match(text, "^%s*");
 
@@ -388,6 +411,7 @@ quickfix.add_decor = function (name, TSNode, injection_lines)
 			local kinds = {
 				default = { "󱈤 ", "@function" },
 				loc = { " ", "@conditional" },
+				toc = { "󱓷 ", "@comment" },
 
 				w = { " ", "DiagnosticWarn" },
 				e = { "󰅙 ", "DiagnosticError" },
@@ -395,8 +419,11 @@ quickfix.add_decor = function (name, TSNode, injection_lines)
 				n = { "󰁨 ", "DiagnosticHint" },
 			};
 			local virt_text = kinds.default;
+			local win = vim.fn.win_findbuf(quickfix.buffer)[1];
 
-			if quickfix.list == "location" then
+			if win and (vim.w[win].qf_toc or vim.w[win].quickfix_title == "Table of contents") then
+				virt_text = kinds.toc;
+			elseif quickfix.list == "location" then
 				virt_text = kinds.loc;
 			else
 				local qflist = vim.fn.getqflist();
@@ -528,6 +555,11 @@ quickfix.decorate = function (from, to)
 
 		(code_block
 			(content) @qf_content)
+
+		((filename)
+			"|"
+			(range)
+			"|" @qf_toc_conceal)
 	]]);
 
 	for id, node in queries:iter_captures(TSTree:root(), quickfix.buffer, from, to) do

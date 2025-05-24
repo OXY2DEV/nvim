@@ -1,13 +1,16 @@
+; Specified language.
+; filename.lua | 10 col 5 | >!lua!< local value = 10;
 (code_block
-  (language_delimiter) @_lang
+  (language_delimiter) @injection.language
   (content) @injection.content
-  (#set-qf-lang! @_lang))
+  (#offset! @injection.language 0 2 0 -2))
 
-; Uncomment the lines below if you want syntax highlighting
-; for the default quickfix list.
-;
-; ((code_block
-;   .
-;   (content) @injection.content
-;   .) @_qf
-;   (#qf-fallback-lang! @_qf))
+; Automatic language(slightly inaccurate).
+; filename.lua | 10 col 5 | local value = 10;
+(quickfix_item
+  (filename) @injection.filename
+  (range)
+  ((code_block
+    .
+    (content) @injection.content
+    .)))

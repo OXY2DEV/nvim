@@ -301,7 +301,8 @@ end
 --- Adds decorations for the given node.
 ---@param name string
 ---@param TSNode table
-quickfix.add_decor = function (name, TSNode)
+---@param injection_lines string[]
+quickfix.add_decor = function (name, TSNode, injection_lines)
 	---|fS
 
 	local line_count = vim.api.nvim_buf_line_count(quickfix.buffer);
@@ -442,7 +443,7 @@ quickfix.add_decor = function (name, TSNode)
 				},
 			});
 
-			if not TSNode:prev_sibling() then
+			if vim.list_contains(injection_lines, range[1]) == false then
 				vim.api.nvim_buf_set_extmark(quickfix.buffer, quickfix.ns, range[1], range[2] + #whitespaces, {
 					end_col = range[4],
 					hl_group = "@comment"
@@ -487,7 +488,7 @@ quickfix.decorate = function (from, to)
 			return;
 		end
 
-		return TSTrees[1];
+		return TSTrees[1], parser;
 
 		---|fE
 	end
@@ -505,11 +506,20 @@ quickfix.decorate = function (from, to)
 		return;
 	end
 
-	local TSTree = get_tstree();
+	local TSTree, root_parser = get_tstree();
 
-	if not TSTree then
+	if not TSTree or not root_parser then
 		return;
 	end
+
+	local injection_lines = {};
+
+	root_parser:for_each_tree(function (tree)
+		if tree ~= TSTree then
+			local row = tree:root():range();
+			table.insert(injection_lines, row);
+		end
+	end);
 
 	local queries = vim.treesitter.query.parse("qf", [[
 		(filename) @qf_filename
@@ -522,7 +532,7 @@ quickfix.decorate = function (from, to)
 
 	for id, node in queries:iter_captures(TSTree:root(), quickfix.buffer, from, to) do
 		local name = queries.captures[id];
-		quickfix.add_decor(name, node);
+		quickfix.add_decor(name, node, injection_lines);
 	end
 
 	---|fE
@@ -622,7 +632,7 @@ quickfix.setup = function ()
 
 	vim.api.nvim_create_user_command("QfToggleDecors", function ()
 		quickfix.should_decorate = not quickfix.should_decorate;
-		quickfix.decorate();
+		quickfix.decorate(0, -1);
 	end, {
 		desc = "Allows toggling decorations of the quickfix list"
 	});

@@ -3,7 +3,7 @@
 ] @punctuation.delimiter
 
 [
- " col "
+ "col"
 ] @keyword
 
 [

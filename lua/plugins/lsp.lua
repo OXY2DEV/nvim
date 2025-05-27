@@ -268,7 +268,7 @@ return {
 			---@type string[] LSP client names.
 			local clients = {
 				"lua_ls",
-				"html", "ts_ls", "emmet_ls",
+				"html", "ts_ls", "emmet_language_server",
 				"basedpyright",
 				"clangd"
 			};

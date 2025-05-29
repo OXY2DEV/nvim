@@ -1,25 +1,29 @@
 [
  "|"
+ "-"
 ] @punctuation.delimiter
+
+
+(filename) @string.special.path
+
+
+(row
+  [
+    (value)
+    (from)
+    (to)
+  ] @number)
 
 [
  "col"
 ] @keyword
 
-[
- (row)
- (col)
-] @number
-
-
-(filename) @string.special.path
-
-((code_block) @markup.raw.block
-  (#set! priority 90))
-
-(code_block
-  (language_delimiter) @markup.raw.block
-  (#set! conceal ""))
+(col
+  [
+    (value)
+    (from)
+    (to)
+  ] @number)
 
 
 ((item_type) @comment.error
@@ -30,3 +34,12 @@
 
 ((item_type) @comment.note
   (#eq? @comment.note "note"))
+
+
+((code_block) @markup.raw.block
+  (#set! priority 90))
+
+(code_block
+  (language_delimiter) @markup.raw.block
+  (#set! conceal ""))
+

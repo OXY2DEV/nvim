@@ -6,11 +6,11 @@ return {
 		priority = 750,
 
 		dependencies = {
-			"hrsh7th/cmp-nvim-lsp",
-			"hrsh7th/cmp-nvim-lua",
-			"FelipeLema/cmp-async-path",
-
-			"chrisgrieser/cmp-nerdfont",
+			-- "hrsh7th/cmp-nvim-lsp",
+			-- "hrsh7th/cmp-nvim-lua",
+			-- "FelipeLema/cmp-async-path",
+			--
+			-- "chrisgrieser/cmp-nerdfont",
 		},
 
 		config = function ()

@@ -86,3 +86,6 @@ uri
 url
 timestamp
 vimdoc
+pos
+args
+arg

@@ -10,26 +10,46 @@ node_maps.named = {
 	markdown = {
 		document = {
 			icon = "󰗚 ",
-			icon_hl = "@comment"
+			icon_hl = "@property"
 		},
 
 		section = {
 			icon = "󰛺 ",
-			icon_hl = "@comment"
+			icon_hl = "@property"
 		},
 
 		["fenced_code_block$"] = {
 			icon = " ",
-			icon_hl = "@module"
+			icon_hl = "@property"
 		},
 
 		fenced_code_block_delimiter = {
 			icon = " ",
 			icon_hl = "@constant"
 		},
+
+		info_string = {
+			icon = "󰋼 ",
+			icon_hl = "@property"
+		},
+
+		language = {
+			icon = "󰗊 ",
+			icon_hl = "@string"
+		},
+
+		block_continuation = {
+			icon = "󱞦 ",
+			icon_hl = "@comment"
+		},
 	},
 
 	lua = {
+		chunk = {
+			icon = "󰐱 ",
+			icon_hl = "@property"
+		},
+
 		["^comment"] = {
 			icon = "󰔌 ",
 		},

@@ -39,16 +39,40 @@ inspect.config = {
 			icon = "󱏒 ",
 
 			text = nil,
-			hl = { "MarkviewCode", "CursorLine" },
+			hl = { "Injection0", "Injection1", "Injection2", },
 
 			icon_hl = "@constant",
 			text_hl = "@constant",
 		},
 
+		["^lua$"] = {
+			icon = " ",
+			text = "Lua",
+
+			hl = "Injection5",
+			icon_hl = "@function",
+			text_hl = "@function"
+		},
+
 		luadoc = {
 			icon = " ",
 			text = "LuaDoc",
-		}
+
+			hl = "Injection0",
+			icon_hl = "@comment",
+			text_hl = "@comment"
+
+		},
+
+		lua_patterns = {
+			icon = " ",
+			text = "Lua patterns",
+
+			hl = "Injection2",
+			icon_hl = "@constant",
+			text_hl = "@constant"
+
+		},
 	},
 
 	anonymous_nodes = {
@@ -58,16 +82,7 @@ inspect.config = {
 		},
 	},
 
-	named_nodes = {
-		default = {
-			icon = "󰌪 ",
-			icon_hl = "DiagnosticOk"
-		},
-
-		["comment"] = {
-			icon = "󰔌 ",
-		},
-	}
+	named_nodes = require("scripts.node_maps").named,
 };
 
 ---@param node TSNode
@@ -251,6 +266,37 @@ function inspector:__hide_params (node)
 	});
 end
 
+function inspector:__highlight_named (node)
+	local range = { node:range() };
+
+	local line_data = self.parsed_data[range[1] + 1] or {};
+	local lang = line_data.language;
+
+	local node_name = string.match(
+		vim.treesitter.get_node_text(node, self.buf),
+		"^%(([%w_]+)"
+	);
+
+	local default_config = inspect.config.named_nodes.default or {};
+
+	local node_config = vim.tbl_extend(
+		"force",
+		default_config,
+		match(inspect.config.named_nodes[lang] or {}, node_name) or {}
+	);
+
+	vim.api.nvim_buf_set_extmark(self.buf, inspect.ns, range[1], range[2] + 1, {
+		end_col = range[2] + 1 + #node_name,
+
+		virt_text_pos = "inline",
+		virt_text = {
+			{ node_config.icon or "", node_config.icon_hl or node_config.hl }
+		},
+
+		hl_group = node_config.hl,
+	});
+end
+
 function inspector:__highlight_injections ()
 	---@param list any[]
 	---@param index integer
@@ -324,28 +370,7 @@ function inspector:decorate ()
 		if name == "paren" then
 			self:__hide_params(node);
 		elseif name == "named" and inspect.config.named_nodes then
-			local node_name = string.match(
-				vim.treesitter.get_node_text(node, self.buf),
-				"^%(([%w_]+)"
-			);
-
-			local default_config = inspect.config.named_nodes.default or {};
-			local node_config = vim.tbl_extend(
-				"force",
-				default_config,
-				match(inspect.config.named_nodes, node_name)
-			);
-
-			vim.api.nvim_buf_set_extmark(self.buf, inspect.ns, range[1], range[2] + 1, {
-				end_col = range[2] + 1 + #node_name,
-
-				virt_text_pos = "inline",
-				virt_text = {
-					{ node_config.icon or "", node_config.icon_hl or node_config.hl }
-				},
-
-				hl_group = node_config.hl,
-			});
+			self:__highlight_named(node);
 		elseif name == "anon" and inspect.config.anonymous_nodes then
 			local node_name = string.match(
 				vim.treesitter.get_node_text(node, self.buf),

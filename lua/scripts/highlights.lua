@@ -49,6 +49,10 @@ hl.lerp = function (a, b, x)
 	return a + ((b - a) * x);
 end
 
+hl.interpolate = function (f1, f2, f3, t1, t2, t3, y)
+	return hl.lerp(f1, t1, y), hl.lerp(f2, t2, y), hl.lerp(f3, t3, y);
+end
+
 ------------------------------------------------------------------------------
 
 --- Turns numeric color code to RGB
@@ -172,6 +176,8 @@ hl.visible_fg = function (lumen)
 
 	---|fE
 end
+
+local Y = 0.15;
 
 ---@type table<string, fun(): table[]>
 hl.groups = {
@@ -885,6 +891,234 @@ hl.groups = {
 					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
 				}
 			}
+		};
+
+		---|fE
+	end,
+
+	---|fE
+
+	---|fS "style: Highlight group for inspect-tree"
+
+	injection_0 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection0",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	injection_1 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticError", "Error" }) or hl.choice(13766457, 15961000)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection1",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	injection_2 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@constant", "Constant" }) or hl.choice(16671755, 16429959)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection2",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	injection_3 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticWarn" }) or hl.choice(14650909, 16376495)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection3",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	injection_4 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticOk" }) or hl.choice(4235307, 10937249)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection4",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	injection_5 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@function", "Function" }) or hl.choice(1992437, 9024762)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection5",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	injection_6 = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@module", "@property" }) or hl.choice(7505917, 11845374)
+			)
+		);
+
+		return {
+			{
+				group_name = "Injection6",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
+							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
+						)
+					)
+				},
+			},
 		};
 
 		---|fE

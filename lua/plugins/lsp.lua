@@ -221,9 +221,9 @@ return {
 									vim.wo[win].signcolumn = "no";
 								end
 
-									vim.bo[buf].ft = "markdown";
-									require("markview").render(buf, { enable = true, hybrid_mode = false });
-									vim.bo[buf].ft = "blink-cmp-documentation";
+								vim.bo[buf].ft = "markdown";
+								require("markview").render(buf, { enable = true, hybrid_mode = false });
+								vim.bo[buf].ft = "blink-cmp-documentation";
 							end, 25);
 						end
 

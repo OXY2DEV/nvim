@@ -90,12 +90,13 @@ inspect.config = {
 ---@param injection_map table<integer, inspect.injection>
 ---@param depth integer
 ---@param injection_depth integer
+---@param named_only boolean
 ---@return string[]
 ---@return inspect.data[]
-inspect.tostring = function (node, language, injection_map, depth, injection_depth)
+inspect.tostring = function (node, language, injection_map, depth, injection_depth, named_only)
 	if not node then
 		return {}, {};
-	elseif inspect.config.named_only and not node:named() then
+	elseif named_only and not node:named() then
 		return {}, {};
 	end
 
@@ -131,7 +132,7 @@ inspect.tostring = function (node, language, injection_map, depth, injection_dep
 		datas[1].injection_depth = injection_depth;
 
 		local inj = injection_map[id];
-		local inj_lines, inj_datas = inspect.tostring(inj.root, inj.language, injection_map, depth + 1, injection_depth)
+		local inj_lines, inj_datas = inspect.tostring(inj.root, inj.language, injection_map, depth + 1, injection_depth, named_only);
 
 		for l, line in ipairs(inj_lines) do
 			inj_lines[l] = "    " .. line;
@@ -142,7 +143,7 @@ inspect.tostring = function (node, language, injection_map, depth, injection_dep
 	end
 
 	for child, field_name in node:iter_children() do
-		local child_lines, child_datas = inspect.tostring(child, language, injection_map, depth + 1, injection_depth);
+		local child_lines, child_datas = inspect.tostring(child, language, injection_map, depth + 1, injection_depth, named_only);
 
 		if #child_lines == 0 then
 			goto ignore;
@@ -218,14 +219,16 @@ end
 
 inspect.ns = vim.api.nvim_create_namespace("Inspect");
 
-inspect.parse = function (buffer)
+inspect.decorator_ns = vim.api.nvim_create_namespace("inspect.decor")
+
+inspect.parse = function (buffer, named_only)
 	local parser = vim.treesitter.get_parser(buffer or 0, nil, {});
 	if not parser then return; end
 
 	local TSTree = parser:parse(true)[1];
 	local injected_nodes = inspect.injected(parser);
 
-	local lines, data = inspect.tostring(TSTree:root(), parser:lang(), injected_nodes, 0, 0);
+	local lines, data = inspect.tostring(TSTree:root(), parser:lang(), injected_nodes, 0, 0, named_only);
 
 	for l, line in ipairs(lines) do
 		local line_data = data[l];
@@ -256,11 +259,12 @@ local inspector = {
 	buffer = nil,
 	window = nil,
 };
+inspector.__index = inspector;
 
 function inspector:__hide_params (node)
 	local range = { node:range() };
 
-	vim.api.nvim_buf_set_extmark(self.buf, inspect.ns, range[1], range[2], {
+	vim.api.nvim_buf_set_extmark(self.buf, inspect.decorator_ns, range[1], range[2], {
 		end_col = range[4],
 		conceal = ""
 	});
@@ -285,7 +289,7 @@ function inspector:__highlight_named (node)
 		match(inspect.config.named_nodes[lang] or {}, node_name) or {}
 	);
 
-	vim.api.nvim_buf_set_extmark(self.buf, inspect.ns, range[1], range[2] + 1, {
+	vim.api.nvim_buf_set_extmark(self.buf, inspect.decorator_ns, range[1], range[2] + 1, {
 		end_col = range[2] + 1 + #node_name,
 
 		virt_text_pos = "inline",
@@ -294,6 +298,7 @@ function inspector:__highlight_named (node)
 		},
 
 		hl_group = node_config.hl,
+		hl_mode = "combine",
 	});
 end
 
@@ -327,7 +332,7 @@ function inspector:__highlight_injections ()
 				match(inspect.config.injections, language)
 			);
 
-			vim.api.nvim_buf_set_extmark(self.buf, inspect.ns, l, 0, {
+			vim.api.nvim_buf_set_extmark(self.buf, inspect.decorator_ns, l, 0, {
 				end_row = (l - 2) + line_data.lines,
 				line_hl_group = from_list(lang_config.hl, line_data.injection_depth),
 				hl_mode = "combine",
@@ -398,17 +403,50 @@ function inspector:decorate ()
 	end
 end
 
+function inspector:switch_state ()
+	self.named_only = not self.named_only;
+
+	local cursor = vim.api.nvim_win_get_cursor(self.win);
+	local Y, X = cursor[1], cursor[2];
+	local item = self.parsed_data[Y] or {};
+
+	if self.named_only then
+		while item and item.named == false do
+			Y = Y - 1;
+			item = self.parsed_data[Y];
+		end
+	end
+
+	self.lines, self.parsed_data = inspect.parse(self.source, self.named_only);
+
+	vim.bo[self.buf].modifiable = true;
+	vim.api.nvim_buf_clear_namespace(self.buf, inspect.ns, 0, -1);
+	vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, self.lines);
+	vim.bo[self.buf].modifiable = false;
+
+	self:decorate();
+	if not item then return; end
+
+	for i, new_item in ipairs(self.parsed_data) do
+		if new_item.node:equal(item.node) then
+			pcall(vim.api.nvim_win_set_cursor, self.win, { i, X });
+			return;
+		end
+	end
+end
+
 function inspector:open (buf)
 	self.source = buf or vim.api.nvim_get_current_buf();
+	self.named_only = inspect.config.named_only == true;
 
-	self.lines, self.parsed_data = inspect.parse(self.source);
+	self.lines, self.parsed_data = inspect.parse(self.source, self.named_only);
 	if not self.lines or not self.parsed_data then return; end
 
 	self.buf = vim.api.nvim_create_buf(false, true);
 	vim.bo[self.buf].ft = "query";
 
 	vim.bo[self.buf].modifiable = true;
-	vim.api.nvim_buf_clear_namespace(self.buf, inspect.ns, 0, -1);
+	vim.api.nvim_buf_clear_namespace(self.buf, inspect.decorator_ns, 0, -1);
 	vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, self.lines);
 	vim.bo[self.buf].modifiable = false;
 
@@ -416,7 +454,7 @@ function inspector:open (buf)
 	vim.wo[self.win].conceallevel = 3;
 	vim.wo[self.win].concealcursor = "nvc";
 
-	inspector:decorate();
+	self:decorate();
 
 	---@diagnostic disable-next-line: undefined-field
 	local debouncer = vim.uv.new_timer();
@@ -444,6 +482,16 @@ function inspector:open (buf)
 			end));
 		end
 	});
+
+	vim.api.nvim_buf_set_keymap(self.buf, "n", "a", "", {
+		callback = function ()
+			self:switch_state();
+		end
+	});
+end
+
+function inspector:new ()
+	return setmetatable({}, inspector);
 end
 
 
@@ -452,7 +500,8 @@ end
 
 inspect.setup = function ()
 	vim.api.nvim_create_user_command("Is", function ()
-		inspector:open();
+		local ab = inspector:new();
+		ab:open()
 	end, {});
 end
 

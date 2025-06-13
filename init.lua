@@ -126,6 +126,7 @@ require("editor.lazy");
 --- Load scripts that rely on plugins.
 require("scripts.highlights").setup();
 require("scripts.color_sync");
+require("scripts.inspect_tree").setup();
 
 -- Autocmd for the custom dynamic highlight groups.
 vim.api.nvim_create_autocmd({

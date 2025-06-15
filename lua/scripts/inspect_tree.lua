@@ -45,6 +45,15 @@ inspect.config = {
 			text_hl = "@constant",
 		},
 
+		markdown_inline = {
+			icon = "󰂽 ",
+			text = "Markdown(inline)",
+
+			hl = "Injection6",
+			icon_hl = "@module",
+			text_hl = "@module"
+		},
+
 		["^lua$"] = {
 			icon = " ",
 			text = "Lua",
@@ -71,17 +80,19 @@ inspect.config = {
 			hl = "Injection2",
 			icon_hl = "@constant",
 			text_hl = "@constant"
+		},
 
+		yaml = {
+			icon = "󰨑 ",
+			text = "YAML",
+
+			hl = "Injection2",
+			icon_hl = "@constant",
+			text_hl = "@constant"
 		},
 	},
 
-	anonymous_nodes = {
-		default = {
-			icon = "󰌪 ",
-			icon_hl = "DiagnosticWarn"
-		},
-	},
-
+	anonymous_nodes = require("scripts.node_maps").anon,
 	named_nodes = require("scripts.node_maps").named,
 };
 
@@ -317,6 +328,8 @@ function inspector:__highlight_injections ()
 		return list[index] or list[mod];
 	end
 
+	local injections = {};
+
 	-- Color injected regions.
 	for l, _ in ipairs(self.lines) do
 		---@type inspect.data
@@ -343,8 +356,14 @@ function inspector:__highlight_injections ()
 					{ lang_config.text or line_data.injected.language, lang_config.text_hl },
 				},
 			});
+
+			for s = l, (l - 2) + line_data.lines do
+				injections[s + 1] = from_list(lang_config.hl, line_data.injection_depth);
+			end
 		end
 	end
+
+	vim.b[self.buf].injections = injections;
 end
 
 function inspector:decorate ()
@@ -450,11 +469,14 @@ function inspector:open (buf)
 	vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, self.lines);
 	vim.bo[self.buf].modifiable = false;
 
-	self.win = vim.api.nvim_open_win(self.buf, true, { split = "below" });
+	self:decorate();
+
+	self.win = vim.api.nvim_open_win(self.buf, true, { split = "below", style = "minimal" });
 	vim.wo[self.win].conceallevel = 3;
 	vim.wo[self.win].concealcursor = "nvc";
+	vim.wo[self.win].signcolumn = "no";
 
-	self:decorate();
+	vim.w[self.win].inspecttree_window = true;
 
 	---@diagnostic disable-next-line: undefined-field
 	local debouncer = vim.uv.new_timer();

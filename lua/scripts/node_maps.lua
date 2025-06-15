@@ -1,5 +1,12 @@
 local node_maps = {};
 
+node_maps.anon = {
+	default = {
+		icon = "󰌪 ",
+		icon_hl = "DiagnosticWarn"
+	},
+};
+
 ---@type table<string, table>
 node_maps.named = {
 	default = {

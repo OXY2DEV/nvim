@@ -119,6 +119,7 @@ require("editor.ts_directives");
 require("scripts.lsp_hover").setup();
 require("scripts.diagnostics").setup();
 require("scripts.quickfix").setup();
+require("scripts.beacon").setup();
 
 -- Now, we load the plugins.
 require("editor.lazy");

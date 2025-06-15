@@ -8,6 +8,24 @@ M.config = {
 	interval = 100,
 };
 
+M.tab_widths = function (str)
+	local tab_widths = {};
+	local text = "";
+
+	local chars = vim.fn.split(str or "", "\\zs")
+
+	for _, char in ipairs(chars) do
+		if char == "\t" then
+			table.insert(tab_widths, vim.fn.strdisplaywidth(text .. char) - vim.fn.strdisplaywidth(text));
+		end
+
+		text = text .. char;
+	end
+
+	return tab_widths;
+end
+
+
 local beacon = {};
 beacon.__index = beacon;
 
@@ -40,90 +58,259 @@ function beacon:__gradient ()
 	return gradient;
 end
 
-function beacon:render ()
+local function last_width (str)
+	local chars = vim.fn.strchars(str);
+	local reduced = vim.fn.strcharpart(str, 0, chars - 1);
+
+	return vim.fn.strdisplaywidth(str) - vim.fn.strdisplaywidth(reduced);
+end
+
+function beacon:__list_render ()
+	if vim.wo[self.window].list == false then
+		return;
+	end
+
 	local Y, X = self.pos[1] - 1, self.pos[2];
 	vim.api.nvim_buf_clear_namespace(self.buffer, self.ns, Y, Y + 1);
 
-	local _line = vim.api.nvim_buf_get_lines(self.buffer, Y, Y + 1, false)[1] or "";
-	local eol = {};
+	local line = vim.api.nvim_buf_get_lines(self.buffer, Y, Y + 1, false)[1] or "";
+	local before = vim.fn.strcharpart(line, 0, X);
+	local after = vim.fn.strcharpart(line, X);
 
-	local color_index = 1;
+	local C = 1;
+	local removed = "";
 
-	local tmp = _line:sub(X, #_line);
-	local col, line;
+	---@type table[]
+	local virt_eol = {};
 
-	if vim.wo[self.window].list ~= true then
-		col = X + 1;
-		line = vim.fn.strcharpart(tmp, 1);
-	else
-		col = X;
-		line = vim.fn.strcharpart(tmp, X == 0 and 0 or 1);
-	end
+	while C <= #self.colors do
+		---@type string
+		local first = vim.fn.strcharpart(after, 0, 1);
+		removed = removed .. first;
 
-	while color_index <= #self.colors do
-		local color = self.colors[color_index];
-		local char = vim.fn.strcharpart(line, 0, 1);
+		---@type integer
+		local width = last_width(before .. removed);
 
-		local W = vim.fn.strdisplaywidth(char);
+		if after == "" then
+			-- Nothing after cursor. Add virtual text.
+			table.insert(virt_eol, { " ", self.colors[C] });
+		elseif width > 1 then
+			-- Multi-width character. Add multiple single characters.
 
-		if col >= vim.fn.strchars(_line) or _line == "" then
-			table.insert(eol, { " ", color });
-			color_index = color_index + 1;
-		elseif W > 1 then
-			local virt = {};
+			---@type integer
+			local col = vim.fn.strchars(before .. removed) - 1;
+			local virt_text = {};
 
-			if vim.wo[self.window].list == false then
-				local fake = { { " ", color } };
+			while width >= 1 do
+				table.insert(virt_text, { " ", self.colors[C] });
 
-				for _ = 1, W - 1 do
-					table.insert(fake, 1, { " " })
-				end
-
-				vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col - 1, {
-					virt_text_pos = "overlay",
-					virt_text = fake,
-				});
-
-				color_index = color_index + 1;
-				color = self.colors[color_index];
-			end
-
-			while color and W > 0 do
-				table.insert(virt, { " ", color });
-
-				W = W - 1;
-				color_index = color_index + 1;
-				color = self.colors[color_index];
+				C = C + 1;
+				width = width - 1;
 			end
 
 			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
 				virt_text_pos = "overlay",
-				virt_text = virt,
-			});
+				virt_text = virt_text,
 
-			col = col + 1;
-			line = vim.fn.strcharpart(line, 1);
-		else
-			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
-				end_col = col + 1,
-
-				hl_group = color,
 				hl_mode = "combine"
 			});
+		else
+			-- Normal text. Only highlight the text.
 
-			color_index = color_index + 1;
-			col = col + 1;
+			---@type integer
+			local col = vim.fn.strchars(before .. removed) - 1;
 
-			line = vim.fn.strcharpart(line, 1);
+			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+				end_col = col + 1,
+				hl_group = self.colors[C],
+			});
 		end
+
+		after = vim.fn.strcharpart(after, 1);
+		C = C + 1;
 	end
 
-	if #eol > 0 then
-		vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, #_line, {
+	if #virt_eol > 0 then
+		local col = vim.fn.strchars(line);
+
+		vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
 			virt_text_pos = "inline",
-			virt_text = eol,
-		});
+			virt_text = virt_eol,
+		})
 	end
+end
+
+function beacon:__nolist_render ()
+	if vim.wo[self.window].list == true then
+		return;
+	end
+
+	local Y, X = self.pos[1] - 1, self.pos[2];
+	vim.api.nvim_buf_clear_namespace(self.buffer, self.ns, Y, Y + 1);
+
+	local line = vim.api.nvim_buf_get_lines(self.buffer, Y, Y + 1, false)[1] or "";
+	local before = vim.fn.strcharpart(line, 0, X);
+	local after = vim.fn.strcharpart(line, X);
+
+	local C = 1;
+	local removed = "";
+
+	---@type table[]
+	local virt_eol = {};
+
+	while C <= #self.colors do
+		---@type string
+		local first = vim.fn.strcharpart(after, 0, 1);
+		removed = removed .. first;
+
+		---@type integer
+		local width = last_width(before .. removed);
+
+		if after == "" then
+			-- Nothing after cursor. Add virtual text.
+			table.insert(virt_eol, { " ", self.colors[C] });
+		elseif width > 1 then
+			-- Multi-width character. Add multiple single characters.
+
+			---@type integer
+			local col = vim.fn.strchars(before .. removed) - 1;
+			local virt_text = {};
+
+			while width >= 1 do
+				-- If this character is under the cursor.
+				-- We add empty spaces to align it correctly as
+				-- the cursor is shown at the end of this character.
+				if X == col and width > 1 then
+					table.insert(virt_text, { " " });
+				else
+					table.insert(virt_text, { " ", self.colors[C] });
+				end
+
+				C = C + 1;
+				width = width - 1;
+			end
+
+			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+				virt_text_pos = "overlay",
+				virt_text = virt_text,
+
+				hl_mode = "combine"
+			});
+		else
+			-- Normal text. Only highlight the text.
+
+			---@type integer
+			local col = vim.fn.strchars(before .. removed) - 1;
+
+			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+				end_col = col + 1,
+				hl_group = self.colors[C],
+			});
+		end
+
+		after = vim.fn.strcharpart(after, 1);
+		C = C + 1;
+	end
+
+	if #virt_eol > 0 then
+		local col = vim.fn.strchars(line);
+
+		vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+			virt_text_pos = "inline",
+			virt_text = virt_eol,
+		})
+	end
+end
+
+function beacon:render ()
+	self:__list_render();
+	self:__nolist_render();
+
+	--[[
+	-- Handle 3 cases,
+	-- 1. Trail exceeds the line width.
+	-- 2. Trail is on multi-width characters.
+	-- 3. Highlight character
+	--]]
+	-- local eol = {};
+	--
+	-- local color_index = 1;
+	--
+	-- local tmp = _line:sub(X, #_line);
+	-- local col, line;
+	--
+	-- if vim.wo[self.window].list ~= true then
+	-- 	col = X + 1;
+	-- 	line = vim.fn.strcharpart(tmp, 1);
+	-- else
+	-- 	col = X;
+	-- 	line = vim.fn.strcharpart(tmp, X == 0 and 0 or 1);
+	-- end
+	--
+	-- while color_index <= #self.colors do
+	-- 	local color = self.colors[color_index];
+	-- 	local char = vim.fn.strcharpart(line, 0, 1);
+	--
+	-- 	local W = vim.fn.strdisplaywidth(char);
+	--
+	-- 	if col >= vim.fn.strchars(_line) or _line == "" then
+	-- 		table.insert(eol, { " ", color });
+	-- 		color_index = color_index + 1;
+	-- 	elseif W > 1 then
+	-- 		local virt = {};
+	--
+	-- 		if vim.wo[self.window].list == false then
+	-- 			local fake = { { " ", color } };
+	--
+	-- 			for _ = 1, W - 1 do
+	-- 				table.insert(fake, 1, { " " })
+	-- 			end
+	--
+	-- 			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col - 1, {
+	-- 				virt_text_pos = "overlay",
+	-- 				virt_text = fake,
+	-- 			});
+	--
+	-- 			color_index = color_index + 1;
+	-- 			color = self.colors[color_index];
+	-- 		end
+	--
+	-- 		while color and W > 0 do
+	-- 			table.insert(virt, { " ", color });
+	--
+	-- 			W = W - 1;
+	-- 			color_index = color_index + 1;
+	-- 			color = self.colors[color_index];
+	-- 		end
+	--
+	-- 		vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+	-- 			virt_text_pos = "overlay",
+	-- 			virt_text = virt,
+	-- 		});
+	--
+	-- 		col = col + 1;
+	-- 		line = vim.fn.strcharpart(line, 1);
+	-- 	else
+	-- 		vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+	-- 			end_col = col + 1,
+	--
+	-- 			hl_group = color,
+	-- 			hl_mode = "combine"
+	-- 		});
+	--
+	-- 		color_index = color_index + 1;
+	-- 		col = col + 1;
+	--
+	-- 		line = vim.fn.strcharpart(line, 1);
+	-- 	end
+	-- end
+	--
+	-- if #eol > 0 then
+	-- 	vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, #_line, {
+	-- 		virt_text_pos = "inline",
+	-- 		virt_text = eol,
+	-- 	});
+	-- end
 
 	table.remove(self.colors, 1);
 	self.step = self.step + 1;

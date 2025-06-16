@@ -1,38 +1,46 @@
 local M = {};
 
 M.config = {
-	from = { 203, 166, 247 },
-	to = { 30, 30, 46 },
+	from = function ()
+		local fg = vim.api.nvim_get_hl(0, { name = "Function", create = false, link = false }).fg;
+		return fg or { 203, 166, 247 };
+	end,
+	to = function ()
+		local bg = vim.api.nvim_get_hl(0, { name = "CursorLine", create = false, link = false }).bg;
+		return bg or { 30, 30, 46 }
+	end,
 
 	steps = 10,
 	interval = 100,
 };
 
-M.tab_widths = function (str)
-	local tab_widths = {};
-	local text = "";
-
-	local chars = vim.fn.split(str or "", "\\zs")
-
-	for _, char in ipairs(chars) do
-		if char == "\t" then
-			table.insert(tab_widths, vim.fn.strdisplaywidth(text .. char) - vim.fn.strdisplaywidth(text));
-		end
-
-		text = text .. char;
-	end
-
-	return tab_widths;
-end
-
-
 local beacon = {};
 beacon.__index = beacon;
 
+--- Creates beacon gradient.
+---@return string[]
 function beacon:__gradient ()
+	local function eval (val)
+		if type(val) == "string" then
+			local R, G, B = string.match(val, "^#?(..?)(..?)(..?)$")
+			return { tonumber(R, 16), tonumber(G, 16), tonumber(B, 16) };
+		elseif type(val) == "number" then
+			local hex = string.format("%x", val);
+			hex = string.sub(hex, 0, 6);
+
+			local R, G, B = string.match(hex, "^#?(..?)(..?)(..?)$")
+			return { tonumber(R, 16), tonumber(G, 16), tonumber(B, 16) };
+		elseif  vim.islist(val) == true and type(val[1]) == "number" then
+			return val;
+		elseif pcall(val) then
+			local _, _val = pcall(val);
+			return type(_val) ~= "function" and eval(_val) or { 0, 0, 0 };
+		end
+	end
+
 	local function lerp (n, y)
-		local from = self.from_color[n];
-		local to = self.to_color[n];
+		local from = eval(self.from_color)[n];
+		local to = eval(self.to_color)[n];
 
 		return math.floor(from + ((to - from) * y));
 	end

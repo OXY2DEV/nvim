@@ -146,7 +146,7 @@ inspect.tostring = function (node, language, injection_map, depth, injection_dep
 		local inj_lines, inj_datas = inspect.tostring(inj.root, inj.language, injection_map, depth + 1, injection_depth, named_only);
 
 		for l, line in ipairs(inj_lines) do
-			inj_lines[l] = "    " .. line;
+			inj_lines[l] = "\t" .. line;
 		end
 
 		lines = vim.list_extend(lines, inj_lines);
@@ -165,7 +165,7 @@ inspect.tostring = function (node, language, injection_map, depth, injection_dep
 		end
 
 		for l, line in ipairs(child_lines) do
-			child_lines[l] = "    " .. line;
+			child_lines[l] = "\t" .. line;
 		end
 
 		lines = vim.list_extend(lines, child_lines);

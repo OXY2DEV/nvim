@@ -1,3 +1,58 @@
+---@alias beacon.color
+---| string
+---| number
+---| number[]
+---| fun(): ( string | number | number[] )
+
+
+---@class beacon.config
+---
+---@field from beacon.color
+---@field to beacon.color
+---
+---@field steps integer
+---@field interval integer
+
+
+--- Creates a new beacon.
+---@class beacon.instance
+---
+---@field ns integer Anonymous namespace.
+---
+---@field window integer Window where the beacon should be shown(default is current window).
+---@field buffer integer Buffer being shown in window.
+---
+---@field pos [ integer, integer ] A position(default is cursor position).
+---
+---@field from_color beacon.color Start color
+---@field to_color beacon.color
+---@field steps integer
+---@field interval integer
+---
+---@field colors string[]
+---@field step integer
+---@field timer table
+---
+---@field __index beacon.instance
+---
+---@field __gradient fun(self: beacon.instance): string[]
+---@field __list_render fun(self: beacon.instance): nil
+---@field __nolist_render fun(self: beacon.instance): nil
+---
+---@field new fun(self: beacon.instance, window?: integer, config?: beacon.config): beacon.instance
+---@field render fun(self: beacon.instance): nil
+
+-----------------------------------------------------------------------------
+
+---@param str string
+---@return integer
+local function last_width (str)
+	local chars = vim.fn.strchars(str);
+	local reduced = vim.fn.strcharpart(str, 0, chars - 1);
+
+	return vim.fn.strdisplaywidth(str) - vim.fn.strdisplaywidth(reduced);
+end
+
 local M = {};
 
 M.config = {
@@ -14,30 +69,45 @@ M.config = {
 	interval = 100,
 };
 
+---@type beacon.instance
+---@diagnostic disable-next-line: missing-fields
 local beacon = {};
 beacon.__index = beacon;
 
---- Creates beacon gradient.
----@return string[]
 function beacon:__gradient ()
+	---@param val beacon.color
+	---@return integer[]
 	local function eval (val)
 		if type(val) == "string" then
+			---@cast val string
+
 			local R, G, B = string.match(val, "^#?(..?)(..?)(..?)$")
 			return { tonumber(R, 16), tonumber(G, 16), tonumber(B, 16) };
 		elseif type(val) == "number" then
+			---@cast val number
+
 			local hex = string.format("%x", val);
 			hex = string.sub(hex, 0, 6);
 
 			local R, G, B = string.match(hex, "^#?(..?)(..?)(..?)$")
 			return { tonumber(R, 16), tonumber(G, 16), tonumber(B, 16) };
-		elseif  vim.islist(val) == true and type(val[1]) == "number" then
+		elseif  vim.islist(val --[[ @as any ]]) == true and type(val[1]) == "number" then
+			---@cast val number[]
+
 			return val;
-		elseif pcall(val) then
+		elseif pcall(val --[[ @as any ]]) then
+			---@cast val fun(): ( string | number | number[] )
+
 			local _, _val = pcall(val);
 			return type(_val) ~= "function" and eval(_val) or { 0, 0, 0 };
 		end
+
+		return { 0, 0, 0 };
 	end
 
+	---@param n number
+	---@param y number
+	---@return integer
 	local function lerp (n, y)
 		local from = eval(self.from_color)[n];
 		local to = eval(self.to_color)[n];
@@ -64,13 +134,6 @@ function beacon:__gradient ()
 	end
 
 	return gradient;
-end
-
-local function last_width (str)
-	local chars = vim.fn.strchars(str);
-	local reduced = vim.fn.strcharpart(str, 0, chars - 1);
-
-	return vim.fn.strdisplaywidth(str) - vim.fn.strdisplaywidth(reduced);
 end
 
 function beacon:__list_render ()
@@ -102,6 +165,7 @@ function beacon:__list_render ()
 		if after == "" then
 			-- Nothing after cursor. Add virtual text.
 			table.insert(virt_eol, { " ", self.colors[C] });
+			C = C + 1;
 		elseif width > 1 then
 			-- Multi-width character. Add multiple single characters.
 
@@ -178,6 +242,7 @@ function beacon:__nolist_render ()
 		if after == "" then
 			-- Nothing after cursor. Add virtual text.
 			table.insert(virt_eol, { " ", self.colors[C] });
+			C = C + 1;
 		elseif width > 1 then
 			-- Multi-width character. Add multiple single characters.
 
@@ -205,7 +270,6 @@ function beacon:__nolist_render ()
 
 				hl_mode = "combine"
 			});
-
 		else
 			-- Normal text. Only highlight the text.
 
@@ -241,7 +305,9 @@ function beacon:render ()
 	self.step = self.step + 1;
 end
 
-function beacon:new (window, from, to, interval, steps)
+function beacon:new (window, config)
+	local _config = type(config) == "table" and config or M.config;
+
 	self = setmetatable({}, beacon);
 	self.ns = vim.api.nvim_create_namespace("");
 
@@ -250,14 +316,16 @@ function beacon:new (window, from, to, interval, steps)
 
 	self.pos = vim.api.nvim_win_get_cursor(self.window);
 
-	self.from_color = from or M.config.from;
-	self.to_color = to or M.config.to;
+	self.from_color = _config.from;
+	self.to_color = _config.to;
 
-	self.interval = interval or M.config.interval;
-	self.steps = steps or M.config.steps;
+	self.interval = _config.interval;
+	self.steps = _config.steps;
 	self.step = 0;
 
 	self.colors = self:__gradient();
+
+	---@diagnostic disable-next-line: undefined-field
 	self.timer = vim.uv.new_timer();
 
 	self.timer:start(0, self.interval, vim.schedule_wrap(function ()
@@ -268,6 +336,8 @@ function beacon:new (window, from, to, interval, steps)
 
 		self:render();
 	end));
+
+	return self;
 end
 
 M.setup = function ()

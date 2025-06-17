@@ -24,23 +24,24 @@
 ---
 ---@field pos [ integer, integer ] A position(default is cursor position).
 ---
----@field from_color beacon.color Start color
----@field to_color beacon.color
----@field steps integer
----@field interval integer
+---@field from_color beacon.color Start color.
+---@field to_color beacon.color End color.
+---@field steps integer Number of steps the beacon will have.
+---@field interval integer Interval between each draw cycle(in milliseconds).
 ---
----@field colors string[]
----@field step integer
----@field timer table
+---@field colors string[] Gradient highlight groups.
+---@field step integer Current step.
+---@field timer table Timer.
 ---
 ---@field __index beacon.instance
 ---
----@field __gradient fun(self: beacon.instance): string[]
----@field __list_render fun(self: beacon.instance): nil
----@field __nolist_render fun(self: beacon.instance): nil
+---@field __gradient fun(self: beacon.instance): string[] Creates the gradient for the beacon.
+---@field __list_render fun(self: beacon.instance): nil Render function for `list` mode.
+---@field __nolist_render fun(self: beacon.instance): nil Render function for normal mode.
 ---
----@field new fun(self: beacon.instance, window?: integer, config?: beacon.config): beacon.instance
----@field render fun(self: beacon.instance): nil
+---@field render fun(self: beacon.instance): nil Renders current frame.
+---@field start fun(self: beacon.instance): nil Starts the beacon.
+---@field stop fun(self: beacon.instance): nil Stops the beacon.
 
 -----------------------------------------------------------------------------
 
@@ -51,6 +52,16 @@ local function last_width (str)
 	local reduced = vim.fn.strcharpart(str, 0, chars - 1);
 
 	return vim.fn.strdisplaywidth(str) - vim.fn.strdisplaywidth(reduced);
+end
+
+local function get_win (...)
+	for _, win in ipairs({ ... }) do
+		if type(win) == "number" and vim.api.nvim_win_is_valid(win) then
+			return win;
+		end
+	end
+
+	return vim.api.nvim_get_current_win();
 end
 
 local M = {};
@@ -170,7 +181,7 @@ function beacon:__list_render ()
 			-- Multi-width character. Add multiple single characters.
 
 			---@type integer
-			local col = vim.fn.strchars(before .. removed) - 1;
+			local col = #(before .. removed) - #first;
 			local virt_text = {};
 
 			while width >= 1 do
@@ -190,7 +201,7 @@ function beacon:__list_render ()
 			-- Normal text. Only highlight the text.
 
 			---@type integer
-			local col = vim.fn.strchars(before .. removed) - 1;
+			local col = #(before .. removed) - #first;
 
 			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
 				end_col = col + 1,
@@ -247,7 +258,7 @@ function beacon:__nolist_render ()
 			-- Multi-width character. Add multiple single characters.
 
 			---@type integer
-			local col = vim.fn.strchars(before .. removed) - 1;
+			local col = #(before .. removed) - #first;
 			local virt_text = {};
 
 			while width >= 1 do
@@ -274,7 +285,7 @@ function beacon:__nolist_render ()
 			-- Normal text. Only highlight the text.
 
 			---@type integer
-			local col = vim.fn.strchars(before .. removed) - 1;
+			local col = #(before .. removed) - #first;
 
 			vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
 				end_col = col + 1,
@@ -305,13 +316,10 @@ function beacon:render ()
 	self.step = self.step + 1;
 end
 
-function beacon:new (window, config)
+function beacon:update (window, config)
 	local _config = type(config) == "table" and config or M.config;
 
-	self = setmetatable({}, beacon);
-	self.ns = vim.api.nvim_create_namespace("");
-
-	self.window = window or vim.api.nvim_get_current_win();
+	self.window = get_win(window, self.window, vim.api.nvim_get_current_win());
 	self.buffer = vim.api.nvim_win_get_buf(self.window);
 
 	self.pos = vim.api.nvim_win_get_cursor(self.window);
@@ -324,26 +332,70 @@ function beacon:new (window, config)
 	self.step = 0;
 
 	self.colors = self:__gradient();
+end
 
-	---@diagnostic disable-next-line: undefined-field
-	self.timer = vim.uv.new_timer();
+function beacon:stop ()
+	if not self.timer then
+		return;
+	end
 
+	self.timer:stop();
+end
+
+function beacon:start ()
+	if not self.timer then
+		return;
+	end
+
+	self.timer:stop();
 	self.timer:start(0, self.interval, vim.schedule_wrap(function ()
 		if self.step > self.steps then
-			self.timer:stop();
+			self:stop();
 			return;
 		end
 
 		self:render();
 	end));
+end
 
-	return self;
+--- Creates a new beacon.
+---@param window? integer
+---@param config? beacon.config
+---
+---@return beacon.instance
+M.new = function (window, config)
+	local _config = type(config) == "table" and config or M.config;
+	local instance = setmetatable({}, beacon);
+
+	instance.ns = vim.api.nvim_create_namespace("");
+
+	instance.window = get_win(window, vim.api.nvim_get_current_win());
+	instance.buffer = vim.api.nvim_win_get_buf(instance.window);
+
+	instance.pos = vim.api.nvim_win_get_cursor(instance.window);
+
+	instance.from_color = _config.from;
+	instance.to_color = _config.to;
+
+	instance.interval = _config.interval;
+	instance.steps = _config.steps;
+	instance.step = 0;
+
+	instance.colors = instance:__gradient();
+
+	---@diagnostic disable-next-line: undefined-field
+	instance.timer = vim.uv.new_timer();
+
+	return instance;
 end
 
 M.setup = function ()
+	local instance = M.new();
+
 	vim.api.nvim_set_keymap("n", "<leader><leader>", "", {
 		callback = function ()
-			beacon:new();
+			instance:update();
+			instance:start();
 		end
 	});
 end

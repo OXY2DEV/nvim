@@ -39,6 +39,7 @@
 ---@field __list_render fun(self: beacon.instance): nil Render function for `list` mode.
 ---@field __nolist_render fun(self: beacon.instance): nil Render function for normal mode.
 ---
+---@field update fun(self: beacon.instance, window?: integer, config?: beacon.config): nil Updates beacon state.
 ---@field render fun(self: beacon.instance): nil Renders current frame.
 ---@field start fun(self: beacon.instance): nil Starts the beacon.
 ---@field stop fun(self: beacon.instance): nil Stops the beacon.
@@ -156,8 +157,8 @@ function beacon:__list_render ()
 	vim.api.nvim_buf_clear_namespace(self.buffer, self.ns, Y, Y + 1);
 
 	local line = vim.api.nvim_buf_get_lines(self.buffer, Y, Y + 1, false)[1] or "";
-	local before = vim.fn.strcharpart(line, 0, X);
-	local after = vim.fn.strcharpart(line, X);
+	local before = vim.fn.strpart(line, 0, X);
+	local after = vim.fn.strpart(line, X);
 
 	local C = 1;
 	local removed = "";
@@ -233,8 +234,8 @@ function beacon:__nolist_render ()
 	vim.api.nvim_buf_clear_namespace(self.buffer, self.ns, Y, Y + 1);
 
 	local line = vim.api.nvim_buf_get_lines(self.buffer, Y, Y + 1, false)[1] or "";
-	local before = vim.fn.strcharpart(line, 0, X);
-	local after = vim.fn.strcharpart(line, X);
+	local before = vim.fn.strpart(line, 0, X);
+	local after = vim.fn.strpart(line, X);
 
 	local C = 1;
 	local removed = "";

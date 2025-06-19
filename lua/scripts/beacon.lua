@@ -40,6 +40,7 @@
 ---@field __nolist_render fun(self: beacon.instance): nil Render function for normal mode.
 ---
 ---@field update fun(self: beacon.instance, window?: integer, config?: beacon.config): nil Updates beacon state.
+---@field pos fun(self: beacon.instance, pos: [ integer, integer ]): nil Updates beacon position.
 ---@field render fun(self: beacon.instance): nil Renders current frame.
 ---@field start fun(self: beacon.instance): nil Starts the beacon.
 ---@field stop fun(self: beacon.instance): nil Stops the beacon.
@@ -66,6 +67,8 @@ local function get_win (...)
 end
 
 local M = {};
+
+M.ns = vim.api.nvim_create_namespace("beacon");
 
 M.config = {
 	from = function ()
@@ -101,7 +104,7 @@ function beacon:__gradient ()
 			local hex = string.format("%x", val);
 			hex = string.sub(hex, 0, 6);
 
-			local R, G, B = string.match(hex, "^#?(..?)(..?)(..?)$")
+			local R, G, B = string.match(hex, "^(..?)(..?)(..?)$")
 			return { tonumber(R, 16), tonumber(G, 16), tonumber(B, 16) };
 		elseif  vim.islist(val --[[ @as any ]]) == true and type(val[1]) == "number" then
 			---@cast val number[]
@@ -318,21 +321,27 @@ function beacon:render ()
 end
 
 function beacon:update (window, config)
-	local _config = type(config) == "table" and config or M.config;
+	local _config = type(config) == "table" and config or {};
 
 	self.window = get_win(window, self.window, vim.api.nvim_get_current_win());
 	self.buffer = vim.api.nvim_win_get_buf(self.window);
 
 	self.pos = vim.api.nvim_win_get_cursor(self.window);
 
-	self.from_color = _config.from;
-	self.to_color = _config.to;
+	self.from_color = _config.from or self.from_color;
+	self.to_color = _config.to or self.to_color;
 
-	self.interval = _config.interval;
-	self.steps = _config.steps;
+	self.interval = _config.interval or self.interval;
+	self.steps = _config.steps or self.steps;
 	self.step = 0;
 
 	self.colors = self:__gradient();
+end
+
+function beacon:pos (pos)
+	if vim.islist(pos) then
+		self.pos = pos;
+	end
 end
 
 function beacon:stop ()
@@ -390,6 +399,85 @@ M.new = function (window, config)
 	return instance;
 end
 
+M.mark_indeicator = function ()
+	local motion = M.new(vim.api.nvim_get_current_win(), {
+		from = function ()
+			local fg = vim.api.nvim_get_hl(0, { name = "Constant", create = false, link = false }).fg;
+			return fg or { 203, 166, 247 };
+		end,
+		to = function ()
+			local bg = vim.api.nvim_get_hl(0, { name = "CursorLine", create = false, link = false }).bg;
+			return bg or { 30, 30, 46 }
+		end,
+
+		steps = 15,
+		interval = 100,
+	});
+	local buffer = "";
+
+	local function on_global_mark (mark)
+		local data = vim.api.nvim_get_mark(mark, {});
+
+		if data[1] == 0 then
+			-- Shouldn't be 0.
+			return false;
+		end
+
+		return true;
+	end
+
+	local function on_local_mark (mark)
+		local buf = vim.api.nvim_get_current_buf();
+		local data = vim.api.nvim_buf_get_mark(buf, mark)
+
+		if data[1] == 0 then
+			-- Shouldn't be 0.
+			return false;
+		end
+
+		return true;
+	end
+
+	vim.on_key(function (key)
+		local mode = vim.fn.mode();
+
+		if mode ~= "n" then
+			buffer = "";
+			return;
+		elseif string.match(key, "[^%a%d'`]") then
+			buffer = "";
+			return;
+		else
+			buffer = buffer .. key;
+		end
+
+		if string.match(buffer, "^['`].$") then
+			buffer = "";
+
+			if string.match(key, "%u") and on_global_mark(key) then
+				vim.schedule(function ()
+					motion:update();
+					motion:start();
+				end);
+			elseif string.match(key, "%l") and on_local_mark(key) then
+				vim.schedule(function ()
+					motion:update();
+					motion:start();
+				end);
+			end
+		elseif buffer == "G" or buffer == "gg" then
+			buffer = "";
+
+			vim.schedule(function ()
+				motion:update();
+				motion:start();
+			end);
+		elseif string.match(buffer, "^[fFm].") then
+			buffer = "";
+		end
+	end, M.ns);
+end
+
 M.setup = function ()
 	local instance = M.new();
 
@@ -399,6 +487,8 @@ M.setup = function ()
 			instance:start();
 		end
 	});
+
+	M.mark_indeicator();
 end
 
 return M;

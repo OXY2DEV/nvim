@@ -1,17 +1,20 @@
+---|fS "doc: Type definitions"
+
 ---@alias beacon.color
----| string
----| number
----| number[]
----| fun(): ( string | number | number[] )
+---| string Hwx code: #RRGGBB
+---| number Decimal value: 12345678
+---| number[] RGB: { R, G, B }
+---| fun(): ( string | number | number[] ) Dynamic as value.
 
 
+--- Configuration for a beacon.
 ---@class beacon.config
 ---
----@field from beacon.color
----@field to beacon.color
+---@field from? beacon.color Start color.
+---@field to? beacon.color End color.
 ---
----@field steps integer
----@field interval integer
+---@field steps? integer Gradient steps.
+---@field interval? integer Delay between each animation frame.
 
 
 --- Creates a new beacon.
@@ -45,7 +48,9 @@
 ---@field start fun(self: beacon.instance): nil Starts the beacon.
 ---@field stop fun(self: beacon.instance): nil Stops the beacon.
 
------------------------------------------------------------------------------
+---|fE
+
+---|fS "code: Utilities"
 
 ---@param str string
 ---@return integer
@@ -66,16 +71,28 @@ local function get_win (...)
 	return vim.api.nvim_get_current_win();
 end
 
+---|fE
+
+-----------------------------------------------------------------------------
+
+--- Beacon for `Neovim`. Usage,
+---
+--- ```lua
+--- local beacon = require("beacon").new();
+--- beacon:start();
+--- ```
 local M = {};
 
-M.ns = vim.api.nvim_create_namespace("beacon");
-
+--- Default configuration table.
+---@type beacon.config
 M.config = {
 	from = function ()
+		---@type integer?
 		local fg = vim.api.nvim_get_hl(0, { name = "Function", create = false, link = false }).fg;
 		return fg or { 203, 166, 247 };
 	end,
 	to = function ()
+		---@type integer?
 		local bg = vim.api.nvim_get_hl(0, { name = "CursorLine", create = false, link = false }).bg;
 		return bg or { 30, 30, 46 }
 	end,
@@ -83,6 +100,8 @@ M.config = {
 	steps = 10,
 	interval = 100,
 };
+
+---|fS "chunk: Beacon creator"
 
 ---@type beacon.instance
 ---@diagnostic disable-next-line: missing-fields
@@ -229,6 +248,8 @@ function beacon:__list_render ()
 end
 
 function beacon:__nolist_render ()
+	---|fS "func: Renderer for when `list` is disabled."
+
 	if vim.wo[self.window].list == true then
 		return;
 	end
@@ -310,6 +331,8 @@ function beacon:__nolist_render ()
 			virt_text = virt_eol,
 		})
 	end
+
+	---|fE
 end
 
 function beacon:render ()
@@ -368,12 +391,16 @@ function beacon:start ()
 	end));
 end
 
+---|fE
+
 --- Creates a new beacon.
 ---@param window? integer
 ---@param config? beacon.config
 ---
 ---@return beacon.instance
 M.new = function (window, config)
+	---|fS
+
 	local _config = type(config) == "table" and config or M.config;
 	local instance = setmetatable({}, beacon);
 
@@ -397,98 +424,47 @@ M.new = function (window, config)
 	instance.timer = vim.uv.new_timer();
 
 	return instance;
+
+	---|fE
 end
 
-M.mark_indeicator = function ()
-	local motion = M.new(vim.api.nvim_get_current_win(), {
-		from = function ()
-			local fg = vim.api.nvim_get_hl(0, { name = "Constant", create = false, link = false }).fg;
-			return fg or { 203, 166, 247 };
-		end,
-		to = function ()
-			local bg = vim.api.nvim_get_hl(0, { name = "CursorLine", create = false, link = false }).bg;
-			return bg or { 30, 30, 46 }
-		end,
+--- Configuration for beacon.
+---@param config? beacon.config
+M.setup = function (config)
+	---|fS
 
-		steps = 15,
-		interval = 100,
-	});
-	local buffer = "";
-
-	local function on_global_mark (mark)
-		local data = vim.api.nvim_get_mark(mark, {});
-
-		if data[1] == 0 then
-			-- Shouldn't be 0.
-			return false;
-		end
-
-		return true;
+	if type(config) == "table" then
+		M.config = vim.tbl_extend("force", M.config, config);
 	end
 
-	local function on_local_mark (mark)
-		local buf = vim.api.nvim_get_current_buf();
-		local data = vim.api.nvim_buf_get_mark(buf, mark)
-
-		if data[1] == 0 then
-			-- Shouldn't be 0.
-			return false;
-		end
-
-		return true;
-	end
-
-	vim.on_key(function (key)
-		local mode = vim.fn.mode();
-
-		if mode ~= "n" then
-			buffer = "";
-			return;
-		elseif string.match(key, "[^%a%d'`]") then
-			buffer = "";
-			return;
-		else
-			buffer = buffer .. key;
-		end
-
-		if string.match(buffer, "^['`].$") then
-			buffer = "";
-
-			if string.match(key, "%u") and on_global_mark(key) then
-				vim.schedule(function ()
-					motion:update();
-					motion:start();
-				end);
-			elseif string.match(key, "%l") and on_local_mark(key) then
-				vim.schedule(function ()
-					motion:update();
-					motion:start();
-				end);
-			end
-		elseif buffer == "G" or buffer == "gg" then
-			buffer = "";
-
-			vim.schedule(function ()
-				motion:update();
-				motion:start();
-			end);
-		elseif string.match(buffer, "^[fFm].") then
-			buffer = "";
-		end
-	end, M.ns);
-end
-
-M.setup = function ()
+	--- Keymap beacon.
 	local instance = M.new();
 
 	vim.api.nvim_set_keymap("n", "<leader><leader>", "", {
 		callback = function ()
-			instance:update();
+			instance:update(nil, M.config);
 			instance:start();
 		end
 	});
 
-	M.mark_indeicator();
+	local found_motions, motions = pcall(require, "scripts.motions");
+	if not found_motions then return; end
+
+	motions.add_event_listener({
+		G = function ()
+			vim.schedule(function ()
+				instance:update(nil, {
+					from = function ()
+						local fg = vim.api.nvim_get_hl(0, { name = "Conditional", create = false, link = false }).fg;
+						return fg or { 203, 166, 247 };
+					end,
+				});
+				instance:start();
+			end);
+		end
+	});
+
+	---|fE
 end
 
 return M;

@@ -12,10 +12,13 @@ A general-purpose setup for `Neovim`.
     + [lsp_hover.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/lsp_hover.lua), Fancy LSP hover window.
     + [quickfix.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/quickfix.lua), Fancy editable quickfix window with `tree-sitter` syntax highlighting.
     + [highlights.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/highlights.lua), Dynamic highlight groups for your custom stuffs without needing to worry about colorscheme support!
+    + [inspect_tree.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/inspect_tree.lua), Custom version of `:InspectTree` with some extra features.
+    + [beacon.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/beacon.lua), Beacon for `Neovim`(animated position indicator).
 
 - Custom tree-sitter parsers,
     + [tree-sitter-vhs](https://github.com/OXY2DEV/tree-sitter-vhs/tree/main), Tree-sitter parser for VHS with improved syntax tree & highlighting!
     + [tree-sitter-lua_patterns](https://github.com/OXY2DEV/tree-sitter-lua_patterns/tree/main), Tree-sitter parser for `Lua patterns` with improved syntax tree, more nodes & bug fixes.
+    + [tree-sitter-qf](https://github.com/OXY2DEV/tree-sitter-qf/tree/main), Tree-sitter parser for Vim's `quickfix list`.
 
 - Spell files with common words.
 - Completion setup for `nvim-cmp` & `blink.cmp`.

@@ -1,7 +1,4 @@
---- Custom LSP hover for Neovim.
-local hover = {};
-
----|fS "Type definitions"
+---|fS "doc: Type definitions"
 
 
 ---@class hover.style Style for the hover window.
@@ -25,6 +22,11 @@ local hover = {};
 
 
 ---|fE
+
+------------------------------------------------------------------------------
+
+--- Custom LSP hover for Neovim.
+local hover = {};
 
 ---@type table<string, hover.style>
 hover.config = {
@@ -161,7 +163,7 @@ end
 ---@param window integer
 ---@param w integer
 ---@param h integer
----@return string[]
+---@return string | string[]
 ---@return "editor" | "cursor"
 ---@return "NE" | "NW" | "SE" | "SW"
 ---@return integer
@@ -319,8 +321,8 @@ hover.hover = function (window)
 
 	if not got_position_params then
 		vim.api.nvim_echo({
-			{ "  Lsp hover: ", "DiagnosticVirtualTextWarn" },
-			{ " " },
+			{ "  Lsp hover ", "DiagnosticVirtualTextWarn" },
+			{ ": ", "@comment" },
 			{ "Couldn't get position parameters!", "Comment" }
 		}, false, {})
 		return;
@@ -330,15 +332,15 @@ hover.hover = function (window)
 		if err then
 			--- Error getting hover information.
 			vim.api.nvim_echo({
-				{ "  Lsp hover: ", "DiagnosticVirtualTextError" },
-				{ " " },
+				{ "  Lsp hover ", "DiagnosticVirtualTextError" },
+				{ ": ", "@comment" },
 				{ err.message, "Comment" }
 			}, true, {})
 			return;
 		elseif not result then
 			vim.api.nvim_echo({
-				{ "  Lsp hover: ", "DiagnosticVirtualTextError" },
-				{ " " },
+				{ "  Lsp.hover ", "DiagnosticVirtualTextError" },
+				{ ": ", "@comment" },
 				{ "No information available!", "Comment" }
 			}, false, {})
 			return;
@@ -366,23 +368,41 @@ hover.hover = function (window)
 
 		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
 
-		-- Get wrapped width.
-		vim.api.nvim_buf_call(hover.buffer, function ()
-			vim.api.nvim_command("silent %normal gqq");
-			H = math.min(
-				vim.api.nvim_buf_line_count(hover.buffer),
-				H,
-				math.floor(vim.o.lines * 0.5)
-			);
-		end);
+		-- Initially open a hidden window.
+		-- We will calculate the wrapped text height.
+		-- Then we make it visible again.
+		hover.window = vim.api.nvim_open_win(hover.buffer, false, {
+			relative = "cursor",
+
+			row = 1, col = 0,
+			width = W, height = H,
+
+			style = "minimal",
+			hide = true,
+		});
+
+		-- Set necessary options.
+		vim.wo[hover.window].wrap = true;
+		vim.wo[hover.window].linebreak = true;
+		vim.wo[hover.window].breakindent = true;
+
+		vim.wo[hover.window].conceallevel = 3;
+		vim.wo[hover.window].concealcursor = "ncv";
+
+		H = math.min(
+			vim.api.nvim_win_text_height(hover.window, { start_row = 0, end_row = -1 }).all,
+			H,
+			math.floor(vim.o.lines * 0.5)
+		);
 
 		-- Reset old text, otherwise it may break syntax highlighting.
 		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
 
+		--- Window options.
 		local border, relative, anchor, row, col = hover.__win_args(window, W, H);
 
-		-- Open window
-		hover.window = vim.api.nvim_open_win(hover.buffer, false, vim.tbl_extend("force", {
+		-- Make window visible.
+		vim.api.nvim_win_set_config(hover.window, vim.tbl_extend("force", {
 			relative = relative or "cursor",
 
 			row = row or 1, col = col or 0,
@@ -391,17 +411,14 @@ hover.hover = function (window)
 			anchor = anchor,
 
 			border = border or "rounded",
-			style = "minimal"
+			style = "minimal",
+
+			hide = false,
 		}, _config.winopts));
 
-		-- Set necessary options.
-		vim.wo[hover.window].wrap = true;
-		vim.wo[hover.window].linebreak = true;
-		vim.wo[hover.window].breakindent = true;
-
+		-- Signcolumn needs to be set later, otherwise it
+		-- gets ignored.
 		vim.wo[hover.window].signcolumn = "no";
-		vim.wo[hover.window].conceallevel = 3;
-		vim.wo[hover.window].concealcursor = "ncv";
 
 		if type(_config.winhl) == "string" then
 			vim.wo[hover.window].winhl = _config.winhl;

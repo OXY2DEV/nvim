@@ -1,3 +1,20 @@
+--- Maps motions to callbacks.
+---@class motions.map
+---
+---@field [string] fun(quqntifier: integer): nil
+
+------------------------------------------------------------------------------
+
+-- Allows running callbacks when triggering motions.
+-- Usage,
+--
+-- ```lua
+-- require("motions").add_event_listener({
+--     gg = function ()
+--         vim.print("hello world!");
+--     end
+-- });
+-- ```
 local motions = {};
 
 ---@type string Mode shorthand.
@@ -16,7 +33,7 @@ motions.previous = "";
 motions.last = "";
 
 --- Parses key presses.
----@param map table<string, function>
+---@param map motions.map
 ---@param key string
 ---@param _ string
 motions.parse = function (map, key, _)
@@ -73,11 +90,10 @@ motions.parse = function (map, key, _)
 		-- Character finder.
 		exec_callback(true, string.match(motions.previous, "[fFtT]$"), nil, quantifier, key);
 	elseif vim.list_contains(single_keys, key) then
-
 		-- Single letter motions.
 		exec_callback(true, key, nil, quantifier);
 	elseif string.match(motions.previous, "g['`]$") then
-		-- g'{mark}
+		-- g'{mark} or g`{mark}
 		exec_callback(true, "g" .. key, nil, quantifier);
 	elseif string.match(motions.previous, "g$") then
 		local actions = {
@@ -97,14 +113,100 @@ motions.parse = function (map, key, _)
 		else
 			motions.previous = "";
 		end
+	elseif vim.list_contains({ "(", ")", "{", "}" }, key) then
+		-- Sentence & paragraph movements.
+		exec_callback(true, key, nil, quantifier);
+	elseif string.match(motions.previous, "%]$") then
+		local actions = {
+			"]", "[",
+			"'", "`",
+			")", "}",
+			"m", "M",
+			"#",
+			"*", "/",
+		};
+
+		if vim.list_contains(actions, key) then
+			exec_callback(true, "]" .. key, nil, quantifier);
+		else
+			motions.previous = "";
+		end
+	elseif string.match(motions.previous, "%[$") then
+		local actions = {
+			"[", "]",
+			"'", "`",
+			"(", "{",
+			"m", "M",
+			"#",
+			"*", "/",
+		};
+
+		if vim.list_contains(actions, key) then
+			exec_callback(true, "[" .. key, nil, quantifier);
+		else
+			motions.previous = "";
+		end
+	elseif string.match(motions.previous, "a$") then
+		local actions = {
+			"w", "W",
+			"s",
+			"p",
+			"]", "[",
+			"(", ")", "b",
+			">", "<",
+			"t",
+			"{", "}", "B",
+			'"', "'", "`",
+		};
+
+		if vim.list_contains(actions, key) then
+			exec_callback(true, "a" .. key, nil, quantifier);
+		else
+			motions.previous = "";
+		end
+	elseif string.match(motions.previous, "i$") then
+		local actions = {
+			"w", "W",
+			"s",
+			"p",
+			"]", "[",
+			"(", ")", "b",
+			">", "<",
+			"t",
+			"{", "}", "B",
+			'"', "'", "`",
+		};
+
+		if vim.list_contains(actions, key) then
+			exec_callback(true, "i" .. key, nil, quantifier);
+		else
+			motions.previous = "";
+		end
+	elseif string.match(motions.previous, "['`]$") then
+		local marker = string.match(motions.previous, "['`]$");
+		local special = {
+			"[", "]",
+			"<", ">",
+			"'", "`", '"',
+			"^", ".",
+			"(", ")",
+			"{", "}",
+		};
+
+		if string.match(key, "[%a%d]") or vim.list_contains(special, key) then
+			-- '{mark} or `{mark}
+			exec_callback(true, marker .. key, nil, quantifier);
+		else
+		end
 	else
 		motions.previous = motions.previous .. key;
+			motions.previous = "";
 	end
 	---|fE
 end
 
 --- Creates a new key press event listener.
----@param map table<string, function>
+---@param map motions.map
 ---@return integer
 motions.add_event_listener = function (map)
 	return vim.on_key(function (key, pressed)

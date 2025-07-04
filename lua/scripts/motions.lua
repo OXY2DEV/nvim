@@ -200,18 +200,34 @@ motions.parse = function (map, key, _)
 		end
 	else
 		motions.previous = motions.previous .. key;
-			motions.previous = "";
 	end
+
 	---|fE
 end
 
+--- An instance of motion parser.
+---@class motions.instance
+---
+---@field map motions.map
+---@field id integer ID of this handler.
+local instance = {};
+instance.__index = instance;
+
+instance.map = {};
+instance.id = nil
+
 --- Creates a new key press event listener.
 ---@param map motions.map
----@return integer
+---@return table
 motions.add_event_listener = function (map)
-	return vim.on_key(function (key, pressed)
+	local new = setmetatable({}, instance);
+	new.map = map;
+
+	new.id = vim.on_key(function (key, pressed)
 		motions.parse(map, key, pressed);
 	end, 0, {});
+
+	return new;
 end
 
 return motions;

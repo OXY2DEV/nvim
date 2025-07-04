@@ -10,11 +10,23 @@
 --- Configuration for a beacon.
 ---@class beacon.config
 ---
+---@field set_keymap? boolean Should `<leader><leader>` be remapped?
+---@field on_motions? table<string, beacon.instance.config> Configuration for beacons used as indicators for motions.
+---
+---@field default beacon.instance.config Default config.
+
+
+--- Configuration for a beacon instance.
+---@class beacon.instance.config
+---
 ---@field from? beacon.color Start color.
 ---@field to? beacon.color End color.
 ---
 ---@field steps? integer Gradient steps.
 ---@field interval? integer Delay between each animation frame.
+
+--- Configuration for a beacon instance.
+---@class beacon.instance.config
 
 
 --- Creates a new beacon.
@@ -42,7 +54,7 @@
 ---@field __list_render fun(self: beacon.instance): nil Render function for `list` mode.
 ---@field __nolist_render fun(self: beacon.instance): nil Render function for normal mode.
 ---
----@field update fun(self: beacon.instance, window?: integer, config?: beacon.config): nil Updates beacon state.
+---@field update fun(self: beacon.instance, window?: integer, config?: beacon.instance.config): nil Updates beacon state.
 ---@field pos fun(self: beacon.instance, pos: [ integer, integer ]): nil Updates beacon position.
 ---@field render fun(self: beacon.instance): nil Renders current frame.
 ---@field start fun(self: beacon.instance): nil Starts the beacon.
@@ -86,19 +98,37 @@ local M = {};
 --- Default configuration table.
 ---@type beacon.config
 M.config = {
-	from = function ()
-		---@type integer?
-		local fg = vim.api.nvim_get_hl(0, { name = "Function", create = false, link = false }).fg;
-		return fg or { 203, 166, 247 };
-	end,
-	to = function ()
-		---@type integer?
-		local bg = vim.api.nvim_get_hl(0, { name = "CursorLine", create = false, link = false }).bg;
-		return bg or { 30, 30, 46 }
-	end,
+	set_keymap = true,
+	on_motions = {
+		gg = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "Comment", create = false, link = false }).fg;
+				return fg or { 147, 153, 178 };
+			end,
+		},
+		G = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "Conditional", create = false, link = false }).fg;
+				return fg or { 203, 166, 247 };
+			end,
+		},
+	},
 
-	steps = 10,
-	interval = 100,
+	default = {
+		from = function ()
+			---@type integer?
+			local fg = vim.api.nvim_get_hl(0, { name = "Function", create = false, link = false }).fg;
+			return fg or { 203, 166, 247 };
+		end,
+		to = function ()
+			---@type integer?
+			local bg = vim.api.nvim_get_hl(0, { name = "CursorLine", create = false, link = false }).bg;
+			return bg or { 30, 30, 46 }
+		end,
+
+		steps = 10,
+		interval = 100,
+	}
 };
 
 ---|fS "chunk: Beacon creator"
@@ -395,13 +425,13 @@ end
 
 --- Creates a new beacon.
 ---@param window? integer
----@param config? beacon.config
+---@param config? beacon.instance.config
 ---
 ---@return beacon.instance
 M.new = function (window, config)
 	---|fS
 
-	local _config = type(config) == "table" and config or M.config;
+	local _config = type(config) == "table" and config or M.config.default;
 	local instance = setmetatable({}, beacon);
 
 	instance.ns = vim.api.nvim_create_namespace("");
@@ -428,24 +458,9 @@ M.new = function (window, config)
 	---|fE
 end
 
---- Configuration for beacon.
----@param config? beacon.config
-M.setup = function (config)
-	---|fS
-
-	if type(config) == "table" then
-		M.config = vim.tbl_extend("force", M.config, config);
-	end
-
+M.enable = function ()
 	--- Keymap beacon.
 	local instance = M.new();
-
-	vim.api.nvim_set_keymap("n", "<leader><leader>", "", {
-		callback = function ()
-			instance:update(nil, M.config);
-			instance:start();
-		end
-	});
 
 	local found_motions, motions = pcall(require, "scripts.motions");
 	if not found_motions then return; end
@@ -463,6 +478,114 @@ M.setup = function (config)
 			end);
 		end
 	});
+end
+
+M.motion = nil;
+
+--- Configuration for beacon.
+---@param config? beacon.config
+M.setup = function (config)
+	---|fS
+
+	if type(config) == "table" then
+		M.config = vim.tbl_extend("force", M.config.default, config);
+	end
+
+	--- Keymap beacon.
+	local instance = M.new();
+	local enabled = true;
+
+	--- Sets/Resets keymap
+	local function set ()
+		---|fS
+
+		if not M.config.set_keymap or not enabled then
+			vim.api.nvim_del_keymap("n", "<leader><leader>");
+			return;
+		end
+
+		vim.api.nvim_set_keymap("n", "<leader><leader>", "", {
+			callback = function ()
+				instance:update(nil, M.config.default);
+				instance:start();
+			end
+		});
+
+		if M.motion then
+			-- Remove the current listener.
+			vim.on_key(M.motion.id, nil);
+		elseif not pcall(require, "scripts.motions") then
+			return;
+		end
+
+		local map = {};
+
+		for k, v in pairs(M.config.on_motions) do
+			if type(v) == "table" then
+				map[k] = function ()
+					vim.schedule(function ()
+						if enabled == false then
+							return;
+						end
+
+						instance:update(nil, v);
+						instance:start();
+					end);
+				end
+			end
+		end
+
+		M.motion = require("scripts.motions").add_event_listener(map);
+
+		---|fE
+	end
+
+	set();
+
+	---|fS "code: Command completion"
+
+	vim.api.nvim_create_user_command("Beacon", function (opts)
+		local fargs = opts.fargs;
+
+		if #fargs == 0 or fargs[1] == "show" then
+			instance:update(nil, M.config.default);
+			instance:start();
+
+			return;
+		elseif fargs[1] == "enable" then
+			enabled = true;
+		elseif fargs[1] == "disable" then
+			enabled = false;
+		elseif fargs[1] == "toggle" then
+			enabled = not enabled;
+		end
+
+		set();
+	end, {
+		nargs = "?",
+		complete = function (aeg_lead, cmdline)
+			local sub_commands = { "enable", "disable", "toggle" };
+
+			if string.match(cmdline, "^Beacon%s+%S+%s+") then
+				return {};
+			elseif string.match(cmdline, "^Beacon%s*$") then
+				return sub_commands;
+			end
+
+			---@type string[]
+			local completeions = {};
+
+			for _, opt in ipairs(sub_commands) do
+				if string.match(opt, aeg_lead) then
+					table.insert(completeions, opt);
+				end
+			end
+
+			return completeions;
+		end
+	});
+
+	---|fE
 
 	---|fE
 end

@@ -31,3 +31,6 @@
 [submodule "parsers/tree-sitter-qf"]
 	path = parsers/tree-sitter-qf
 	url = ../tree-sitter-qf.git
+[submodule "parsers/tree-sitter-doctext"]
+	path = parsers/tree-sitter-doctext
+	url = ../tree-sitter-doctext.git

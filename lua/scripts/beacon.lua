@@ -458,28 +458,7 @@ M.new = function (window, config)
 	---|fE
 end
 
-M.enable = function ()
-	--- Keymap beacon.
-	local instance = M.new();
-
-	local found_motions, motions = pcall(require, "scripts.motions");
-	if not found_motions then return; end
-
-	motions.add_event_listener({
-		G = function ()
-			vim.schedule(function ()
-				instance:update(nil, {
-					from = function ()
-						local fg = vim.api.nvim_get_hl(0, { name = "Conditional", create = false, link = false }).fg;
-						return fg or { 203, 166, 247 };
-					end,
-				});
-				instance:start();
-			end);
-		end
-	});
-end
-
+--- Instance of Motion event listener.
 M.motion = nil;
 
 --- Configuration for beacon.

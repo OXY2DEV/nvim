@@ -178,6 +178,7 @@ hl.visible_fg = function (lumen)
 end
 
 local Y = 0.15;
+local D = 0.15;
 
 ---@type table<string, fun(): table[]>
 hl.groups = {
@@ -221,6 +222,250 @@ hl.groups = {
 
 		---|fE
 	end,
+
+	---|fS "style: Diagnostic"
+
+	def = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D + 0.05);
+
+		return {
+			{
+				group_name = "DgDefault",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
+				},
+			},
+
+			{
+				group_name = "DgDefaultBg",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+			{
+				group_name = "DgDefaultPad",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	err = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticError", "Error" }) or hl.choice(13766457, 15961000)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
+
+		return {
+			{
+				group_name = "DgError",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
+				},
+			},
+
+			{
+				group_name = "DgErrorBg",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+			{
+				group_name = "DgErrorPad",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	hnt = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticHint" }) or hl.choice(1544857, 9757397)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
+
+		return {
+			{
+				group_name = "DgHint",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
+				},
+			},
+
+			{
+				group_name = "DgHintBg",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+			{
+				group_name = "DgHintPad",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	nte = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticNote" }) or hl.choice(1544857, 9757397)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
+
+		return {
+			{
+				group_name = "DgNote",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
+				},
+			},
+
+			{
+				group_name = "DgNoteBg",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+			{
+				group_name = "DgNotePad",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	wrn = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "DiagnosticWarn" }) or hl.choice(14650909, 16376495)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
+
+		return {
+			{
+				group_name = "DgWarn",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
+				},
+			},
+
+			{
+				group_name = "DgWarnBg",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+			{
+				group_name = "DgWarnPad",
+				value = {
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+				},
+			},
+		};
+
+		---|fE
+	end,
+
+	---|fE
 
 	---|fS "style: Highlight group for completions"
 

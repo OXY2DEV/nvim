@@ -369,7 +369,7 @@ hl.groups = {
 		---|fE
 	end,
 
-	nte = function ()
+	inf = function ()
 		---|fS
 
 		---@type number, number, number Background color.
@@ -382,7 +382,7 @@ hl.groups = {
 		---@type number, number, number Background color.
 		local FL, FA, FB = hl.rgb_to_oklab(
 			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticNote" }) or hl.choice(1544857, 9757397)
+				hl.get_attr("fg", { "DiagnosticInfo" }) or hl.choice(1544857, 9757397)
 			)
 		);
 
@@ -391,7 +391,7 @@ hl.groups = {
 
 		return {
 			{
-				group_name = "DgNote",
+				group_name = "DgInfo",
 				value = {
 					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
@@ -399,14 +399,14 @@ hl.groups = {
 			},
 
 			{
-				group_name = "DgNoteBg",
+				group_name = "DgInfoBg",
 				value = {
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
 					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
 				},
 			},
 			{
-				group_name = "DgNotePad",
+				group_name = "DgInfoPad",
 				value = {
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
 					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))

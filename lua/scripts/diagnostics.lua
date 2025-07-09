@@ -71,16 +71,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DiagnosticInfo" or "@comment";
+				return current and "DgInfo" or "DgDefault";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▍󰀨 ", current and "DiagnosticInfo" or "@comment" }
+					{ "▌", current and "DgInfoBg" or "DgDefaultBg" },
+					{ "󰀨 ", current and "DgInfoBg" or "DgDefaultBg" },
+					{ " ", current and "DgInfo" or "DgDefault" },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▍  ", current and "DiagnosticInfo" or "@comment" }
+					{ "▌",  current and "DgInfoPad" or "DgDefaultPad" },
+					{ "  ", current and "DgInfo" or "DgDefault" },
+					{ " ", current and "DgInfo" or "DgDefault" },
 				}
 			end
 		},
@@ -88,16 +92,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DiagnosticHint" or "@comment";
+				return current and "DgHint" or "DgDefault";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▍󰁨 ", current and "DiagnosticHint" or "@comment" }
+					{ "▌", current and "DgHintBg" or "DgDefaultBg" },
+					{ "󰁨 ", current and "DgHintBg" or "DgDefaultBg" },
+					{ " ", current and "DgHint" or "DgDefault" },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▍  ", current and "DiagnosticHint" or "@comment" }
+					{ "▌",  current and "DgHintPad" or "DgDefaultPad" },
+					{ "  ", current and "DgHint" or "DgDefault" },
+					{ " ", current and "DgHint" or "DgDefault" },
 				}
 			end
 		},
@@ -105,16 +113,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DiagnosticWarn" or "@comment";
+				return current and "DgWarn" or "DgDefault";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▍ ", current and "DiagnosticWarn" or "@comment" }
+					{ "▌", current and "DgWarnBg" or "DgDefaultBg" },
+					{ " ", current and "DgWarnBg" or "DgDefaultBg" },
+					{ " ", current and "DgWarn" or "DgDefault" },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▍  ", current and "DiagnosticWarn" or "@comment" }
+					{ "▌",  current and "DgWarnPad" or "DgDefaultPad" },
+					{ "  ", current and "DgWarn" or "DgDefault" },
+					{ " ", current and "DgWarn" or "DgDefault" },
 				}
 			end
 		},
@@ -122,16 +134,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DiagnosticError" or "@comment";
+				return current and "DgError" or "DgDefault";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▍󰅙 ", current and "DiagnosticError" or "@comment" }
+					{ "▌", current and "DgErrorBg" or "DgDefaultBg" },
+					{ "󰅙 ", current and "DgErrorBg" or "DgDefaultBg" },
+					{ " ", current and "DgError" or "DgDefault" },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▍  ", current and "DiagnosticError" or "@comment" }
+					{ "▌",  current and "DgErrorPad" or "DgDefaultPad" },
+					{ "  ", current and "DgError" or "DgDefault" },
+					{ " ", current and "DgError" or "DgDefault" },
 				}
 			end
 		},

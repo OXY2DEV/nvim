@@ -580,14 +580,17 @@ diagnostics.hover = function (window)
 
 	local items = vim.diagnostic.get(buffer, { lnum = cursor[1] - 1 });
 
+	---@type boolean Is the window already open?
+	local already_open = diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window);
+
 	if #items == 0 then
 		-- No diagnostics available.
 		diagnostics.__close();
 		return;
+	elseif already_open then
+		vim.api.nvim_set_current_win(diagnostics.window);
+		return;
 	end
-
-	---@type boolean Is the window already open?
-	local already_open = diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window);
 
 	if diagnostics.quad then
 		-- If the old quadrant wasn't freed, we

@@ -251,6 +251,20 @@ local function get_beacon_config (level, ...)
 	return output;
 end
 
+local function virt_text_to_sign (virt_text)
+	local output = "";
+
+	for _, item in ipairs(virt_text) do
+		if type(item[2]) == "string" then
+			output = output .. string.format("%%#%s#%s", item[2], item[1]) .. "%#Normal#";
+		else
+			output = output .. item[1];
+		end
+	end
+
+	return output;
+end
+
 ------------------------------------------------------------------------------
 
 ---@type integer Decoration namespace.
@@ -264,6 +278,9 @@ diagnostics.scratch_buffer = nil
 
 ---@type "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
 diagnostics.quad = nil;
+
+--- Information regarding signs.
+diagnostics.sign_data = {};
 
 --- Prepares the buffer for the diagnostics window.
 diagnostics.__prepare = function ()
@@ -526,6 +543,29 @@ diagnostics.__integration = function (window, beacon_config)
 	end
 end
 
+--- Custom statuscolumn.
+---@return string
+_G.__diagnostics_statuscolumn = function ()
+	---|fS
+
+	if vim.tbl_isempty(diagnostics.sign_data) then
+		return "";
+	end
+
+	local lnum = vim.v.lnum;
+	local data = diagnostics.sign_data[lnum];
+
+	if not data then
+		return "";
+	elseif vim.v.virtnum == 0 then
+		return virt_text_to_sign(data.icon);
+	else
+		return virt_text_to_sign(data.padding or data.icon);
+	end
+
+	---|fE
+end
+
 --- Hover function for diagnostics.
 ---@param window integer
 diagnostics.hover = function (window)
@@ -569,6 +609,8 @@ diagnostics.hover = function (window)
 	local cursor_y;
 	local ranges = {};
 
+	diagnostics.sign_data = {};
+
 	for i, item in ipairs(items) do
 		---|fS
 
@@ -606,8 +648,14 @@ diagnostics.hover = function (window)
 				line_hl_group = decorations.line_hl_group,
 			});
 		end
+		table.insert(diagnostics.sign_data, {
+			current = current,
+			width = decorations.width,
 
-		H = H + wrapped_height;
+			icon = decorations.icon,
+			line_hl_group = decorations.line_hl_group,
+			padding = decorations.padding,
+		});
 
 		---|fE
 	end

@@ -130,6 +130,7 @@ require("editor.lazy");
 require("scripts.highlights").setup();
 require("scripts.color_sync");
 require("scripts.inspect_tree").setup();
+require("scripts.ts_regen").setup();
 
 -- Autocmd for the custom dynamic highlight groups.
 vim.api.nvim_create_autocmd({

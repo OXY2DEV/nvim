@@ -14,6 +14,7 @@ A general-purpose setup for `Neovim`.
     + [highlights.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/highlights.lua), Dynamic highlight groups for your custom stuffs without needing to worry about colorscheme support!
     + [inspect_tree.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/inspect_tree.lua), Custom version of `:InspectTree` with some extra features.
     + [beacon.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/beacon.lua), Beacon for `Neovim`(animated position indicator).
+    + [ts_regen.lua](5https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/ts_regen.lua), Updates `tree-sitter` CLI's config to match Neovim's colorscheme(via `:TSRegen`).
 
 - Custom tree-sitter parsers,
     + [tree-sitter-vhs](https://github.com/OXY2DEV/tree-sitter-vhs/tree/main), Tree-sitter parser for VHS with improved syntax tree & highlighting!

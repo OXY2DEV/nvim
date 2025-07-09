@@ -64,6 +64,47 @@ diagnostics.config = {
 		return math.floor(vim.o.lines * 0.4);
 	end,
 
+	beacon = {
+		default = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "DgDefault", link = false }).fg;
+				return fg or "#9399b2";
+			end,
+			to = function ()
+				local bg = vim.api.nvim_get_hl(0, { name = vim.o.statusline and "Cursorline" or "Normal", link = false }).bg;
+				return bg or "#1e1e2e";
+			end,
+
+			steps = 10,
+			interval = 100,
+		},
+
+		[vim.diagnostic.severity.INFO] = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "DgInfo", link = false }).fg;
+				return fg or "#94e2d5";
+			end
+		},
+		[vim.diagnostic.severity.HINT] = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "DgHint", link = false }).fg;
+				return fg or "#94e2d5";
+			end
+		},
+		[vim.diagnostic.severity.WARN] = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "DgWarn", link = false }).fg;
+				return fg or "#f9e2af";
+			end
+		},
+		[vim.diagnostic.severity.ERROR] = {
+			from = function ()
+				local fg = vim.api.nvim_get_hl(0, { name = "DgError", link = false }).fg;
+				return fg or "#f38ba8";
+			end
+		},
+	},
+
 	decorations = {
 		---|fS
 
@@ -194,6 +235,20 @@ local function get_decorations (level, ...)
 	return output;
 
 	---|fE
+end
+
+local function get_beacon_config (level, ...)
+	if not diagnostics.config.beacon then
+		return;
+	end
+
+	local output = {};
+
+	for k, v in pairs(diagnostics.config.beacon[level]) do
+		output[k] = eval(v, ...);
+	end
+
+	return output;
 end
 
 ------------------------------------------------------------------------------
@@ -447,6 +502,30 @@ diagnostics.__close = function ()
 	---|fE
 end
 
+--- Beacon instance.
+diagnostics.__beacon = nil;
+
+--- External integrations.
+diagnostics.__integration = function (window, beacon_config)
+	-- Markdown rendering.
+	-- if package.loaded["markview"] then
+	-- 	package.loaded["markview"].render(diagnostics.buffer, {
+	-- 		enable = true,
+	-- 		hybrid_mode = false
+	-- 	});
+	-- end
+
+	if package.loaded["scripts.beacon"] then
+		if not diagnostics.__beacon then
+			diagnostics.__beacon = require("scripts.beacon").new(window, beacon_config);
+		else
+			diagnostics.__beacon:update(window, beacon_config);
+		end
+
+		diagnostics.__beacon:start();
+	end
+end
+
 --- Hover function for diagnostics.
 ---@param window integer
 diagnostics.hover = function (window)
@@ -594,6 +673,7 @@ diagnostics.hover = function (window)
 			hybrid_mode = false
 		});
 	end
+	diagnostics.__integration(window, beacon_config);
 
 	---|fE
 end

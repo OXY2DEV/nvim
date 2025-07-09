@@ -590,7 +590,7 @@ diagnostics.hover = function (window)
 	local already_open = diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window);
 
 	if diagnostics.quad then
-		-- If the old quadrant wasn't free we
+		-- If the old quadrant wasn't freed, we
 		-- free it here.
 		diagnostics.update_quad(diagnostics.quad, false)
 	end
@@ -603,11 +603,32 @@ diagnostics.hover = function (window)
 	vim.api.nvim_buf_set_lines(diagnostics.buffer, 0, -1, false, {});
 
 	local W = eval(diagnostics.config.width, items)
-	local D = 0;
-	local H = 0;
+	---@type table Configuration used for calculating window height.
+	local height_calc_config = {
+		relative = "editor",
 
-	local cursor_y;
+		row = 0, col = 1,
+		width = W, height = 2,
+
+		style = "minimal",
+		hide = true,
+	};
+
+	if not diagnostics.window or not vim.api.nvim_win_is_valid(diagnostics.window) then
+		diagnostics.window = vim.api.nvim_open_win(diagnostics.buffer, false, height_calc_config);
+	else
+		vim.api.nvim_win_set_config(diagnostics.window, height_calc_config);
+	end
+
+	vim.wo[diagnostics.window].wrap = true;
+	vim.wo[diagnostics.window].linebreak = true;
+	vim.wo[diagnostics.window].breakindent = true;
+
+	---@type integer Line where the cursor should be placed.
+	local cursor_y = 1;
 	local ranges = {};
+
+	local beacon_config = get_beacon_config("default", {}, true);
 
 	diagnostics.sign_data = {};
 
@@ -616,38 +637,28 @@ diagnostics.hover = function (window)
 
 		local from = i == 1 and 0 or -1;
 
-		local wrapped_height, lines = diagnostics.__wrap(
-			item.message,
-			W
-		);
-
 		local start = item.col;
 		local stop = item.end_col;
+
 		local current = false;
 
 		if cursor[2] >= start and cursor[2] <= stop then
-			cursor_y = math.max(H, 1);
+			beacon_config = vim.tbl_extend("force", beacon_config, get_beacon_config(item.severity, item, true) or {});
+
+			cursor_y = i;
 			current = true;
 		end
 
-		vim.api.nvim_buf_set_lines(diagnostics.buffer, from, -1, false, lines);
+		vim.api.nvim_buf_set_lines(diagnostics.buffer, from, -1, false, vim.split(item.message, "\n", { trimempty = true }));
 		local decorations = get_decorations(item.severity, item, current);
 
-		D = math.max(D, decorations.width or 0);
+		ranges[i] = { item.lnum, item.col };
 
-		for l = H, H + (wrapped_height - 1), 1 do
-			ranges[l] = {
-				item.lnum + 1,
-				item.col
-			};
-			vim.api.nvim_buf_set_extmark(diagnostics.buffer, diagnostics.ns, l, 0, {
-				virt_text_pos = "inline",
-				virt_text = l == H and decorations.icon or (decorations.padding or decorations.icon),
+		vim.api.nvim_buf_set_extmark(diagnostics.buffer, diagnostics.ns, i - 1, 0, {
+			end_row = i,
+			line_hl_group = decorations.line_hl_group,
+		});
 
-				right_gravity = false,
-				line_hl_group = decorations.line_hl_group,
-			});
-		end
 		table.insert(diagnostics.sign_data, {
 			current = current,
 			width = decorations.width,
@@ -660,8 +671,40 @@ diagnostics.hover = function (window)
 		---|fE
 	end
 
-	H = math.min(H, eval(diagnostics.config.max_height, items) or 0);
-	W = W + D;
+	local H = vim.api.nvim_win_text_height(diagnostics.window, { start_row = 0, end_row = -1 }).all;
+
+	local _, relative, anchor, row, col = diagnostics.__win_args(window, W, H);
+	local win_config = {
+		relative = relative or "cursor",
+
+		row = row or 0, col = col or 0,
+		width = W, height = H,
+
+		anchor = anchor,
+		border = "none",
+		style = "minimal",
+		hide = false,
+	};
+
+	vim.api.nvim_win_set_config(diagnostics.window, win_config);
+	vim.api.nvim_win_set_cursor(diagnostics.window, { cursor_y, 0 });
+
+	-- Update quadrant state.
+	diagnostics.update_quad(diagnostics.quad, true);
+
+	-- Set necessary options.
+	vim.wo[diagnostics.window].signcolumn = "no";
+	vim.wo[diagnostics.window].statuscolumn = "%!v:lua.__diagnostics_statuscolumn()";
+
+	vim.wo[diagnostics.window].conceallevel = 3;
+	vim.wo[diagnostics.window].concealcursor = "ncv";
+
+	vim.wo[diagnostics.window].winhl = "FloatBorder:@comment,Normal:Normal";
+
+	diagnostics.__integration(window, beacon_config);
+
+	---|fS
+
 
 	vim.api.nvim_buf_set_keymap(diagnostics.buffer, "n", "<CR>", "", {
 		desc = "Go to diagnostic location",
@@ -681,47 +724,15 @@ diagnostics.hover = function (window)
 		end
 	});
 
-	local border, relative, anchor, row, col = diagnostics.__win_args(window, W, H);
-	local win_config = {
-		relative = relative or "cursor",
+	vim.api.nvim_buf_set_keymap(diagnostics.buffer, "n", "q", "", {
+		desc = "Exit diagnostics window",
+		callback = function ()
+			pcall(vim.api.nvim_set_current_win, window);
+			diagnostics.__close();
+		end
+	});
 
-		row = row or 0, col = col or 0,
-		width = W, height = H,
-
-		anchor = anchor,
-		border = border or "none",
-		style = "minimal"
-	};
-
-	if not diagnostics.window or not vim.api.nvim_win_is_valid(diagnostics.window) then
-		diagnostics.window = vim.api.nvim_open_win(diagnostics.buffer, false, win_config);
-	else
-		vim.api.nvim_win_set_config(diagnostics.window, win_config);
-	end
-
-	if already_open then
-		vim.api.nvim_set_current_win(diagnostics.window);
-	end
-
-	-- Update quadrant state.
-	diagnostics.update_quad(diagnostics.quad, true);
-
-	-- Set necessary options.
-	vim.wo[diagnostics.window].signcolumn = "no";
-	vim.wo[diagnostics.window].conceallevel = 3;
-	vim.wo[diagnostics.window].concealcursor = "ncv";
-
-	vim.wo[diagnostics.window].winhl = "FloatBorder:@comment,Normal:Normal";
-	vim.api.nvim_win_set_cursor(diagnostics.window, { cursor_y or 1, 0 })
-
-	-- Markdown rendering.
-	if package.loaded["markview"] then
-		package.loaded["markview"].render(diagnostics.buffer, {
-			enable = true,
-			hybrid_mode = false
-		});
-	end
-	diagnostics.__integration(window, beacon_config);
+	---|fE
 
 	---|fE
 end

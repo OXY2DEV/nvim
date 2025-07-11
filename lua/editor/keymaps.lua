@@ -36,10 +36,6 @@ vim.api.nvim_set_keymap("n", "<leader>w", "<CMD>w<CR>", {
 	desc = "[w]rite changes."
 });
 
-vim.api.nvim_set_keymap("n", "<leader>wq", "<CMD>wq<CR>", {
-	desc = "[w]rite & [q]uit Neovim."
-});
-
 ---|fE
 
 ---|fS "refactor: Undo & Redo"
@@ -68,37 +64,50 @@ vim.api.nvim_set_keymap("n", "<leader>z", "<CMD>tabprevious<CR>", {
 
 ---|fS "refactor: Lua related"
 
-vim.api.nvim_set_keymap("n", "<leader>l", "", {
+vim.api.nvim_set_keymap("n", "<leader>l", "<CMD>.lua<CR>", {
 	desc = "Run [l]ua",
-	callback = function ()
-		local buffer = vim.api.nvim_get_current_buf();
-		local ft = vim.bo[buffer].filetype;
-
-		if ft ~= "lua" then
-			keymap_alert(4, "Not a Lua file!");
-			return;
-		end
-
-		local line = "";
-
-		vim.api.nvim_buf_call(buffer, function ()
-			line = vim.fn.getline(".");
-		end);
-
-		if line:match("^%s*$") then
-			vim.cmd("luafile %");
-		else
-			vim.cmd(".lua");
-		end
-	end
 });
 
--- vim.api.nvim_set_keymap("v", "<leader>l", "", {
--- 	desc = "Run [l]ua",
--- 	callback = function ()
--- 		pcall(vim.cmd --[[ @as function ]], "'<,'>lua");
--- 	end
--- });
+vim.api.nvim_set_keymap("v", "<leader>l", "", {
+	desc = "Run [l]ua",
+	callback = function ()
+		local from, to = vim.fn.getpos("."), vim.fn.getpos("v");
+		local mode = vim.api.nvim_get_mode().mode;
+
+		if mode == "v" then
+			local min_l, max_l = math.min(from[2], to[2]) - 1, math.max(from[2], to[2]) - 1;
+			local min_c, max_c;
+
+			if min_l == from[2] - 1 then
+				min_c, max_c = from[3] - 1, to[3];
+			else
+				min_c, max_c = to[3] - 1, from[3];
+			end
+
+			local lines = vim.api.nvim_buf_get_text(0, min_l, min_c, max_l, max_c, {});
+			vim.cmd("lua " .. table.concat(lines, ""));
+		elseif mode == "V" then
+			local min, max = math.min(from[2], to[2]) - 1, math.max(from[2], to[2]);
+			local lines = vim.api.nvim_buf_get_lines(0, min, max, false);
+
+			vim.cmd("lua " .. table.concat(lines, ""));
+		else
+			local min_l, max_l = math.min(from[2], to[2]) - 1, math.max(from[2], to[2]) - 1;
+			local min_c, max_c = math.min(from[3], to[3]) - 1, math.max(from[3], to[3]);
+
+			local lines = {};
+
+			for l = min_l, max_l, 1 do
+				local _line = vim.api.nvim_buf_get_lines(0, l, l + 1, false)[1];
+				table.insert(lines, vim.fn.strcharpart(_line, min_c, max_c));
+			end
+
+			vim.cmd("lua " .. table.concat(lines, ""));
+		end
+
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<ESC>", true, true, true), "n", false);
+	end
+});
 
 ---|fE
 

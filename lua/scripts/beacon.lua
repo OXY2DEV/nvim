@@ -413,6 +413,8 @@ function beacon:start ()
 	end
 
 	self.timer:stop();
+	pcall(vim.api.nvim_buf_clear_namespace, self.buffer, self.ns, 0, -1);
+
 	self.timer:start(0, self.interval, vim.schedule_wrap(function ()
 		if self.step > self.steps then
 			self:stop();

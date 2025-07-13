@@ -182,9 +182,11 @@
   (#eq? @_method "format")
   (#set! injection.language "printf"))
 
+; Only for comments that don't start with @ or |.
 (comment
   content: (_) @injection.content
-  (#set! injection.language "comment"))
+  (#match? @injection.content "^-+[^@\|]")
+  (#set! injection.language "doctext"))
 
 ; vim.filetype.add({ pattern = { ["some lua pattern here"] = "filetype" } })
 ((function_call

@@ -366,8 +366,10 @@ function beacon:__nolist_render ()
 end
 
 function beacon:render ()
-	self:__list_render();
-	self:__nolist_render();
+	if type(self.window) == "number" and vim.api.nvim_win_is_valid(self.window) then
+		self:__list_render();
+		self:__nolist_render();
+	end
 
 	table.remove(self.colors, 1);
 	self.step = self.step + 1;

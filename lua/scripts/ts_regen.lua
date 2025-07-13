@@ -75,8 +75,14 @@ regen.regenerate_ts_config = function (user_config)
 	---@type string[] Tree-sitter highlight group names.
 	local groups = vim.fn.getcompletion("@", "highlight");
 
+	local def_value = vim.api.nvim_get_hl(0, { name = "Normal", link = false });
+
 	for _, group in ipairs(groups) do
 		local value = vim.api.nvim_get_hl(0, { name = group, link = false });
+
+		if value.fg and value.fg == def_value.bg then
+			value.fg = value.bg;
+		end
 
 		---@type string Tree-sitter theme group name.
 		local ts_group = string.match(group, "^@(.+)$");

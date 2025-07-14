@@ -59,3 +59,11 @@
 
 ((task)
  (paragraph) @comment)
+
+
+;; Code block
+
+(code_block
+  "```" @punctuation.delimiter
+  (language) @markup.raw)
+

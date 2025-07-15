@@ -3,8 +3,7 @@ return {
 	build = ":TSUpdate",
 	priority = 200,
 
-	--- `opts` doesn't work for this plugin
-	opts = {},
+	-- branch = "main",
 
 	config = function ()
 		--- Gets the path(or URL) for the parser.
@@ -22,7 +21,17 @@ return {
 			end
 		end
 
-		local parser_configs = require("nvim-treesitter.parsers").get_parser_configs();
+		local parsers = require("nvim-treesitter.parsers");
+		local is_on_main = type(parsers.get_parser_configs) ~= "function";
+
+		local parser_configs = parsers.get_parser_configs and parsers.get_parser_configs() or parsers;
+
+		parser_configs.doctext = {
+			install_info = {
+				url = get_path("/parsers/tree-sitter-doctext", "https://github.com/OXY2DEV/tree-sitter-doctext.git"),
+				files = { "src/parser.c" }
+			}
+		};
 
 		parser_configs.lua_patterns = {
 			install_info = {
@@ -46,29 +55,41 @@ return {
 			filetype = "qf"
 		};
 
-		require("nvim-treesitter.configs").setup({
-			ensure_installed = {
-				"vim",
-				"lua",
+		local use_parsers = {
+			"vim",
+			"lua",
 
-				"regex",
-				"html",
-				"markdown",
-				"markdown_inline",
-				"yaml",
+			"regex",
+			"html",
+			"markdown",
+			"markdown_inline",
+			"yaml",
 
-				"vimdoc",
-				"query",
+			"vimdoc",
+			"query",
 
-				"lua_patterns",
-				"vhs",
+			"lua_patterns",
+			"vhs",
 
-				"python"
-			},
-			highlight = {
-				enable = true,
-				additional_vim_regex_highlighting = false
-			},
-		});
+			"python"
+		};
+
+		if is_on_main then
+			require("nvim-treesitter").install(use_parsers);
+
+			vim.api.nvim_create_autocmd("Filetype", {
+				callback = function ()
+					pcall(vim.treesitter.start);
+				end
+			});
+		else
+			require("nvim-treesitter.configs").setup({
+				ensure_installed = use_parsers,
+				highlight = {
+					enable = true,
+					additional_vim_regex_highlighting = false
+				},
+			});
+		end
 	end
 }

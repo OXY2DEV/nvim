@@ -270,7 +270,8 @@ return {
 				"lua_ls",
 				"html", "ts_ls", "emmet_language_server",
 				"basedpyright",
-				"clangd"
+				"clangd",
+				"rust_analyzer"
 			};
 
 			---@type table<string, table> Additional configurations for LSP servers.

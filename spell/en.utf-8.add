@@ -101,3 +101,5 @@ func
 userdata
 colorscheme
 JSON
+Neovim's
+extmarks

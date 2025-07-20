@@ -182,12 +182,6 @@
   (#eq? @_method "format")
   (#set! injection.language "printf"))
 
-; Only for comments that don't start with @ or |.
-(comment
-  content: (_) @injection.content
-  (#match? @injection.content "^-+[^@\|]")
-  (#set! injection.language "doctext"))
-
 ; vim.filetype.add({ pattern = { ["some lua pattern here"] = "filetype" } })
 ((function_call
   name: (_) @_filetypeadd_identifier
@@ -202,3 +196,13 @@
   (#set! injection.language "lua_patterns")
   (#eq? @_filetypeadd_identifier "vim.filetype.add")
   (#eq? @_pattern_key "pattern"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Only for comments that don't start with - or @ or |
+; -- Example: `NOTE: Hello world`
+(comment
+  content: (_) @injection.content
+  (#match? @injection.content "^[^%-@\|]")
+  (#set! injection.language "doctext"))
+

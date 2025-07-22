@@ -201,6 +201,8 @@ function beacon:__gradient ()
 end
 
 function beacon:__list_render ()
+	---|fS "func: Renderer for when `list` is enabled."
+
 	if vim.wo[self.window].list == false then
 		return;
 	end
@@ -275,6 +277,8 @@ function beacon:__list_render ()
 			virt_text = virt_eol,
 		})
 	end
+
+	---|fE
 end
 
 function beacon:__nolist_render ()
@@ -417,6 +421,7 @@ function beacon:start ()
 
 	self.timer:start(0, self.interval, vim.schedule_wrap(function ()
 		if self.step > self.steps then
+			vim.api.nvim_buf_clear_namespace(self.buffer, self.ns, 0, -1);
 			self:stop();
 			return;
 		end

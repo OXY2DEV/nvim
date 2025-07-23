@@ -1,33 +1,35 @@
----@class inspect.data
+---@class inspect.data Parsed TSNose data.
 ---
----@field language string
----@field injected? table
+---@field language string Language name
+---@field injected? inspect.injection Injected TSTree.
 ---
----@field depth integer
----@field injection_depth integer
+---@field depth integer Depth of a TSNode.
+---@field injection_depth integer Depth of injection.
 ---
----@field type string
----@field range integer[]
+---@field type string TSNode type.
+---@field range integer[] TSNode range, { row_start, col_start, row_end, col_end }.
 ---@field node TSNode
 ---
----@field missing boolean
----@field named boolean
----@field extra boolean
+---@field missing boolean Is the node a missing node?
+---@field named boolean Is the mode a named node?
+---@field extra boolean Is the node an extra node?
 ---
----@field has_error boolean
----@field lines integer
+---@field has_error boolean Does the node have error?
+---@field lines integer Number of lines this node's children take.
 
 
----@class inspect.injection
+---@class inspect.injection An injected tree.
 ---
----@field language string
----@field root TSNode
+---@field language string Language name.
+---@field root TSNode Root of the injected tree.
 
 
 ------------------------------------------------------------------------------
 
 
 local inspect = {};
+
+inspect.map = {};
 
 inspect.config = {
 	named_only = false,
@@ -380,6 +382,7 @@ function inspector:switch_state ()
 	end
 
 	self.lines, self.parsed_data = inspect.parse(self.source, self.named_only);
+	vim.print(item)
 
 	vim.bo[self.buf].modifiable = true;
 	vim.api.nvim_buf_clear_namespace(self.buf, inspect.ns, 0, -1);
@@ -389,43 +392,31 @@ function inspector:switch_state ()
 	self:decorate();
 	if not item then return; end
 
-	for i, new_item in ipairs(self.parsed_data) do
-		if new_item.node:equal(item.node) then
-			pcall(vim.api.nvim_win_set_cursor, self.win, { i, X });
-			return;
+	local _Y = 0;
+
+	for _, data in ipairs(self.parsed_data) do
+		if self.named_only and data.named then
+			_Y = _Y + 1;
+		elseif self.named_only == false then
+			_Y = _Y + 1;
+		end
+
+		if self.named_only and data.named and data.node:equal(item.node) then
+			pcall(vim.api.nvim_win_set_cursor, self.win, { _Y, X });
+			break;
+		elseif data.node:equal(item.node) then
+			pcall(vim.api.nvim_win_set_cursor, self.win, { _Y, X });
+			break;
 		end
 	end
 end
 
-function inspector:open (buf)
-	self.source = buf or vim.api.nvim_get_current_buf();
-	self.named_only = inspect.config.named_only == true;
-
-	self.lines, self.parsed_data = inspect.parse(self.source, self.named_only);
-	if not self.lines or not self.parsed_data then return; end
-
-	self.buf = vim.api.nvim_create_buf(false, true);
-	vim.bo[self.buf].ft = "query";
-
-	vim.bo[self.buf].modifiable = true;
-	vim.api.nvim_buf_clear_namespace(self.buf, inspect.decorator_ns, 0, -1);
-	vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, self.lines);
-	vim.bo[self.buf].modifiable = false;
-
-	self:decorate();
-
-	self.win = vim.api.nvim_open_win(self.buf, true, { split = "below", style = "minimal" });
-	vim.wo[self.win].conceallevel = 3;
-	vim.wo[self.win].concealcursor = "nvc";
-	vim.wo[self.win].signcolumn = "no";
-	vim.wo[self.win].list = true;
-
-	vim.w[self.win].inspecttree_window = true;
-
+function inspector:set_movements ()
 	---@diagnostic disable-next-line: undefined-field
 	local debouncer = vim.uv.new_timer();
 
 	vim.api.nvim_create_autocmd("CursorMoved", {
+		buffer = self.buf,
 		callback = function ()
 			debouncer:stop();
 			debouncer:start(inspect.config.debounce or 100, 0, vim.schedule_wrap(function ()
@@ -454,6 +445,90 @@ function inspector:open (buf)
 			self:switch_state();
 		end
 	});
+
+	local win = vim.fn.bufwinid(self.source) or 0;
+
+	vim.api.nvim_buf_set_keymap(self.buf, "n", "gd", "", {
+		callback = function ()
+			local cursor = vim.api.nvim_win_get_cursor(self.win);
+
+			local data = self.parsed_data[cursor[1]];
+			if not data then return; end
+
+			pcall(vim.api.nvim_win_set_cursor, win, { data.range[1] + 1, data.range[2] });
+			pcall(vim.api.nvim_set_current_win, win);
+		end
+	});
+end
+
+function inspector:open (buf)
+	self.source = buf or vim.api.nvim_get_current_buf();
+
+	if self.named_only == nil then
+		self.named_only = inspect.config.named_only == true;
+	end
+
+	self.lines, self.parsed_data = inspect.parse(self.source, self.named_only);
+	if not self.lines or not self.parsed_data then return; end
+
+	if type(self.buf) ~= "number" or vim.api.nvim_buf_is_valid(self.buf) == false then
+		self.buf = vim.api.nvim_create_buf(false, true);
+		self:set_movements();
+	end
+
+	vim.bo[self.buf].ft = "query";
+
+	vim.bo[self.buf].modifiable = true;
+	vim.api.nvim_buf_clear_namespace(self.buf, inspect.decorator_ns, 0, -1);
+	vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, self.lines);
+	vim.bo[self.buf].modifiable = false;
+
+	self:decorate();
+
+	if type(self.win) ~= "number" or vim.api.nvim_win_is_valid(self.win) == false then
+		self.win = vim.api.nvim_open_win(self.buf, true, { split = "below", style = "minimal" });
+	else
+		pcall(vim.api.nvim_set_current_win, self.win);
+	end
+
+	vim.wo[self.win].conceallevel = 3;
+	vim.wo[self.win].concealcursor = "nvc";
+	vim.wo[self.win].signcolumn = "no";
+	vim.wo[self.win].list = true;
+
+	inspect.map[self.source] = self;
+	vim.w[self.win].inspecttree_window = true;
+
+	local win = vim.fn.bufwinid(self.source) or 0;
+	local source_cursor = vim.api.nvim_win_get_cursor(win);
+	local source_node = vim.treesitter.get_node({
+		bufnr = self.source,
+		ignore_injections = false,
+
+		pos = { source_cursor[1] - 1, source_cursor[2] },
+	});
+
+	if not source_node then
+		return;
+	end
+
+	local Y = 0;
+
+	for _, data in ipairs(self.parsed_data) do
+		if self.named_only and data.named then
+			Y = Y + 1;
+		elseif self.named_only == false then
+			Y = Y + 1;
+		end
+
+		if self.named_only and data.named and data.node:equal(source_node) then
+			pcall(vim.api.nvim_win_set_cursor, self.win, { Y, data.depth });
+			break;
+		elseif data.node:equal(source_node) then
+			pcall(vim.api.nvim_win_set_cursor, self.win, { Y, data.depth });
+			break;
+		end
+	end
 end
 
 function inspector:new ()
@@ -466,8 +541,15 @@ end
 
 inspect.setup = function ()
 	vim.api.nvim_create_user_command("Is", function ()
+		local buf = vim.api.nvim_get_current_buf();
+
+		if inspect.map[buf] then
+			inspect.map[buf]:open(buf);
+			return;
+		end
+
 		local ab = inspector:new();
-		ab:open()
+		ab:open(buf)
 	end, {});
 end
 

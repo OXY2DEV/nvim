@@ -178,7 +178,7 @@ hl.visible_fg = function (lumen)
 end
 
 local Y = 0.15;
-local D = 0.15;
+local D = 0.25;
 
 ---@type table<string, fun(): table[]>
 hl.groups = {
@@ -223,55 +223,16 @@ hl.groups = {
 		---|fE
 	end,
 
-	---|fS "style: Diagnostic"
-
-	def = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D + 0.05);
-
+	["@lsp.type"] = function ()
 		return {
 			{
-				group_name = "DgDefault",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-
-			{
-				group_name = "DgDefaultBg",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
-				},
-			},
-			{
-				group_name = "DgDefaultPad",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
-				},
-			},
+				group_name = "@lsp.type.comment.lua",
+				value = {}
+			}
 		};
-
-		---|fE
 	end,
+
+	---|fS "style: Highlight groups for Diagnostic"
 
 	err = function ()
 		---|fS
@@ -297,23 +258,22 @@ hl.groups = {
 			{
 				group_name = "DgError",
 				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
+				},
+			},
+			{
+				group_name = "DgErrorDisabled",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
-
 			{
-				group_name = "DgErrorBg",
+				group_name = "DgErrorDisabledIcon",
 				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
-				},
-			},
-			{
-				group_name = "DgErrorPad",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
 		};
@@ -345,23 +305,22 @@ hl.groups = {
 			{
 				group_name = "DgHint",
 				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
+				},
+			},
+			{
+				group_name = "DgHintDisabled",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
-
 			{
-				group_name = "DgHintBg",
+				group_name = "DgHintDisabledIcon",
 				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
-				},
-			},
-			{
-				group_name = "DgHintPad",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
 		};
@@ -393,23 +352,22 @@ hl.groups = {
 			{
 				group_name = "DgInfo",
 				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
+				},
+			},
+			{
+				group_name = "DgInfoDisabled",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
-
 			{
-				group_name = "DgInfoBg",
+				group_name = "DgInfoDisabledIcon",
 				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
-				},
-			},
-			{
-				group_name = "DgInfoPad",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
 		};
@@ -441,23 +399,22 @@ hl.groups = {
 			{
 				group_name = "DgWarn",
 				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
+				},
+			},
+			{
+				group_name = "DgWarnDisabled",
+				value = {
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
 					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
-
 			{
-				group_name = "DgWarnBg",
+				group_name = "DgWarnDisabledIcon",
 				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
-				},
-			},
-			{
-				group_name = "DgWarnPad",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB))
+					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
 				},
 			},
 		};

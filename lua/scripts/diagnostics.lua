@@ -4,6 +4,8 @@
 ---@class diagnostics.config
 ---
 ---@field width integer | fun(items: table[]): integer Width for the diagnostics window.
+---@field decoration_width integer Width of the decorations.
+---
 ---@field max_height integer | fun(items: table[]): integer Maximum height for the diagnostics window.
 ---
 ---@field decorations table<integer, diagnostics.decorations> Decorations for each diagnostic severity.
@@ -60,6 +62,8 @@ diagnostics.config = {
 
 		return W;
 	end,
+	decoration_width = 4,
+
 	max_height = function ()
 		return math.floor(vim.o.lines * 0.4);
 	end,
@@ -67,12 +71,12 @@ diagnostics.config = {
 	beacon = {
 		default = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgDefault", link = false }).fg;
-				return fg or "#9399b2";
+				local fg = vim.api.nvim_get_hl(0, { name = "@comment", link = false }).fg;
+				return fg and string.format("#%06x", fg) or "#9399b2";
 			end,
 			to = function ()
 				local bg = vim.api.nvim_get_hl(0, { name = vim.o.statusline and "Cursorline" or "Normal", link = false }).bg;
-				return bg or "#1e1e2e";
+				return bg and string.format("#%06x", bg) or "#1e1e2e";
 			end,
 
 			steps = 10,
@@ -81,26 +85,26 @@ diagnostics.config = {
 
 		[vim.diagnostic.severity.INFO] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgInfo", link = false }).fg;
-				return fg or "#94e2d5";
+				local fg = vim.api.nvim_get_hl(0, { name = "DgInfoDisabledIcon", link = false }).fg;
+				return fg and string.format("#%06x", fg) or "#94e2d5";
 			end
 		},
 		[vim.diagnostic.severity.HINT] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgHint", link = false }).fg;
-				return fg or "#94e2d5";
+				local fg = vim.api.nvim_get_hl(0, { name = "DgHintDisabledIcon", link = false }).fg;
+				return fg and string.format("#%06x", fg) or "#94e2d5";
 			end
 		},
 		[vim.diagnostic.severity.WARN] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgWarn", link = false }).fg;
-				return fg or "#f9e2af";
+				local fg = vim.api.nvim_get_hl(0, { name = "DgWarnDisabledIcon", link = false }).fg;
+				return fg and string.format("#%06x", fg) or "#f9e2af";
 			end
 		},
 		[vim.diagnostic.severity.ERROR] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgError", link = false }).fg;
-				return fg or "#f38ba8";
+				local fg = vim.api.nvim_get_hl(0, { name = "DgErrorDisabledIcon", link = false }).fg;
+				return fg and string.format("#%06x", fg) or "#f38ba8";
 			end
 		},
 	},
@@ -112,20 +116,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DgInfo" or "DgDefault";
+				return current and "DiagnosticInfo" or "@comment";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▌", current and "DgInfoBg" or "DgDefaultBg" },
-					{ "󰀨 ", current and "DgInfoBg" or "DgDefaultBg" },
-					{ " ", current and "DgInfo" or "DgDefault" },
+					{ "▌", current and "DgInfo" or "DgInfoDisabled" },
+					{ "󰀨 ", current and "DgInfo" or "DgInfoDisabledIcon" },
+					{ " " },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▌",  current and "DgInfoPad" or "DgDefaultPad" },
-					{ "  ", current and "DgInfo" or "DgDefault" },
-					{ " ", current and "DgInfo" or "DgDefault" },
+					{ "▌",  current and "DgInfo" or "DgInfoDisabled" },
+					{ "  ", current and "DgInfo" or "DgInfoDisabled" },
+					{ " " },
 				}
 			end
 		},
@@ -133,20 +137,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DgHint" or "DgDefault";
+				return current and "DiagnosticHint" or "@comment";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▌", current and "DgHintBg" or "DgDefaultBg" },
-					{ "󰁨 ", current and "DgHintBg" or "DgDefaultBg" },
-					{ " ", current and "DgHint" or "DgDefault" },
+					{ "▌", current and "DgHint" or "DgHintDisabled" },
+					{ "󰁨 ", current and "DgHint" or "DgHintDisabledIcon" },
+					{ " " },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▌",  current and "DgHintPad" or "DgDefaultPad" },
-					{ "  ", current and "DgHint" or "DgDefault" },
-					{ " ", current and "DgHint" or "DgDefault" },
+					{ "▌",  current and "DgHint" or "DgHintDisabled" },
+					{ "  ", current and "DgHint" or "DgHintDisabled" },
+					{ " " },
 				}
 			end
 		},
@@ -154,20 +158,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DgWarn" or "DgDefault";
+				return current and "DiagnosticWarn" or "@comment";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▌", current and "DgWarnBg" or "DgDefaultBg" },
-					{ " ", current and "DgWarnBg" or "DgDefaultBg" },
-					{ " ", current and "DgWarn" or "DgDefault" },
+					{ "▌", current and "DgWarn" or "DgWarnDisabled" },
+					{ " ", current and "DgWarn" or "DgWarnDisabledIcon" },
+					{ " " },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▌",  current and "DgWarnPad" or "DgDefaultPad" },
-					{ "  ", current and "DgWarn" or "DgDefault" },
-					{ " ", current and "DgWarn" or "DgDefault" },
+					{ "▌",  current and "DgWarn" or "DgWarnDisabled" },
+					{ "  ", current and "DgWarn" or "DgWarnDisabled" },
+					{ " " },
 				}
 			end
 		},
@@ -175,20 +179,20 @@ diagnostics.config = {
 			width = 3,
 
 			line_hl_group = function (_, current)
-				return current and "DgError" or "DgDefault";
+				return current and "DiagnosticError" or "@comment";
 			end,
 			icon = function (_, current)
 				return {
-					{ "▌", current and "DgErrorBg" or "DgDefaultBg" },
-					{ "󰅙 ", current and "DgErrorBg" or "DgDefaultBg" },
-					{ " ", current and "DgError" or "DgDefault" },
+					{ "▌", current and "DgError" or "DgErrorDisabled" },
+					{ "󰅙 ", current and "DgError" or "DgErrorDisabledIcon" },
+					{ " " },
 				}
 			end,
 			padding = function (_, current)
 				return {
-					{ "▌",  current and "DgErrorPad" or "DgDefaultPad" },
-					{ "  ", current and "DgError" or "DgDefault" },
-					{ " ", current and "DgError" or "DgDefault" },
+					{ "▌",  current and "DgError" or "DgErrorDisabled" },
+					{ "  ", current and "DgError" or "DgErrorDisabled" },
+					{ " " },
 				}
 			end
 		},
@@ -199,7 +203,7 @@ diagnostics.config = {
 	---|fE
 };
 
---- Evaluates `val`.
+--[[ Evaluates `val`. ]]
 ---@param val any
 ---@param ... any
 ---@return any
@@ -219,10 +223,10 @@ local function eval(val, ...)
 	---|fE
 end
 
---- Gets decorations.
----@param level integer | vim.diagnostic.Severity
----@param ... any
----@return diagnostics.decorations__static
+--[[ Gets diagnostic item `decoration`. ]]
+---@param level vim.diagnostic.Severity | "default" Diagnostic severity.
+---@param ... any Extra arguments to be used for value evaluation.
+---@return diagnostics.decorations__static decoration Static version of the diagnostic item's decoration.
 local function get_decorations (level, ...)
 	---|fS
 
@@ -237,8 +241,14 @@ local function get_decorations (level, ...)
 	---|fE
 end
 
+--[[ Gets `beacon` configuration. ]]
+---@param level? vim.diagnostic.Severity | "default" Diagnostic level.
+---@param ... any Extra arguments to be used for value evaluation.
+---@return table?
 local function get_beacon_config (level, ...)
-	if not diagnostics.config.beacon then
+	---|fS
+
+	if not level or not diagnostics.config.beacon then
 		return;
 	end
 
@@ -249,9 +259,16 @@ local function get_beacon_config (level, ...)
 	end
 
 	return output;
+
+	---|fE
 end
 
+--[[ Turns given **virtual text** into **format string** for the statusline. ]]
+---@param virt_text [ string, string? ][] Virtual text.
+---@return string sign Virtual text as a sign(use in `statuscolumn`, `statusline`, `tabline` or `winbar`)
 local function virt_text_to_sign (virt_text)
+	---|fS
+
 	local output = "";
 
 	for _, item in ipairs(virt_text) do
@@ -263,6 +280,8 @@ local function virt_text_to_sign (virt_text)
 	end
 
 	return output;
+
+	---|fE
 end
 
 ------------------------------------------------------------------------------
@@ -282,7 +301,7 @@ diagnostics.quad = nil;
 --- Information regarding signs.
 diagnostics.sign_data = {};
 
---- Prepares the buffer for the diagnostics window.
+--[[ Prepares the buffer for the diagnostics window. ]]
 diagnostics.__prepare = function ()
 	---|fS
 
@@ -297,6 +316,7 @@ diagnostics.__prepare = function ()
 	---|fE
 end
 
+--[[ Updates the state of the quadrants. ]]
 ---@param quad "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
 ---@param state boolean
 diagnostics.update_quad = function (quad, state)
@@ -317,14 +337,15 @@ diagnostics.update_quad = function (quad, state)
 	---|fE
 end
 
----@param window integer
----@param w integer
----@param h integer
----@return  string | string[]
----@return "editor" | "cursor"
----@return "NE" | "NW" | "SE" | "SW"
----@return integer
----@return integer
+--[[ Returns `{opts}` for `nvim_open_win()` based on the parameters. ]]
+---@param window integer Window ID.
+---@param w integer Window width.
+---@param h integer Window height.
+---@return  string | string[] border Window border.
+---@return "editor" | "cursor" relative Relative position for floating window.
+---@return "NE" | "NW" | "SE" | "SW" anchor Anchor position.
+---@return integer row Window position in Y-axis.
+---@return integer col Window position in X-axis.
 diagnostics.__win_args = function (window, w, h)
 	---|fS
 
@@ -457,52 +478,9 @@ diagnostics.__win_args = function (window, w, h)
 	---|fE
 end
 
----@param text string
----@param W integer
----@return integer
----@return string[]
-diagnostics.__wrap = function (text, W)
-	---|fS
-
-	diagnostics.__prepare();
-
-	local text_lines = vim.split(text, "\n", { trimempty = true });
-	local final_lines = {};
-
-	vim.bo[diagnostics.scratch_buffer].tw = W or vim.o.columns;
-
-	for _, line in ipairs(text_lines) do
-		vim.api.nvim_buf_set_lines(diagnostics.scratch_buffer, 0, -1, false, { line });
-
-		if string.match(line, "[`~%[%]%-%+%*]") then
-			vim.bo[diagnostics.scratch_buffer].ft = "markdown";
-		else
-			vim.bo[diagnostics.scratch_buffer].ft = "plaintext";
-		end
-
-		vim.api.nvim_buf_call(diagnostics.scratch_buffer, function ()
-			vim.api.nvim_command("silent %normal gqq");
-
-			final_lines = vim.list_extend(
-				final_lines,
-
-				vim.api.nvim_buf_get_lines(
-					diagnostics.scratch_buffer,
-					0, -1,
-					false
-				)
-			);
-		end);
-	end
-
-	return #final_lines, final_lines;
-
-	---|fE
-end
-
 ------------------------------------------------------------------------------
 
---- Closes diagnostics window.
+--[[ Closes diagnostics window. ]]
 diagnostics.__close = function ()
 	---|fS
 
@@ -519,19 +497,24 @@ diagnostics.__close = function ()
 	---|fE
 end
 
---- Beacon instance.
+---@type beacon.instance
 diagnostics.__beacon = nil;
 
---- External integrations.
+--[[ External integrations. ]]
+---@param window integer Window Id.
+---@param beacon_config beacon.instance.config Configuration for `beacon`.
 diagnostics.__integration = function (window, beacon_config)
-	-- Markdown rendering.
-	-- if package.loaded["markview"] then
-	-- 	package.loaded["markview"].render(diagnostics.buffer, {
-	-- 		enable = true,
-	-- 		hybrid_mode = false
-	-- 	});
-	-- end
+	---|fS
 
+	-- Markdown rendering.
+	if package.loaded["markview"] then
+		package.loaded["markview"].render(diagnostics.buffer, {
+			enable = true,
+			hybrid_mode = false
+		});
+	end
+
+	-- Beacon.
 	if package.loaded["scripts.beacon"] then
 		if not diagnostics.__beacon then
 			diagnostics.__beacon = require("scripts.beacon").new(window, beacon_config);
@@ -541,6 +524,8 @@ diagnostics.__integration = function (window, beacon_config)
 
 		diagnostics.__beacon:start();
 	end
+
+	---|fE
 end
 
 --- Custom statuscolumn.
@@ -553,11 +538,13 @@ _G.__diagnostics_statuscolumn = function ()
 	end
 
 	local lnum = vim.v.lnum;
+
 	local data = diagnostics.sign_data[lnum];
+	local start = data.start_row;
 
 	if not data then
 		return "";
-	elseif vim.v.virtnum == 0 then
+	elseif vim.v.virtnum == 0 and start == lnum then
 		return virt_text_to_sign(data.icon);
 	else
 		return virt_text_to_sign(data.padding or data.icon);
@@ -605,13 +592,15 @@ diagnostics.hover = function (window)
 	vim.api.nvim_buf_clear_namespace(diagnostics.buffer, diagnostics.ns, 0, -1);
 	vim.api.nvim_buf_set_lines(diagnostics.buffer, 0, -1, false, {});
 
-	local W = eval(diagnostics.config.width, items)
+	local W = eval(diagnostics.config.width, items);
+	local D = eval(diagnostics.config.decoration_width, items);
+
 	---@type table Configuration used for calculating window height.
 	local height_calc_config = {
 		relative = "editor",
 
 		row = 0, col = 1,
-		width = W, height = 2,
+		width = W - D, height = 2,
 
 		style = "minimal",
 		hide = true,
@@ -627,11 +616,15 @@ diagnostics.hover = function (window)
 	vim.wo[diagnostics.window].linebreak = true;
 	vim.wo[diagnostics.window].breakindent = true;
 
+	local diagnostic_lines = 0;
+
 	---@type integer Line where the cursor should be placed.
 	local cursor_y = 1;
 	local ranges = {};
 
-	local beacon_config = get_beacon_config("default", {}, true);
+	local start_row = 1;
+	---@type vim.diagnostic.Severity | nil
+	local level;
 
 	diagnostics.sign_data = {};
 
@@ -639,6 +632,7 @@ diagnostics.hover = function (window)
 		---|fS
 
 		local from = i == 1 and 0 or -1;
+		local lines = vim.split(item.message, "\n", { trimempty = true })
 
 		local start = item.col;
 		local stop = item.end_col;
@@ -646,37 +640,54 @@ diagnostics.hover = function (window)
 		local current = false;
 
 		if cursor[2] >= start and cursor[2] <= stop then
-			beacon_config = vim.tbl_extend("force", beacon_config, get_beacon_config(item.severity, item, true) or {});
-
 			cursor_y = i;
 			current = true;
 		end
 
-		vim.api.nvim_buf_set_lines(diagnostics.buffer, from, -1, false, vim.split(item.message, "\n", { trimempty = true }));
+		vim.api.nvim_buf_set_lines(diagnostics.buffer, from, -1, false, lines);
 		local decorations = get_decorations(item.severity, item, current);
 
 		ranges[i] = { item.lnum, item.col };
 
-		vim.api.nvim_buf_set_extmark(diagnostics.buffer, diagnostics.ns, i - 1, 0, {
-			end_row = i,
+		vim.api.nvim_buf_set_extmark(diagnostics.buffer, diagnostics.ns, diagnostic_lines, 0, {
+			end_row = diagnostic_lines + #lines,
 			line_hl_group = decorations.line_hl_group,
 		});
 
-		table.insert(diagnostics.sign_data, {
-			current = current,
-			width = decorations.width,
+		diagnostic_lines = diagnostic_lines + #lines;
 
-			icon = decorations.icon,
-			line_hl_group = decorations.line_hl_group,
-			padding = decorations.padding,
-		});
+		if current == true and ( not level or item.severity < level ) then
+			level = item.severity;
+		end
+
+		for _ = 1, #lines do
+			-- Signs
+			table.insert(diagnostics.sign_data, {
+				start_row = start_row,
+
+				current = current,
+				width = decorations.width,
+
+				icon = decorations.icon,
+				line_hl_group = decorations.line_hl_group,
+				padding = decorations.padding,
+			});
+		end
+
+		start_row = start_row + #lines;
 
 		---|fE
 	end
 
+	local beacon_config = vim.tbl_extend("force",
+		get_beacon_config("default", {}, true),
+		get_beacon_config(level, {}, true) or {}
+	);
+
 	local H = vim.api.nvim_win_text_height(diagnostics.window, { start_row = 0, end_row = -1 }).all;
 
 	local _, relative, anchor, row, col = diagnostics.__win_args(window, W, H);
+
 	local win_config = {
 		relative = relative or "cursor",
 
@@ -685,6 +696,7 @@ diagnostics.hover = function (window)
 
 		anchor = anchor,
 		border = "none",
+
 		style = "minimal",
 		hide = false,
 	};

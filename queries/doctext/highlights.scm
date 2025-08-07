@@ -1,4 +1,9 @@
+; Highlighting for Neovim.
+; Use a higher priority to override semantic highlights.
+
 ;;; Inline elements.
+
+((word) @spell)
 
 (italic) @markup.italic
 (bold) @markup.strong
@@ -66,4 +71,3 @@
 (code_block
   "```" @punctuation.delimiter
   (language) @markup.raw)
-

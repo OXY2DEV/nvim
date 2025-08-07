@@ -3,6 +3,8 @@
 --- Configuration for diagnostics.
 ---@class diagnostics.config
 ---
+---@field map string Key to map.
+---
 ---@field width integer | fun(items: table[]): integer Width for the diagnostics window.
 ---@field decoration_width integer Width of the decorations.
 ---
@@ -45,6 +47,8 @@ local diagnostics = {};
 ---@class diagnostics.config
 diagnostics.config = {
 	---|fS
+
+	map = "D",
 
 	width = function (items)
 		local max_w = math.floor(vim.o.columns * 0.4);
@@ -761,13 +765,11 @@ diagnostics.setup = function (config)
 		diagnostics.config = vim.tbl_extend("force", diagnostics.config, config);
 	end
 
-	vim.api.nvim_create_autocmd("LspAttach", {
-		callback = function (ev)
-			vim.api.nvim_buf_set_keymap(ev.buf, "n", "D", "", {
-				callback = diagnostics.hover
-			});
-		end
-	});
+	if diagnostics.config.map then
+		vim.api.nvim_set_keymap("n", diagnostics.config.map, "", {
+			callback = diagnostics.hover
+		});
+	end
 
 	vim.api.nvim_create_autocmd({
 		"CursorMoved", "CursorMovedI"

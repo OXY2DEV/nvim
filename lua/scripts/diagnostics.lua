@@ -577,6 +577,11 @@ diagnostics.hover = function (window)
 	if #items == 0 then
 		-- No diagnostics available.
 		diagnostics.__close();
+		vim.api.nvim_echo({
+			{ " 󰾕 diagnostics.lua ", "DiagnosticVirtualTextInfo" },
+			{ ": ", "@comment" },
+			{ "No diagnostic under cursor", "@comment" },
+		}, true, {});
 		return;
 	elseif already_open then
 		vim.api.nvim_set_current_win(diagnostics.window);

@@ -735,10 +735,15 @@ diagnostics.hover = function (window)
 		callback = function ()
 			---|fS
 
+			---@type [ integer, integer ] Selected item.
 			local _cursor = vim.api.nvim_win_get_cursor(diagnostics.window);
+			---@type [ integer, integer ]? Diagnostic location.
+			local location = ranges[_cursor[1]];
 
-			if ranges[_cursor[1] - 1] then
-				vim.api.nvim_win_set_cursor(window, ranges[_cursor[1] - 1]);
+			if location then
+				location[1] = location[1] + 1;
+
+				vim.api.nvim_win_set_cursor(window, location);
 				vim.api.nvim_set_current_win(window);
 
 				diagnostics.__close();

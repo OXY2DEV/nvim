@@ -112,18 +112,18 @@ _G.disable_properties = function (ignore, properties)
 	---|fE
 end
 
--- Load the options first;
+-- Load the options **first**;
 require("editor.options");
 require("editor.keymaps");
 require("editor.ts_directives");
 
--- Hover, Diagnostics & Quickfix should be loaded first.
+-- `LSP hover`, `Diagnostics`, `Quickfix`, `Beacon` etc. should be loaded first.
 require("scripts.lsp_hover").setup();
 require("scripts.diagnostics").setup();
 require("scripts.quickfix").setup();
 require("scripts.beacon").setup();
 
--- Now, we load the plugins.
+-- Now, we load the **plugins**.
 require("editor.lazy");
 
 --- Load scripts that rely on plugins.
@@ -132,7 +132,11 @@ require("scripts.color_sync");
 require("scripts.inspect_tree").setup();
 require("scripts.ts_regen").setup();
 
--- Autocmd for the custom dynamic highlight groups.
+
+------------------------------------------------------------------------------
+
+
+-- Autocmd for the custom *dynamic highlight group modifier*.
 vim.api.nvim_create_autocmd({
 	"VimEnter",
 	"ColorScheme"

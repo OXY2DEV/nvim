@@ -1,10 +1,28 @@
+--[[
+
+fix(tree-sitter): Fix concealing rows for TOCs.
+
+Add the missing feature of the default quickfix syntax that hides the
+`file path` & `range` of the entries in Table of Content style quickfix
+lists.
+
+See: `gO`
+
+--]]
+
+
 ---@type integer
 local buffer = vim.api.nvim_get_current_buf();
 
---- Hides the first 2 rows in quickfix TOCs.
+--[[ Hides the first 2 **rows** in quickfix TOCs. ]]
 local function hide_toc ()
 	---|fS
 
+	--[[
+		Check if we are in the correct quickfix window,
+			• `qf_toc`, used by Vim's quickfix window.
+			• `"Table of contents"`, title used by TOCs.
+	--]]
 	if not vim.w.qf_toc and vim.w.quickfix_title ~= "Table of contents" then
 		return;
 	end
@@ -12,7 +30,7 @@ local function hide_toc ()
 	---|fS "fix: Fixes tree-sitter not updating on quickfix buffer"
 
 	vim.bo[buffer].modifiable = true;
-	vim.bo[buffer].undolevels = -1;
+	vim.bo[buffer].undolevels = -1; -- Prevent undoing.
 
 	local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false);
 	vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines);
@@ -63,6 +81,5 @@ local function hide_toc ()
 	---|fE
 end
 
--- NOTE, do we need to also hook this
--- to`TextChanged`?
+--[[ NOTE: do we need to also hook this to `TextChanged`? ]]
 hide_toc();

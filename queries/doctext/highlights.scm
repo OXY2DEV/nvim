@@ -42,8 +42,8 @@
   (#set! priority 150))
 
 (task
-  (label) @comment.warn @nospell
-  (#any-of? @comment.warn "NITPICK" "nitpick" "WARNING" "warning" "FIX" "fix" "HACK" "hack")
+  (label) @comment.warning @nospell
+  (#any-of? @comment.warning "NITPICK" "nitpick" "WARNING" "warning" "FIX" "fix" "HACK" "hack")
   (#set! priority 150))
 
 (task

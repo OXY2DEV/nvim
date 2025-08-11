@@ -578,7 +578,7 @@ diagnostics.hover = function (window)
 		-- No diagnostics available.
 		diagnostics.__close();
 		vim.api.nvim_echo({
-			{ " 󰾕 diagnostics.lua ", "DiagnosticVirtualTextInfo" },
+			{ " 󰾕 diagnostics.lua ", "DiagnosticVirtualTextWarn" },
 			{ ": ", "@comment" },
 			{ "No diagnostic under cursor", "@comment" },
 		}, true, {});

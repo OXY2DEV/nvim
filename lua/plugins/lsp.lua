@@ -63,6 +63,12 @@ return {
 		priority = 750,
 
 		opts = {
+			enabled = function ()
+				-- ISSUE: Query files causes error if `blink.cmp` is used.
+				return not vim.list_contains({
+					"query",
+				}, vim.bo.filetype);
+			end,
 			fuzzy = { implementation = "prefer_rust" },
 			appearance = { nerd_font_variant = "mono" },
 			cmdline = { enabled = false },

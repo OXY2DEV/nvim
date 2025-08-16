@@ -240,7 +240,7 @@ return {
 			keymap = {
 				preset = "none",
 
-				["<C-Space>"] = { "show", "fallback" },
+				["<C-Space>"] = { "show", "hide_documentation", "show_documentation" },
 				["<CR>"] = { "accept", "fallback" },
 				["<BS>"] = { "cancel", "fallback" },
 

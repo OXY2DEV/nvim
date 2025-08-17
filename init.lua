@@ -129,9 +129,8 @@ require("editor.lazy");
 --- Load scripts that rely on plugins.
 require("scripts.highlights").setup();
 require("scripts.color_sync");
-require("scripts.inspect_tree").setup();
+require("scripts.tree").setup();
 require("scripts.ts_regen").setup();
-
 
 ------------------------------------------------------------------------------
 

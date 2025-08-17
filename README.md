@@ -12,7 +12,7 @@ A general-purpose setup for `Neovim`.
     + [lsp_hover.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/lsp_hover.lua), Fancy LSP hover window.
     + [quickfix.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/quickfix.lua), Fancy editable quickfix window with `tree-sitter` syntax highlighting.
     + [highlights.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/highlights.lua), Dynamic highlight groups for your custom stuffs without needing to worry about colorscheme support!
-    + [inspect_tree.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/inspect_tree.lua), Custom version of `:InspectTree` with some extra features.
+    + [tree.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/tree.lua), Custom version of `:InspectTree` with some extra features.
     + [beacon.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/beacon.lua), Beacon for `Neovim`(animated position indicator).
     + [ts_regen.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/ts_regen.lua), Updates `tree-sitter` CLI's config to match Neovim's colorscheme(via `:TSRegen`).
 

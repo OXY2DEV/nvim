@@ -7,7 +7,7 @@
   "lazy.nvim": { "branch": "main", "commit": "6c3bda4aca61a13a9c63f1c1d1b16b9d3be90d7a" },
   "nightfly": { "branch": "master", "commit": "8d0ee8436a9f37252c1a7976fe76617e8df34a5a" },
   "nvim-cmp": { "branch": "main", "commit": "b5311ab3ed9c846b585c0c15b7559be131ec4be9" },
-  "nvim-lspconfig": { "branch": "master", "commit": "3d66048f40ace2d8b8f0789f4346d4fc0a6de15f" },
+  "nvim-lspconfig": { "branch": "master", "commit": "612d9fcc652725ce2e3a8043daad6cfc6865c4a7" },
   "nvim-treesitter": { "branch": "master", "commit": "42fc28ba918343ebfd5565147a42a26580579482" },
   "onedarkpro.nvim": { "branch": "main", "commit": "ddbcb80d1403a789b3c656064c3ec448a50caa41" },
   "solarized-osaka.nvim": { "branch": "main", "commit": "f796014c14b1910e08d42cc2077fef34f08e0295" },

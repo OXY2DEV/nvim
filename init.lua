@@ -132,6 +132,8 @@ require("scripts.color_sync");
 require("scripts.tree").setup();
 require("scripts.ts_regen").setup();
 
+require("scripts.color").setup();
+
 ------------------------------------------------------------------------------
 
 

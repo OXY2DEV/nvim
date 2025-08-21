@@ -182,6 +182,39 @@ local D = 0.25;
 
 ---@type table<string, fun(): table[]>
 hl.groups = {
+	faded_bg = function ()
+		---|fS
+
+		---@type number, number, number Background color.
+		local BL, BA, BB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local FL, FA, FB = hl.rgb_to_oklab(
+			hl.num_to_rgb(
+				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
+			)
+		);
+
+		---@type number, number, number Background color.
+		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, 0.4);
+
+		return {
+			{
+				group_name = "FadedBg",
+				value = {
+					-- fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
+					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
+				},
+			}
+		};
+
+		---|fE
+	end,
+
 	qf = function ()
 		---|fS "style: Quickfix diagnostic groups."
 

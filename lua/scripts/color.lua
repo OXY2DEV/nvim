@@ -1,14 +1,20 @@
 ---@class color.config Configuration for `color.lua`.
 ---
 ---@field debounce integer Debounce delay.
+---@field color_style color.config.style Changes how colors are highlighted.
 ---@field patterns table<string, color.config.pattern> Color patterns.
+
+
+---@alias color.config.style
+---| "simple"
+---| "virt_text"
 
 
 ---@class color.config.pattern
 ---
 ---@field pattern string Pattern used to detect 
----@field hl? fun(buffer: integer, str: string, lnum: integer, index: integer): color.hl Turns `pattern` into a `highlight group`.
----@field render? fun(buffer: integer, hl: string, lnum: integer, start: integer, stop: integer): nil Renders a `highlight group`.
+---@field hl? fun(buffer: integer, str: string, style: color.config.style, lnum: integer, index: integer): color.hl Turns `pattern` into a `highlight group`.
+---@field render? fun(buffer: integer, hl: string, style: color.config.style, lnum: integer, start: integer, stop: integer): nil Renders a `highlight group`.
 
 
 ---@class color.hl
@@ -21,52 +27,76 @@
 --[[ Color highlighter for `Neovim`. ]]
 local color = {};
 
-color.ns = vim.api.nvim_create_namespace("color.hover");
-
----@type color.config
-color.config = {
-	debounce = 100,
-
-	patterns = {
-		hex = {
-			pattern = "#[0-9a-fA-F]\\{3,6}"
-		},
-		rgb = {
-			pattern = "rgb(\\d\\{1,3},\\s*\\d\\{1,3},\\s*\\d\\{1,3})",
-			hl = function (buffer, str, lnum, index)
-				local faded_bg = vim.api.nvim_get_hl(0, { name = "FadedBg" }).bg;
-
-				local __R, __G, __B = string.match(str, "rgb%((%d+),%s*(%d+),%s*(%d+)%)");
-				local R = math.max(math.min(255, tonumber(__R)), 0);
-				local G = math.max(math.min(255, tonumber(__G)), 0);
-				local B = math.max(math.min(255, tonumber(__B)), 0);
-
-				return {
-					name = string.format("HL%d%d%d", buffer, lnum, index),
-					value = {
-						fg = string.format("#%02x%02x%02x", R, G, B),
-						bg = faded_bg
-					}
-				};
-			end
-		},
-	}
-};
-
 ---@param buffer integer
----@param str string
 ---@param lnum integer
 ---@param index integer
----@return table
-local function default_hl (buffer, str, lnum, index)
+---@param R integer
+---@param G number
+---@param B number
+---@return color.hl
+local function apply_hl_style (buffer, lnum, index, R, G, B)
 	---|fS
 
-	local faded_bg = vim.api.nvim_get_hl(0, { name = "FadedBg" }).bg;
+	local fg;
+
+	if package.loaded["scripts.highlights"] then
+		local hl = require("scripts.highlights");
+		local tmp = {
+			hl.visible_fg(
+				hl.rgb_to_oklab(
+					R, G, B
+				)
+			)
+		};
+
+		fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(tmp[1], tmp[2], tmp[3]));
+	else
+		local normal = vim.api.nvim_get_hl(0, { name = "Normal" });
+		local brightness = ( (R * 299) + (G * 587) + (B * 114) ) / 1000;
+
+		if brightness > 128 then
+			fg = normal.bg or "#1E1E2E";
+		else
+			fg = normal.fg or "#CDD6F4";
+		end
+	end
 
 	return {
 		name = string.format("HL%d%d%d", buffer, lnum, index),
-		value = { fg = str, bg = faded_bg }
+		value = {
+			bg = string.format("#%02x%02x%02x", R, G, B),
+			fg = fg
+		}
 	};
+
+	---|fE
+end
+
+---@param buffer integer
+---@param str string
+---@param style color.config.style
+---@param lnum integer
+---@param index integer
+---@return color.hl
+local function default_hl (buffer, str, style, lnum, index)
+	---|fS
+
+	if style == "virt_text" then
+		local faded_bg = vim.api.nvim_get_hl(0, { name = "FadedBg" }).bg;
+
+		return {
+			name = string.format("HL%d%d%d", buffer, lnum, index),
+			value = { fg = str, bg = faded_bg }
+		};
+	else
+		local __R, __G, __B = string.match(str, "#(%x%x?)(%x%x?)(%x%x?)");
+
+		local R = math.max(math.min(255, tonumber(__R, 16)), 0);
+		local G = math.max(math.min(255, tonumber(__G, 16)), 0);
+		local B = math.max(math.min(255, tonumber(__B, 16)), 0);
+
+		return apply_hl_style(buffer, lnum, index, R, G, B);
+	end
 
 	---|fE
 end
@@ -74,32 +104,80 @@ end
 --[[ Default renderer for colors. ]]
 ---@param buffer integer
 ---@param hl string
+---@param style color.config.style
 ---@param lnum integer
 ---@param start integer
 ---@param stop integer
-local function default_render (buffer, hl, lnum, start, stop)
+local function default_render (buffer, hl, style, lnum, start, stop)
 	---|fS
 
-	vim.api.nvim_buf_set_extmark(buffer, color.ns, lnum, start, {
-		end_col = stop,
+	if style == "virt_text" then
+		vim.api.nvim_buf_set_extmark(buffer, color.ns, lnum, start, {
+			end_col = stop,
 
-		virt_text_pos = "inline",
-		virt_text = {
-			{ " ", "FadedBg" },
-			{ " ", hl },
-		},
+			virt_text_pos = "inline",
+			virt_text = {
+				{ " ", "FadedBg" },
+				{ " ", hl },
+			},
 
-		hl_group = "FadedBg",
-	});
-	vim.api.nvim_buf_set_extmark(buffer, color.ns, lnum, stop, {
-		virt_text_pos = "inline",
-		virt_text = {
-			{ " ", "FadedBg" },
-		},
-	});
+			hl_group = "FadedBg",
+		});
+		vim.api.nvim_buf_set_extmark(buffer, color.ns, lnum, stop, {
+			virt_text_pos = "inline",
+			virt_text = {
+				{ " ", "FadedBg" },
+			},
+		});
+	elseif style == "simple" then
+		vim.api.nvim_buf_set_extmark(buffer, color.ns, lnum, start, {
+			end_col = stop,
+			hl_group = hl,
+		});
+	end
 
 	---|fE
 end
+
+
+------------------------------------------------------------------------------
+
+color.ns = vim.api.nvim_create_namespace("color.hover");
+
+---@type color.config
+color.config = {
+	debounce = 100,
+	color_style = "simple",
+
+	patterns = {
+		hex = {
+			pattern = "#[0-9a-fA-F]\\{3,6}"
+		},
+		rgb = {
+			pattern = "rgb(\\d\\{1,3},\\s*\\d\\{1,3},\\s*\\d\\{1,3})",
+			hl = function (buffer, str, style, lnum, index)
+				local faded_bg = vim.api.nvim_get_hl(0, { name = "FadedBg" }).bg;
+
+				local __R, __G, __B = string.match(str, "rgb%((%d+),%s*(%d+),%s*(%d+)%)");
+				local R = math.max(math.min(255, tonumber(__R)), 0);
+				local G = math.max(math.min(255, tonumber(__G)), 0);
+				local B = math.max(math.min(255, tonumber(__B)), 0);
+
+				if style == "simple" then
+					return apply_hl_style(buffer, lnum, index, R, G, B);
+				else
+					return {
+						name = string.format("HL%d%d%d", buffer, lnum, index),
+						value = {
+							fg = string.format("#%02x%02x%02x", R, G, B),
+							bg = faded_bg
+						}
+					};
+				end
+			end
+		},
+	}
+};
 
 --[[ Colors the current line of `win`. ]]
 ---@param win integer
@@ -118,6 +196,27 @@ color.color = function (win)
 	---@type integer How many `patterns` have we matched yet?
 	local matched = 0;
 
+	---@param val any
+	---@return any
+	local function eval (val)
+		---|fS
+
+		if type(val) ~= "function" then
+			return val;
+		end
+
+		local can_eval, evaled = pcall(val);
+
+		if can_eval and evaled then
+			return evaled;
+		end
+
+		---|fE
+	end
+
+	---@type color.config.style
+	local style = eval(color.config.color_style) or "simple";
+
 	--[[ Colorizes current line with `pattern_config`. ]]
 	---@param pattern_config color.config.pattern
 	---@param start integer
@@ -130,9 +229,9 @@ color.color = function (win)
 		local hl;
 
 		if pattern_config.hl then
-			hl = pattern_config.hl(buffer, _color, cursor[1] - 1, matched);
+			hl = pattern_config.hl(buffer, _color, style, cursor[1] - 1, matched);
 		else
-			hl = default_hl(buffer, _color, cursor[1] - 1, matched)
+			hl = default_hl(buffer, _color, style, cursor[1] - 1, matched)
 		end
 
 		vim.api.nvim_set_hl(
@@ -144,7 +243,7 @@ color.color = function (win)
 		if pattern_config.render then
 			pcall(pattern_config.render, buffer, hl.name, cursor[1] - 1, start, stop)
 		else
-			default_render(buffer, hl.name, cursor[1] - 1, start, stop);
+			default_render(buffer, hl.name, style, cursor[1] - 1, start, stop);
 		end
 
 		---|fE

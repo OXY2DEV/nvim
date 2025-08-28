@@ -30,7 +30,14 @@
 
 ------------------------------------------------------------------------------
 
---[[ Color highlighter for `Neovim`. ]]
+--[[
+Color highlighter for `Neovim` focusing on *performance* & *customizability*.
+
+Usage,
+```lua
+require("color").setup();
+```
+]]
 local color = {};
 
 ---@param r integer

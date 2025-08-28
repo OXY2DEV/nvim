@@ -62,6 +62,8 @@
 
 ---|fE
 
+-----------------------------------------------------------------------------
+
 ---|fS "code: Utilities"
 
 ---@param str string
@@ -87,12 +89,16 @@ end
 
 -----------------------------------------------------------------------------
 
---- Beacon for `Neovim`. Usage,
----
---- ```lua
---- local beacon = require("beacon").new();
---- beacon:start();
---- ```
+--[[
+Beacon implementation for `Neovim`. Based on the **Emacs** package with the same name.
+
+Usage,
+
+```lua
+local beacon = require("beacon").new();
+beacon:start();
+```
+]]
 local M = {};
 
 --- Default configuration table.

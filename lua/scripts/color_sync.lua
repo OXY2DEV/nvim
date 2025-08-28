@@ -1,5 +1,11 @@
---- Syncs terminals colors with the
---- colorscheme's color.
+--[[
+Syncs terminal default `background` & `foreground` color with the current colorscheme.
+
+Usage,
+```lua
+require("color_sync");
+```
+]]
 _G.terminal_color_sync = function ()
 	---|fS
 

@@ -5,19 +5,22 @@
 
 ------------------------------------------------------------------------------
 
--- Allows running callbacks when triggering motions.
--- Usage,
---
--- ```lua
--- require("motions").add_event_listener({
---     gg = function ()
---         vim.print("hello world!");
---     end
--- });
--- ```
+--[[
+Allows running `callbacks` when triggering `motions`.
+
+Usage,
+
+```lua
+require("motions").add_event_listener({
+	gg = function ()
+		vim.print("hello world!");
+	end
+});
+```
+]]
 local motions = {};
 
----@type string Mode shorthand.
+---@type string Current mode shorthand.
 motions.mode = "n";
 
 vim.api.nvim_create_autocmd("ModeChanged", {

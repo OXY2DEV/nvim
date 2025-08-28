@@ -1,6 +1,9 @@
+---|fS "doc: Type definitions"
+
 ---@class color.config Configuration for `color.lua`.
 ---
 ---@field debounce integer Debounce delay.
+---@field max_lines integer
 ---@field color_style color.config.style Changes how colors are highlighted.
 ---@field patterns table<string, color.config.pattern> Color patterns.
 
@@ -13,6 +16,7 @@
 ---@class color.config.pattern
 ---
 ---@field pattern string Pattern used to detect 
+---@field color_style? color.config.style Changes how colors are highlighted.
 ---@field hl? fun(buffer: integer, str: string, style: color.config.style, lnum: integer, index: integer): color.hl Turns `pattern` into a `highlight group`.
 ---@field render? fun(buffer: integer, hl: string, style: color.config.style, lnum: integer, start: integer, stop: integer): nil Renders a `highlight group`.
 
@@ -22,29 +26,29 @@
 ---@field name string Name of the highlight group.
 ---@field value table Value to be passed to `nvim_set_hl()`.
 
+---|fE
+
 ------------------------------------------------------------------------------
 
 --[[ Color highlighter for `Neovim`. ]]
 local color = {};
 
----@param buffer integer
----@param lnum integer
----@param index integer
----@param R integer
----@param G number
----@param B number
----@return color.hl
-local function apply_hl_style (buffer, lnum, index, R, G, B)
+---@param r integer
+---@param g integer
+---@param b integer
+---@return string|integer
+local function get_fg (r, g, b)
 	---|fS
 
 	local fg;
 
 	if package.loaded["scripts.highlights"] then
 		local hl = require("scripts.highlights");
+		---@type { [1]: integer, [2]: integer, [3]: integer } Foreground color in `OKLab`.
 		local tmp = {
 			hl.visible_fg(
 				hl.rgb_to_oklab(
-					R, G, B
+					r, g, b
 				)
 			)
 		};
@@ -52,7 +56,7 @@ local function apply_hl_style (buffer, lnum, index, R, G, B)
 		fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(tmp[1], tmp[2], tmp[3]));
 	else
 		local normal = vim.api.nvim_get_hl(0, { name = "Normal" });
-		local brightness = ( (R * 299) + (G * 587) + (B * 114) ) / 1000;
+		local brightness = ( (r * 299) + (g * 587) + (b * 114) ) / 1000;
 
 		if brightness > 128 then
 			fg = normal.bg or "#1E1E2E";
@@ -61,13 +65,7 @@ local function apply_hl_style (buffer, lnum, index, R, G, B)
 		end
 	end
 
-	return {
-		name = string.format("HL%d%d%d", buffer, lnum, index),
-		value = {
-			bg = string.format("#%02x%02x%02x", R, G, B),
-			fg = fg
-		}
-	};
+	return fg;
 
 	---|fE
 end
@@ -95,7 +93,13 @@ local function default_hl (buffer, str, style, lnum, index)
 		local G = math.max(math.min(255, tonumber(__G, 16)), 0);
 		local B = math.max(math.min(255, tonumber(__B, 16)), 0);
 
-		return apply_hl_style(buffer, lnum, index, R, G, B);
+		return {
+			name = string.format("HL%d%d%d", buffer, lnum, index),
+			value = {
+				bg = string.format("#%02x%02x%02x", R, G, B),
+				fg = get_fg(R, G, B)
+			}
+		};
 	end
 
 	---|fE
@@ -139,6 +143,16 @@ local function default_render (buffer, hl, style, lnum, start, stop)
 	---|fE
 end
 
+--[[ Evaluates `value` with provided `arguments`. ]]
+---@param value any
+---@param ... any
+---@return any
+local function evaluate (value, ...)
+	if type(value) ~= "function" then return value; end
+
+	local success, result = pcall(value, ...);
+	return success and result or nil;
+end
 
 ------------------------------------------------------------------------------
 
@@ -146,6 +160,7 @@ color.ns = vim.api.nvim_create_namespace("color.hover");
 
 ---@type color.config
 color.config = {
+	max_lines = 500,
 	debounce = 100,
 	color_style = "simple",
 
@@ -163,8 +178,15 @@ color.config = {
 				local G = math.max(math.min(255, tonumber(__G)), 0);
 				local B = math.max(math.min(255, tonumber(__B)), 0);
 
+
 				if style == "simple" then
-					return apply_hl_style(buffer, lnum, index, R, G, B);
+					return {
+						name = string.format("HL%d%d%d", buffer, lnum, index),
+						value = {
+							bg = string.format("#%02x%02x%02x", R, G, B),
+							fg = get_fg(R, G, B);
+						}
+					};
 				else
 					return {
 						name = string.format("HL%d%d%d", buffer, lnum, index),
@@ -179,105 +201,83 @@ color.config = {
 	}
 };
 
---[[ Colors the current line of `win`. ]]
----@param win integer
-color.color = function (win)
+------------------------------------------------------------------------------
+
+--[[ Colors `lnum` numbered line in `buffer`. ]]
+---@param buffer integer
+---@param lnum integer 0-indexed.
+color.color_line = function (buffer, lnum)
 	---|fS
 
-	local buffer = vim.api.nvim_win_get_buf(win);
-	local cursor = vim.api.nvim_win_get_cursor(win);
+	---@type string line text.
+	local text = vim.api.nvim_buf_get_lines(
+		buffer,
+		lnum,
+		lnum + 1,
+		false
+	)[1] or "";
 
-	local line = vim.api.nvim_buf_get_lines(buffer, cursor[1] - 1, cursor[1], false)[1] or "";
-
-	---@type string[]
+	---@type string[] Pattern names.
 	local pattern_keys = vim.tbl_keys(color.config.patterns);
 	table.sort(pattern_keys);
 
-	---@type integer How many `patterns` have we matched yet?
-	local matched = 0;
+	local ID = 0;
 
-	---@param val any
-	---@return any
-	local function eval (val)
-		---|fS
+	local function color_pattern_ranges (key)
+		---@type color.config.pattern
+		local pattern = color.config.patterns[key]
+		if not pattern then return {}; end
 
-		if type(val) ~= "function" then
-			return val;
+		local style = evaluate(pattern.color_style or color.config.color_style, buffer);
+		local hl = pattern.hl or default_hl;
+		local render = pattern.render or default_render;
+
+		local regex = vim.regex(pattern.pattern or "");
+		local current_column = 0;
+
+		while current_column < #text do
+			local col_start, col_end = regex:match_line(buffer, lnum, current_column);
+			if not col_start or not col_end then return; end
+
+			col_start = current_column + col_start;
+			col_end   = current_column + col_end;
+
+			local match = string.sub(text, col_start + 1, col_end);
+			local found_hl, group = pcall(
+				hl,
+
+				buffer,
+				match,
+				style,
+				lnum,
+				ID
+			);
+
+			if found_hl then
+				pcall(vim.api.nvim_set_hl, 0, group.name, group.value);
+				pcall(
+					render,
+
+					buffer,
+					group.name,
+					style,
+
+					lnum,
+					col_start,
+					col_end
+				);
+			end
+
+			current_column = col_end;
+			ID = ID + 1;
 		end
-
-		local can_eval, evaled = pcall(val);
-
-		if can_eval and evaled then
-			return evaled;
-		end
-
-		---|fE
-	end
-
-	---@type color.config.style
-	local style = eval(color.config.color_style) or "simple";
-
-	--[[ Colorizes current line with `pattern_config`. ]]
-	---@param pattern_config color.config.pattern
-	---@param start integer
-	---@param stop integer
-	local function colorize (pattern_config, start, stop)
-		---|fS
-
-		local _color = string.sub(line, start + 1, stop);
-		---@type color.hl
-		local hl;
-
-		if pattern_config.hl then
-			hl = pattern_config.hl(buffer, _color, style, cursor[1] - 1, matched);
-		else
-			hl = default_hl(buffer, _color, style, cursor[1] - 1, matched)
-		end
-
-		vim.api.nvim_set_hl(
-			0,
-			hl.name,
-			hl.value
-		);
-
-		if pattern_config.render then
-			pcall(pattern_config.render, buffer, hl.name, cursor[1] - 1, start, stop)
-		else
-			default_render(buffer, hl.name, style, cursor[1] - 1, start, stop);
-		end
-
-		---|fE
 	end
 
 	-- Clear the current line of `old decorations`.
-	vim.api.nvim_buf_clear_namespace(buffer, color.ns, cursor[1] - 1, cursor[1]);
+	vim.api.nvim_buf_clear_namespace(buffer, color.ns, lnum, lnum + 1);
 
 	for _, key in ipairs(pattern_keys) do
-		---@type color.config.pattern
-		local pattern = color.config.patterns[key];
-
-		local c = 0;
-		local iter = 1;
-
-		--[[ Regex pattern object. ]]
-		local regex = vim.regex(pattern.pattern);
-
-		while c < #line do
-			local start, stop = regex:match_line(buffer, cursor[1] - 1, c);
-			iter = iter + 1;
-
-			if not start or not stop then
-				break;
-			end
-
-			start = start + c;
-			stop = stop + c;
-
-			colorize(pattern, start, stop);
-
-			c = stop;
-			matched = matched + 1;
-		end
+		color_pattern_ranges(key);
 	end
 
 	---|fE
@@ -289,21 +289,36 @@ color.setup = function ()
 	---@diagnostic disable-next-line: undefined-field
 	local timer = vim.uv.new_timer();
 
-	vim.api.nvim_create_autocmd("ModeChanged", {
-		callback = function ()
-			local win = vim.api.nvim_get_current_win();
-			local buf = vim.api.nvim_win_get_buf(win);
+	local function callback (event)
+		local win = vim.api.nvim_get_current_win();
+		local buf = vim.api.nvim_win_get_buf(win);
 
+		local lines = vim.api.nvim_buf_line_count(buf);
+
+		if event == "ModeChanged" then
 			vim.api.nvim_buf_clear_namespace(buf, color.ns, 0, -1);
 
-			if vim.api.nvim_get_mode().mode == "n" then
-				color.color(win);
+			if vim.api.nvim_get_mode().mode ~= "n" then
+				return;
 			end
 		end
-	});
 
-	vim.api.nvim_create_autocmd("CursorMoved", {
-		callback = function ()
+		if lines < (color.config.max_lines or 100) then
+			for l = 0, lines, 1 do
+				color.color_line(buf, l);
+			end
+		else
+			local cursor = vim.api.nvim_win_get_cursor(win);
+			color.color_line(buf, cursor[1] - 1);
+		end
+	end
+
+	vim.api.nvim_create_autocmd({
+		"ModeChanged",
+		"CursorMoved",
+		"BufWinEnter",
+	}, {
+		callback = function (event)
 			timer:stop();
 
 			if vim.fn.reg_executing() ~= "" or vim.fn.reg_recording() ~= "" then
@@ -311,16 +326,9 @@ color.setup = function ()
 			end
 
 			timer:start(color.config.debounce or 100, 0, vim.schedule_wrap(function ()
-				local win = vim.api.nvim_get_current_win();
-				local buf = vim.api.nvim_win_get_buf(win);
-
-				vim.api.nvim_buf_clear_namespace(buf, color.ns, 0, -1);
-
-				if vim.api.nvim_get_mode().mode == "n" then
-					color.color(win);
-				end
+				callback(event.event)
 			end));
-		end,
+		end
 	});
 
 	---|fE

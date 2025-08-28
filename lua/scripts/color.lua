@@ -304,10 +304,10 @@ color.setup = function ()
 
 		if event == "ModeChanged" then
 			vim.api.nvim_buf_clear_namespace(buf, color.ns, 0, -1);
+		end
 
-			if vim.api.nvim_get_mode().mode ~= "n" then
-				return;
-			end
+		if vim.api.nvim_get_mode().mode ~= "n" then
+			return;
 		end
 
 		if lines < (color.config.max_lines or 100) then

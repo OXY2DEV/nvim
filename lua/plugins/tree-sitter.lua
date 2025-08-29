@@ -55,6 +55,14 @@ return {
 			filetype = "qf"
 		};
 
+		parser_configs.kitty = {
+			install_info = {
+				url = get_path("/parsers/tree-sitter-kitty", "https://github.com/OXY2DEV/tree-sitter-kitty.git"),
+				files = { "src/parser.c" }
+			},
+			filetype = "kitty"
+		};
+
 		local use_parsers = {
 			"vim",
 			"lua",

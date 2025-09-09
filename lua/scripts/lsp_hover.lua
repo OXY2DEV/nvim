@@ -337,7 +337,7 @@ hover.hover = function (window)
 				{ err.message, "Comment" }
 			}, true, {})
 			return;
-		elseif not result then
+		elseif not result or not result.contents then
 			vim.api.nvim_echo({
 				{ "  Lsp.hover ", "DiagnosticVirtualTextError" },
 				{ ": ", "@comment" },
@@ -360,26 +360,39 @@ hover.hover = function (window)
 
 		local contents = result.contents or {};
 		---@type string[]
-		local lines = vim.split(contents.value or "", "\n", { trimempty = true });
+		local lines
+
+		if type(contents) == "string" then
+			lines = vim.split(contents, "\n", { trimempty = true });
+			vim.bo[hover.buffer].ft = "markdown";
+		else
+			lines = vim.split(contents.value or "", "\n", { trimempty = true });
+			vim.bo[hover.buffer].ft = contents.kind or "markdown";
+		end
 
 		-- Set content
-		vim.bo[hover.buffer].ft = contents.kind or "markdown";
 		vim.bo[hover.buffer].tw = W;
-
 		vim.api.nvim_buf_set_lines(hover.buffer, 0, -1, false, lines);
 
 		-- Initially open a hidden window.
 		-- We will calculate the wrapped text height.
 		-- Then we make it visible again.
-		hover.window = vim.api.nvim_open_win(hover.buffer, false, {
-			relative = "cursor",
+		if not hover.window or vim.api.nvim_win_is_valid(hover.window) == false then
+			hover.window = vim.api.nvim_open_win(hover.buffer, false, {
+				relative = "cursor",
 
-			row = 1, col = 0,
-			width = W, height = H,
+				row = 1, col = 0,
+				width = W, height = H,
 
-			style = "minimal",
-			hide = true,
-		});
+				style = "minimal",
+				hide = true,
+			});
+		end
+
+		if hover.quad then
+			-- Reset any residual quadrant data.
+			hover.update_quad(hover.quad, false);
+		end
 
 		-- Set necessary options.
 		vim.wo[hover.window].wrap = true;

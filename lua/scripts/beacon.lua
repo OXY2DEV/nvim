@@ -278,7 +278,7 @@ function beacon:__list_render ()
 	if #virt_eol > 0 then
 		local col = vim.fn.strchars(line);
 
-		vim.api.nvim_buf_set_extmark(self.buffer, self.ns, Y, col, {
+		pcall(vim.api.nvim_buf_set_extmark, self.buffer, self.ns, Y, col, {
 			virt_text_pos = "inline",
 			virt_text = virt_eol,
 		})

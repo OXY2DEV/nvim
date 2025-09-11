@@ -28,28 +28,28 @@ return {
 
 		parser_configs.doctext = {
 			install_info = {
-				url = get_path("/parsers/tree-sitter-doctext", "https://github.com/OXY2DEV/tree-sitter-doctext.git"),
+				url = get_path("/parsers/tree-sitter-doctext", "https://github.com/OXY2DEV/tree-sitter-doctext"),
 				files = { "src/parser.c" }
 			}
 		};
 
 		parser_configs.lua_patterns = {
 			install_info = {
-				url = get_path("/parsers/tree-sitter-lua_patterns", "https://github.com/OXY2DEV/tree-sitter-lua_patterns.git"),
+				url = get_path("/parsers/tree-sitter-lua_patterns", "https://github.com/OXY2DEV/tree-sitter-lua_patterns"),
 				files = { "src/parser.c" }
 			}
 		};
 
 		parser_configs.vhs = {
 			install_info = {
-				url = get_path("/parsers/tree-sitter-vhs", "https://github.com/OXY2DEV/tree-sitter-vhs.git"),
+				url = get_path("/parsers/tree-sitter-vhs", "https://github.com/OXY2DEV/tree-sitter-vhs"),
 				files = { "src/parser.c" }
 			}
 		};
 
 		parser_configs.qf = {
 			install_info = {
-				url = get_path("/parsers/tree-sitter-qf", "https://github.com/OXY2DEV/tree-sitter-qf.git"),
+				url = get_path("/parsers/tree-sitter-qf", "https://github.com/OXY2DEV/tree-sitter-qf"),
 				files = { "src/parser.c" }
 			},
 			filetype = "qf"
@@ -57,7 +57,7 @@ return {
 
 		parser_configs.kitty = {
 			install_info = {
-				url = get_path("/parsers/tree-sitter-kitty", "https://github.com/OXY2DEV/tree-sitter-kitty.git"),
+				url = get_path("/parsers/tree-sitter-kitty", "https://github.com/OXY2DEV/tree-sitter-kitty"),
 				files = { "src/parser.c" }
 			},
 			filetype = "kitty"

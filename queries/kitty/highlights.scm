@@ -1,3 +1,7 @@
+; Extra Nodes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(line_continuation) @comment
+
 ; Primitive data types ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 [
@@ -701,11 +705,14 @@
     "bold_italic_font"
   ] @keyword)
 
-(font_option
-  [
-    "auto"
-    "monospace"
-  ] @constant)
+(font_value
+  (string) @string.special)
+
+(font_value
+  .
+  (string) @constant
+  (#eq? @constant "auto")
+  .)
 
 (font_property
   name: (string) @variable.parameter
@@ -1039,6 +1046,15 @@
 
 (kitty_mod
   "kitty_mod" @keyword)
+
+(initial_window_size
+  [
+    "initial_window_width"
+    "initial_window_height"
+  ] @keyword)
+
+(initial_window_size
+  "c" @type)
 
 (action_alias
   [

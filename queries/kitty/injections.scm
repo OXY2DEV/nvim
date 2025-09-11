@@ -4,7 +4,7 @@
 
 (launch_next_to
   pattern: (string) @injection.content
-  (#set! injection.filetype "regex"))
+  (#set! injection.language "regex"))
 
 (marker_entry
   pattern: (string) @injection.content

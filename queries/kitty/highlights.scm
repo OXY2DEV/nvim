@@ -56,8 +56,8 @@
  ] @constant.builtin
 
 [
- (with)
- (together)
+ "+"
+ ">"
 ] @punctuation.delimiter
 
 (special) @variable.builtin

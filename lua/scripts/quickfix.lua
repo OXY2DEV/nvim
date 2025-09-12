@@ -637,6 +637,7 @@ quickfix.setup = function ()
 	vim.api.nvim_create_autocmd({
 		"CursorMoved",
 		"ModeChanged",
+		"WinResized"
 	}, {
 		callback = function ()
 			---|fS

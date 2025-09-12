@@ -3,7 +3,7 @@ _G.BASE_RUNTIME = vim.tbl_filter(function (item)
 	return string.match(item, "runtime$") ~= nil;
 end, vim.api.nvim_get_runtime_file("", true));
 
---- Checks if Neovim is within Termux.
+--[[ Checks if `Neovim` is within **Termux**. ]]
 ---@return boolean
 _G.is_within_termux = function ()
 	---|fS
@@ -115,7 +115,6 @@ end
 -- Load the options **first**;
 require("editor.options");
 require("editor.keymaps");
-require("editor.ts_directives");
 
 -- `LSP hover`, `Diagnostics`, `Quickfix`, `Beacon` etc. should be loaded first.
 require("scripts.lsp_hover").setup();
@@ -126,7 +125,7 @@ require("scripts.beacon").setup();
 -- Now, we load the **plugins**.
 require("editor.lazy");
 
---- Load scripts that rely on plugins.
+-- Load scripts that rely on `plugin`s.
 require("scripts.highlights").setup();
 require("scripts.color_sync");
 require("scripts.tree").setup();
@@ -135,7 +134,6 @@ require("scripts.ts_regen").setup();
 require("scripts.color").setup();
 
 ------------------------------------------------------------------------------
-
 
 -- Autocmd for the custom *dynamic highlight group modifier*.
 vim.api.nvim_create_autocmd({

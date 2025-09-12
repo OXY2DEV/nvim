@@ -296,15 +296,13 @@ color.setup = function ()
 	---@diagnostic disable-next-line: undefined-field
 	local timer = vim.uv.new_timer();
 
-	local function callback (event)
+	local function callback ()
 		local win = vim.api.nvim_get_current_win();
 		local buf = vim.api.nvim_win_get_buf(win);
 
 		local lines = vim.api.nvim_buf_line_count(buf);
 
-		if event == "ModeChanged" then
-			vim.api.nvim_buf_clear_namespace(buf, color.ns, 0, -1);
-		end
+		vim.api.nvim_buf_clear_namespace(buf, color.ns, 0, -1);
 
 		if vim.api.nvim_get_mode().mode ~= "n" then
 			return;

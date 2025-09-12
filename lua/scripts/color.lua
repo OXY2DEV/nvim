@@ -185,31 +185,15 @@ color.config = {
 		rgb = {
 			pattern = "rgb(\\d\\{1,3},\\s*\\d\\{1,3},\\s*\\d\\{1,3})",
 			hl = function (buffer, str, style, lnum, index)
-				local faded_bg = vim.api.nvim_get_hl(0, { name = "FadedBg" }).bg;
-
 				local __R, __G, __B = string.match(str, "rgb%((%d+),%s*(%d+),%s*(%d+)%)");
+
 				local R = math.max(math.min(255, tonumber(__R)), 0);
 				local G = math.max(math.min(255, tonumber(__G)), 0);
 				local B = math.max(math.min(255, tonumber(__B)), 0);
 
+				local hex = string.format("#%02x%02x%02x", R, G, B);
 
-				if style == "simple" then
-					return {
-						name = string.format("HL%d%d%d", buffer, lnum, index),
-						value = {
-							bg = string.format("#%02x%02x%02x", R, G, B),
-							fg = get_fg(R, G, B);
-						}
-					};
-				else
-					return {
-						name = string.format("HL%d%d%d", buffer, lnum, index),
-						value = {
-							fg = string.format("#%02x%02x%02x", R, G, B),
-							bg = faded_bg
-						}
-					};
-				end
+				return default_hl(buffer, hex, style, lnum, index);
 			end
 		},
 	}

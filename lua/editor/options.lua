@@ -1,4 +1,4 @@
---- Option configuration for Neovim
+-- Option configuration for `Neovim`
 
 ---|fS "doc: Neovim options"
 
@@ -95,8 +95,9 @@ vim.o.wrap = false;
 
 --- Load a fallback colorscheme
 if vim.fn.has("nvim-0.9.5") == 0 then
-	--- On versions older then 0.9.5 load
-	--- habamax.
+	--[[
+		On versions older then 0.9.5 load `habamax`.
+	]]
 	vim.cmd.colorscheme("habamax");
 end
 
@@ -117,7 +118,7 @@ vim.diagnostic.config({
 ---|fS "feat: Completion types"
 vim.g.__completion_kinds = {
 	default = {
-		icon = "󰘎 ",
+		icon = " 󰘎 ",
 		hl = "CompletionDefault",
 
 		border_hl = "CompletionDefaultBg"

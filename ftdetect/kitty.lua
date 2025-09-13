@@ -9,8 +9,8 @@
 --[[ Gets `kitty`'s config directory. ]]
 ---@return string
 local function get_kitty_config_dir ()
-	if vim.env.KITTY_CONFIG_DIR then
-		return vim.env.KITTY_CONFIG_DIR;
+	if vim.env.KITTY_CONFIG_DIRECTORY then
+		return vim.env.KITTY_CONFIG_DIRECTORY;
 	elseif vim.env.XDG_CONFIG_HOME then
 		return vim.env.XDG_CONFIG_HOME;
 	elseif vim.env.XDG_CONFIG_DIRS then

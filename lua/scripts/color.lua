@@ -176,7 +176,7 @@ color.config = {
 			pattern = "#[0-9a-fA-F]\\{3,6}"
 		},
 		num = {
-			pattern = "\\d\\{6,8}",
+			pattern = "#\\@<!\\(\\d\\{6,8}\\)",
 			hl = function (buffer, str, style, lnum, index)
 				local hex = string.format("#%06x", tonumber(str));
 				return default_hl(buffer, hex, style, lnum, index);

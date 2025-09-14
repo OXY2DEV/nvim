@@ -26,7 +26,7 @@ vim.api.nvim_create_autocmd({
 	"BufRead",
 	"BufNewFile"
 }, {
-	pattern = "*.conf",
+	pattern = { "kitty.conf", "*/kitty/*.conf" },
 	callback = function (event)
 		local path = event.match;
 		local kitty_config_path = vim.pesc(

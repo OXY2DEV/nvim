@@ -37,9 +37,9 @@ motions.last = "";
 
 --- Parses key presses.
 ---@param map motions.map
----@param key string
 ---@param _ string
-motions.parse = function (map, key, _)
+---@param key string
+motions.parse = function (map, _, key)
 	---|fS
 
 	map = map or {};
@@ -200,9 +200,20 @@ motions.parse = function (map, key, _)
 			-- '{mark} or `{mark}
 			exec_callback(true, marker .. key, nil, quantifier);
 		else
+			motions.previous = "";
 		end
 	else
 		motions.previous = motions.previous .. key;
+
+		local keys = vim.tbl_keys(map);
+		table.sort(keys);
+
+		for _, _key in ipairs(keys) do
+			if string.match(motions.previous, vim.pesc(_key) .. "$") then
+				exec_callback(true, _key, nil, quantifier);
+				motions.previous = "";
+			end
+		end
 	end
 
 	---|fE

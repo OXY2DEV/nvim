@@ -27,20 +27,23 @@ local function hide_toc ()
 		return;
 	end
 
-	---|fS "fix: Fixes tree-sitter not updating on quickfix buffer"
+	-- `Quickfix` buffers update correctly since 0.11.4-1. See neovim/neovim#31105.
+	if vim.fn.has("nvim-0.11.4-1") == 0 then
+		---|fS "fix: Fixes tree-sitter not updating on quickfix buffer"
 
-	vim.bo[buffer].modifiable = true;
-	vim.bo[buffer].undolevels = -1; -- Prevent undoing.
+		vim.bo[buffer].modifiable = true;
+		vim.bo[buffer].undolevels = -1; -- Prevent undoing.
 
-	local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false);
-	vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines);
+		local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false);
+		vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines);
 
-	vim.bo[buffer].modifiable = false;
-	vim.bo[buffer].modified = false;
+		vim.bo[buffer].modifiable = false;
+		vim.bo[buffer].modified = false;
 
-	vim.bo[buffer].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" });
+		vim.bo[buffer].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" });
 
-	---|fE
+		---|fE
+	end
 
 	vim.wo.conceallevel = 3;
 	vim.wo.concealcursor = "nvc";

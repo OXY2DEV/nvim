@@ -314,7 +314,22 @@ return {
 					});
 				end
 
-				require("lspconfig")[client].setup(settings);
+				if vim.fn.has("nvim-0.11") == 1 then
+					-- Use the new `vim.lsp.*` stuff.
+					vim.lsp.config(client, settings);
+					vim.lsp.enable(client, true);
+				elseif pcall(require, "lspconfig") then
+					require("lspconfig")[client].setup(settings);
+				else
+					vim.api.nvim_echo({
+						{ "  plugins/lsp.lua ", "DiagnosticVirtualTextError" },
+						{ ": No ", "@comment" },
+						{ " vim.lsp ", "DiagnosticVirtualTextHint" },
+						{ " or ", "@comment" },
+						{ " lspconfig ", "DiagnosticVirtualTextHint" },
+						{ " module found!", "@comment" },
+					}, true, {});
+				end
 			end
 
 			---|fE

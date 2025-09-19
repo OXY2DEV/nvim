@@ -3,7 +3,7 @@ return {
 	build = ":TSUpdate",
 	priority = 200,
 
-	-- branch = "main",
+	branch = "main",
 
 	config = function ()
 		--- Gets the path(or URL) for the parser.

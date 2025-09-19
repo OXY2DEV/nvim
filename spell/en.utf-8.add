@@ -120,3 +120,7 @@ undercurl
 fg
 multiline
 progressbar
+showcmd
+showmode
+Spinn
+json

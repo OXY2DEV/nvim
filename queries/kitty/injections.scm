@@ -25,3 +25,12 @@
 (filter_element
   (string) @injection.content
   (#set! injection.language "regex"))
+
+(comment
+  (comment_content) @injection.content
+  (#set! injection.language "comment"))
+
+; Integration for `doctext`.
+; (comment
+;   (comment_content) @injection.content
+;   (#set! injection.language "comment"))

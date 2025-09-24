@@ -32,7 +32,7 @@ vim.o.helpheight = math.ceil((vim.o.lines - 1) * 0.25);
 
 -- Allow `listchars` to be shown.
 vim.o.list = true;
-vim.o.listchars = "eol:↩,tab:│ ,trail:╴";
+vim.o.listchars = "eol:↩,tab:│ ,trail:╴,multispace:│   ";
 
 -- Only allow using mouse/touch for `Normal` mode.
 vim.o.mouse = "n";

@@ -34,7 +34,7 @@ return {
 			if type(parsers.get_parser_configs) ~= "function" then
 				opts.install_info.path = vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. name;
 				opts.install_info.queries = "queries/";
-				opts.install_info.generate = true;
+				-- opts.install_info.generate = true;
 
 				update_stack[name] = opts;
 			else

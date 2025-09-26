@@ -14,6 +14,8 @@ return {
 		},
 
 		config = function ()
+			---|fS "feat: Cmp"
+
 			require("cmp").setup({
 				performance = {
 					debounce = 250,
@@ -53,6 +55,8 @@ return {
 					documentation = require("cmp").config.window.bordered()
 				},
 			});
+
+			---|fE
 		end
 	},
 	{
@@ -63,6 +67,8 @@ return {
 		priority = 750,
 
 		opts = {
+			---|fS "feat: Blink"
+
 			enabled = function ()
 				-- ISSUE: Query files causes error if `blink.cmp` is used.
 				return not vim.list_contains({
@@ -172,7 +178,7 @@ return {
 						winhighlight = ""
 					},
 					draw = function (data)
-						---|fS
+						---|fS "feat: markview.nvim integration"
 
 						---@type integer
 						local buf = data.window.buf;
@@ -253,6 +259,8 @@ return {
 			sources = {
 				default = { "lsp", "path", "snippets", "omni", "buffer" },
 			},
+
+			---|fE
 		},
 	},
 	{

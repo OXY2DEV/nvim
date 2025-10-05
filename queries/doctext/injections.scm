@@ -1,3 +1,3 @@
 (code_block
-  (language) @injection.language
-  (content) @injection.content)
+  language: (string) @injection.language
+  content: (code_block_content) @injection.content)

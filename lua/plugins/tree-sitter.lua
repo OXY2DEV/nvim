@@ -11,6 +11,8 @@ return {
 		---@param url string
 		---@return string
 		local function get_path(path, url)
+			---|fS
+
 			---@type table Path stat.
 			local stat = vim.uv.fs_stat(vim.fn.stdpath("config") .. path);
 			local parsers = require("nvim-treesitter.parsers");
@@ -22,60 +24,65 @@ return {
 			else
 				return url;
 			end
+
+			---|fE
 		end
 
 		---|fS "config: Parser info"
 
 		local update_stack = {};
 
-		local function new_parser (name, opts)
+		---@class parser_register_opts
+		---
+		---@field language string Language name.
+		---@field parser_name? string Custom name of parser `directory` or `repository`.
+
+		---@param opts parser_register_opts
+		local function register_parser (opts)
+			---|fS
+
 			local parsers = require("nvim-treesitter.parsers");
 
 			if type(parsers.get_parser_configs) ~= "function" then
-				opts.install_info.path = vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. name;
-				opts.install_info.queries = "queries/";
-				-- opts.install_info.generate = true;
+				local config = {
+					install_info = {
+						url = "https://github.com/OXY2DEV/tree-sitter-" .. (opts.parser_name or opts.language),
+						path = vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. (opts.parser_name or opts.language),
 
-				update_stack[name] = opts;
+						queries = "queries/"
+					},
+				};
+
+				update_stack[opts.language] = config;
 			else
-				require("nvim-treesitter.parsers").get_parser_configs()[name] = opts;
+				local config = {
+					install_info = {
+						url = get_path(
+							"https://github.com/OXY2DEV/" .. (opts.parser_name or opts.language),
+							vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. (opts.parser_name or opts.language)
+						),
+
+						queries = "queries/"
+					},
+					filetype = opts.language
+				};
+
+				require("nvim-treesitter.parsers").get_parser_configs()[opts.language] = config;
 			end
+
+			if opts.parser_name and opts.parser_name ~= opts.language then
+				vim.treesitter.language.register(opts.parser_name, opts.language);
+			end
+
+			---|fE
 		end
 
-		new_parser("doctext", {
-			install_info = {
-				url = get_path("/parsers/tree-sitter-doctext", "https://github.com/OXY2DEV/tree-sitter-doctext"),
-				files = { "src/parser.c" }
-			}
-		});
-
-		new_parser("lua_patterns", {
-			install_info = {
-				url = get_path("/parsers/tree-sitter-lua_patterns", "https://github.com/OXY2DEV/tree-sitter-lua_patterns"),
-				files = { "src/parser.c" }
-			}
-		});
-
-		new_parser("vhs", {
-			install_info = {
-				url = get_path("/parsers/tree-sitter-vhs", "https://github.com/OXY2DEV/tree-sitter-vhs"),
-				files = { "src/parser.c" }
-			}
-		});
-
-		new_parser("qf", {
-			install_info = {
-				url = get_path("/parsers/tree-sitter-qf", "https://github.com/OXY2DEV/tree-sitter-qf"),
-				files = { "src/parser.c" }
-			},
-		});
-
-		new_parser("kitty", {
-			install_info = {
-				url = get_path("/parsers/tree-sitter-kitty", "https://github.com/OXY2DEV/tree-sitter-kitty"),
-				files = { "src/parser.c" }
-			},
-		});
+		register_parser({ language = "doctext" });
+		register_parser({ language = "comment", parser_name = "doctext" });
+		register_parser({ language = "lua_patterns" });
+		register_parser({ language = "vhs" });
+		register_parser({ language = "qf" });
+		register_parser({ language = "kitty" });
 
 		---@type string[]
 		local use_parsers = {

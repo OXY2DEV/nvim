@@ -362,9 +362,21 @@ hover.hover = function (window)
 		---@type string[]
 		local lines
 
+		--[[
+			NOTE: LSP hover contents can be any of the followings,
+
+			1. Literal string.
+			2. A table(`{ kind = ..., value = ... }`).
+			3. A list(`{ kind = ..., value = ... }[]`).
+		]]
 		if type(contents) == "string" then
 			lines = vim.split(contents, "\n", { trimempty = true });
 			vim.bo[hover.buffer].ft = "markdown";
+		elseif vim.islist(contents) then
+			contents = contents[1];
+
+			lines = vim.split(contents.value or "", "\n", { trimempty = true });
+			vim.bo[hover.buffer].ft = contents.kind or "markdown";
 		else
 			lines = vim.split(contents.value or "", "\n", { trimempty = true });
 			vim.bo[hover.buffer].ft = contents.kind or "markdown";

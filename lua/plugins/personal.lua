@@ -79,4 +79,14 @@ return {
 			vim.api.nvim_set_keymap("n", "O", "<CMD>Oops<CR>", {});
 		end
 	},
+
+	{
+		-- "OXY2DEV/markdoc.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/markdoc.nvim",
+		name = "markdoc",
+		priority = 100,
+		lazy = false,
+
+		opts = {}
+	},
 };

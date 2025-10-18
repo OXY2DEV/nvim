@@ -37,3 +37,6 @@
 [submodule "parsers/tree-sitter-kitty"]
 	path = parsers/tree-sitter-kitty
 	url = ../tree-sitter-kitty.git
+[submodule "lua/custom_plugins/markdoc.nvim"]
+	path = lua/custom_plugins/markdoc.nvim
+	url = ../markdoc.nvim.git

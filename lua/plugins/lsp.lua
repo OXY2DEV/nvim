@@ -294,14 +294,15 @@ return {
 					settings = {
 						Lua = {
 							runtime = {
-								version = 'LuaJIT', -- Neovim uses LuaJIT
+								version = "LuaJIT",
 							},
 							diagnostics = {
-								globals = {'vim'}, -- recognize `vim` global
+								globals = { "vim" },
 							},
 							workspace = {
-								library = _G.is_within_termux() and nil or _G.BASE_RUNTIME,
-								checkThirdParty = false, -- optional, to prevent prompts
+								library = { vim.env.VIMRUNTIME },
+								 -- optional, to prevent `prompts`
+								checkThirdParty = false,
 							},
 						}
 					},

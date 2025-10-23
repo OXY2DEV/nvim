@@ -86,7 +86,5 @@ return {
 		name = "markdoc",
 		priority = 100,
 		lazy = false,
-
-		opts = {}
 	},
 };

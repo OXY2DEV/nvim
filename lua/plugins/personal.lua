@@ -87,4 +87,13 @@ return {
 		priority = 100,
 		lazy = false,
 	},
+	{
+		-- "OXY2DEV/markdoc.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/mdtypes.nvim",
+		name = "mdtypes",
+		priority = 100,
+		lazy = false,
+
+		opts = {}
+	},
 };

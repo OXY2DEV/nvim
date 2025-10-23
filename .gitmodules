@@ -40,3 +40,6 @@
 [submodule "lua/custom_plugins/markdoc.nvim"]
 	path = lua/custom_plugins/markdoc.nvim
 	url = ../markdoc.nvim.git
+[submodule "lua/custom_plugins/mdtypes.nvim"]
+	path = lua/custom_plugins/mdtypes.nvim
+	url = ../mdtypes.nvim

@@ -25,7 +25,11 @@ return {
 				-- "OXY2DEV/icons.nvim",
 				dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons.nvim",
 			}
-		}
+		},
+		opts = {
+			-- Winbar should be disabled in Termux
+			winbar = _G.is_within_termux and not _G.is_within_termux()
+		},
 	},
 
 	{

@@ -122,9 +122,21 @@ M.config = {
 
 	default = {
 		from = function ()
-			---@type integer?
-			local fg = vim.api.nvim_get_hl(0, { name = "Function", create = false, link = false }).fg;
-			return fg or { 203, 166, 247 };
+			local colors = {
+				Function = vim.api.nvim_get_hl(0, { name = "Function", create = false, link = false }).fg,
+				Character = vim.api.nvim_get_hl(0, { name = "Character", create = false, link = false }).fg,
+				Constant = vim.api.nvim_get_hl(0, { name = "Constant", create = false, link = false }).fg,
+				Conditional = vim.api.nvim_get_hl(0, { name = "Conditional", create = false, link = false }).fg,
+				Define = vim.api.nvim_get_hl(0, { name = "Define", create = false, link = false }).fg,
+				Type = vim.api.nvim_get_hl(0, { name = "Type", create = false, link = false }).fg,
+				DiagnosticError = vim.api.nvim_get_hl(0, { name = "DiagnosticError", create = false, link = false }).fg,
+				DiagnosticOk = vim.api.nvim_get_hl(0, { name = "DiagnosticOk", create = false, link = false }).fg,
+			};
+
+			local keys = vim.tbl_keys(colors);
+			local K = math.random(1, #keys);
+
+			return colors[keys[K]] or { 203, 166, 247 };
 		end,
 		to = function ()
 			---@type integer?
@@ -146,8 +158,9 @@ beacon.__index = beacon;
 
 function beacon:__gradient ()
 	---@param val beacon.color
+	---@param ... any
 	---@return integer[]
-	local function eval (val)
+	local function eval (val, ...)
 		if type(val) == "string" then
 			---@cast val string
 
@@ -168,21 +181,26 @@ function beacon:__gradient ()
 		elseif pcall(val --[[ @as any ]]) then
 			---@cast val fun(): ( string | number | number[] )
 
-			local _, _val = pcall(val);
-			return type(_val) ~= "function" and eval(_val) or { 0, 0, 0 };
+			local _, _val = pcall(val, ...);
+			return type(_val) ~= "function" and eval(_val, ...) or { 0, 0, 0 };
 		end
 
 		return { 0, 0, 0 };
 	end
 
+	-- NOTE: Eval only when starting a new beacon.
+
+	local from = eval(self.from_color);
+	local to = eval(self.to_color);
+
 	---@param n number
 	---@param y number
 	---@return integer
 	local function lerp (n, y)
-		local from = eval(self.from_color)[n];
-		local to = eval(self.to_color)[n];
+		local _from = from[n];
+		local _to = to[n];
 
-		return math.floor(from + ((to - from) * y));
+		return math.floor(_from + ((_to - _from) * y));
 	end
 
 	local gradient = {};

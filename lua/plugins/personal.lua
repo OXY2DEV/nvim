@@ -97,7 +97,5 @@ return {
 		name = "mdtypes",
 		priority = 100,
 		lazy = false,
-
-		opts = {}
 	},
 };

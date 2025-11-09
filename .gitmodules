@@ -43,3 +43,6 @@
 [submodule "lua/custom_plugins/mdtypes.nvim"]
 	path = lua/custom_plugins/mdtypes.nvim
 	url = ../mdtypes.nvim.git
+[submodule "lua/custom_plugins/revert.nvim"]
+	path = lua/custom_plugins/revert.nvim
+	url = ../revert.nvim.git

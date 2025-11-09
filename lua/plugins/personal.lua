@@ -92,9 +92,16 @@ return {
 		lazy = false,
 	},
 	{
-		-- "OXY2DEV/markdoc.nvim",
+		-- "OXY2DEV/mdtypes.nvim",
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/mdtypes.nvim",
 		name = "mdtypes",
+		priority = 100,
+		lazy = false,
+	},
+	{
+		-- "OXY2DEV/revert.nvim",
+		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/revert.nvim",
+		name = "revert",
 		priority = 100,
 		lazy = false,
 	},

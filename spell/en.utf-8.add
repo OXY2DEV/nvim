@@ -151,3 +151,10 @@ typedef
 eval
 eval
 funcref
+gitsigns
+lnum
+nomodifiable
+bufname
+nav
+bufs
+guibg

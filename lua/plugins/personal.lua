@@ -24,6 +24,7 @@ return {
 			{
 				-- "OXY2DEV/icons.nvim",
 				dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/icons.nvim",
+				opts = {},
 			}
 		},
 		opts = {

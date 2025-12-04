@@ -1,1380 +1,364 @@
---- Dynamic highlight groups.
---- Maintainer: MD. Mouinul Hossain
-local hl = {};
+--[[
+*Dynamic* highlights for `config.nvim` to match the current `colorscheme`.
 
-local function clamp (val, min, max)
-	return math.max(math.min(val, max), min);
+Usage,
+
+```lua
+require("config.highlights").setup();
+```
+]]
+local highlights = {};
+
+--- Clamps a value between 0 & 255.
+---@param c integer
+---@return integer
+local function clamp (c)
+	return math.min(
+		math.max(
+			0,
+			math.floor(c)
+		),
+		255
+	);
 end
 
---- Gets attribute from highlight groups.
----@param attr string
----@param from string[]
----@return number | boolean | string | nil
-hl.get_attr = function (attr, from)
+--[[ Turns given color into **RGB** color value. ]]
+---@param input string | number
+---@return config.hl.rgb
+---@return boolean invalid_value Was the given value invalid?
+highlights.rgb = function (input)
 	---|fS
 
-	attr = attr or "bg";
-	from = from or { "Normal" };
+	local lookup = vim.api.nvim_get_color_map();
+	local hex;
 
-	for _, group in ipairs(from) do
-		---@type table
-		local _hl = vim.api.nvim_get_hl(0, {
-			name = group,
-			link = false, create = false
+	if type(input) == "string" and (lookup[input]) then
+		hex = string.format("#%06x", lookup[input]);
+	elseif type(input) == "number" then
+		hex = string.format("#%06x", input);
+	else
+		hex = type(input) == "string" and input or "#FFFFFF";
+	end
+
+	return {
+		r = tonumber(
+			string.sub(hex, 2, 3),
+			16
+		),
+		g = tonumber(
+			string.sub(hex, 4, 5),
+			16
+		),
+		b = tonumber(
+			string.sub(hex, 6, 7),
+			16
+		),
+	}, type(input) ~= "string" and type(input) ~= "number";
+
+	---|fE
+end
+
+--[[ Simple RGB color mixer. ]]
+---@param c1 config.hl.rgb | config.hl.Lab
+---@param c2 config.hl.rgb | config.hl.Lab
+---@param p1 number
+---@param p2 number
+---@return config.hl.rgb | config.hl.Lab
+highlights.mix = function (c1, c2, p1, p2)
+	---|fS
+
+	local out = {};
+
+	for k, v in pairs(c1) do
+		if c2[k] then
+			out[k] = (v * p1) + (c2[k] * p2);
+		else
+			out[k] = v;
+		end
+	end
+
+	return out;
+
+	---|fE
+end
+
+--[[ `RGB` to `hex color code` converter. ]]
+---@param color config.hl.rgb
+---@return string
+highlights.rgb_to_hex = function (color)
+	return string.format(
+		"#%02x%02x%02x",
+		clamp(color.r),
+		clamp(color.g),
+		clamp(color.b)
+	)
+end
+
+---|fS "chunk: sRGB <-> Oklab"
+
+--[[
+`sRGB` -> `Oklab` conversion.
+
+Source: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
+License: https://bottosson.github.io/misc/License.txt
+]]
+---@param c config.hl.rgb
+---@return config.hl.Lab
+highlights.srgb_to_oklab = function (c)
+    local l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;
+	local m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;
+	local s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;
+
+    local l_ = math.pow(l, 1 / 3);
+    local m_ = math.pow(m, 1 / 3);
+    local s_ = math.pow(s, 1 / 3);
+
+    return {
+        L = 0.2104542553 *l_ + 0.7936177850 *m_ - 0.0040720468 *s_,
+        a = 1.9779984951 *l_ - 2.4285922050 *m_ + 0.4505937099 *s_,
+        b = 0.0259040371 *l_ + 0.7827717662 *m_ - 0.8086757660 *s_,
+    };
+end
+
+
+--[[
+`Oklab` -> `sRGB` conversion.
+
+Source: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
+License: https://bottosson.github.io/misc/License.txt
+]]
+highlights.oklab_to_srgb = function (c)
+    local l_ = c.L + 0.3963377774 * c.a + 0.2158037573 * c.b;
+    local m_ = c.L - 0.1055613458 * c.a - 0.0638541728 * c.b;
+    local s_ = c.L - 0.0894841775 * c.a - 1.2914855480 * c.b;
+
+    local l = l_*l_*l_;
+    local m = m_*m_*m_;
+    local s = s_*s_*s_;
+
+    return {
+		r = clamp( 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+		g = clamp(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+		b = clamp(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s),
+    };
+end
+
+---|fE
+
+--- Wrapper function for `nvim_set_hl()`.
+---@param name string
+---@param value table
+highlights.set_hl = function (name, value)
+	---|fS
+
+	local found, v = pcall(vim.api.nvim_get_hl, 0, { name = name, create = false, link = false });
+	local is_empty = vim.deep_equal(v, vim.empty_dict());
+
+	if found and not is_empty then
+		-- ISSUE: Old highlight group values are stored as `vim.empty_dict()`. These should be overwritten.
+		-- BUG(no-regression): No way to remove any of config's highlight group entirely.
+		return;
+	end
+
+	-- NOTE: `default = true` will skip empty highlight groups.
+	value.default = not is_empty;
+	local success, err = pcall(vim.api.nvim_set_hl, 0, name, value);
+
+	if success == false and err then
+		require("config.health").print({
+			kind = "hl",
+
+			from = "highlights.lua",
+			fn = "set_hl() -> " .. tostring(name),
+
+			name = name,
+			value = value,
+			message = {
+				{ tostring(err), "DiagnosticError" }
+			}
 		});
+	end
 
-		if _hl[attr] then
-			return _hl[attr];
+	---|fE
+end
+
+--- Creates highlight groups from an array of tables
+---@param array table<string, config.hl>
+highlights.create = function (array)
+	---|fS
+
+	if type(array) == "string" then
+		if not highlights[array] then
+			return;
+		end
+
+		array = highlights[array];
+	end
+
+	local hls = vim.tbl_keys(array) or {};
+	table.sort(hls);
+
+	for _, hl in ipairs(hls) do
+		local _value = array[hl];
+		local value;
+
+		if type(_value) == "function" then
+			local s, v = pcall(_value);
+
+			if s then
+				value = v;
+			else
+				value = {};
+			end
+		else
+			value = _value;
+		end
+
+		if vim.islist(value) and #value > 0 then
+			---@cast value table[]
+			for _, entry in ipairs(value) do
+				highlights.set_hl(entry.group_name, entry.value);
+			end
+		elseif type(value) == "table" then
+			---@cast value table
+			highlights.set_hl(hl, value);
 		end
 	end
 
 	---|fE
 end
 
---- Chooses a color based on 'background'.
+--- Is the background "dark"?
+--- Returns values based on this condition(when provided).
+---@param on_light any
+---@param on_dark any
+---@return any
+local is_dark = function (on_light, on_dark)
+	return vim.o.background == "dark" and on_dark or on_light;
+end
+
+--[[ Gets `property` from a list of `highlight group`s. ]]
+---@param property string
+---@param groups string[]
 ---@param light any
 ---@param dark any
 ---@return any
-hl.choice = function (light, dark)
-	return vim.o.background == "dark" and dark or light;
-end
-
---- Linear-interpolation.
----@param a number
----@param b number
----@param x number
----@return number
-hl.lerp = function (a, b, x)
-	x = x or 0;
-	return a + ((b - a) * x);
-end
-
-hl.interpolate = function (f1, f2, f3, t1, t2, t3, y)
-	return hl.lerp(f1, t1, y), hl.lerp(f2, t2, y), hl.lerp(f3, t3, y);
-end
-
-------------------------------------------------------------------------------
-
---- Turns numeric color code to RGB
----@param num number
----@return integer
----@return integer
----@return integer
-hl.num_to_rgb = function(num)
+---@private
+highlights.get_property = function (property, groups, light, dark)
 	---|fS
 
-	local hex = string.format("%06x", num)
-	local r, g, b = string.match(hex, "^(%x%x)(%x%x)(%x%x)");
+	local val;
 
-	return tonumber(r, 16), tonumber(g, 16), tonumber(b, 16);
+	for _, item in ipairs(groups) do
+		local hl = vim.api.nvim_get_hl(0, { name = item, link = false, create = false });
+
+		if vim.fn.hlexists(item) == 1 and hl[property] then
+			val = hl[property];
+			break;
+		end
+	end
+
+	local fallback = is_dark(light, dark);
+
+	if property == "fg" or property == "bg" or property == "sp" then
+		local converted, as_fallback = highlights.rgb(val or fallback);
+		return as_fallback == false and converted or nil;
+	else
+		return val or fallback;
+	end
 
 	---|fE
 end
 
---- Gamma correction.
----@param c number
----@return number
-hl.gamma_to_linear = function (c)
-	return c >= 0.04045 and math.pow((c + 0.055) / 1.055, 2.4) or c / 12.92;
-end
-
---- Reverse gamma correction.
----@param c number
----@return number
-hl.linear_to_gamma = function (c)
-	return c >= 0.0031308 and 1.055 * math.pow(c, 1 / 2.4) - 0.055 or 12.92 * c;
-end
-
---- RGB to OKLab.
----@param r number
----@param g number
----@param b number
----@return number
----@return number
----@return number
-hl.rgb_to_oklab = function (r, g, b)
-	---|fS
-
-	local R, G, B = hl.gamma_to_linear(r / 255), hl.gamma_to_linear(g / 255), hl.gamma_to_linear(b / 255);
-
-	local L = math.pow(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B, 1 / 3);
-	local M = math.pow(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B, 1 / 3);
-	local S = math.pow(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B, 1 / 3);
-
-	return
-		L *  0.2119034982 + M *  0.7936177850 + S * -0.0040720468,
-		L *  1.9779984951 + M * -2.4285922050 + S *  0.4505937099,
-		L *  0.0259040371 + M *  0.7827717662 + S * -0.8086757660
-	;
-
-  ---|fE
-end
-
---- OKLab to RGB.
----@param l number
----@param a number
----@param b number
----@return number
----@return number
----@return number
-hl.oklab_to_rgb = function (l, a, b)
-	---|fS
-
-	local L = math.pow(l + a *  0.3963377774 + b *  0.2158037573, 3);
-	local M = math.pow(l + a * -0.1055613458 + b * -0.0638541728, 3);
-	local S = math.pow(l + a * -0.0894841775 + b * -1.2914855480, 3);
-
-	local R = L *  4.0767416621 + M * -3.3077115913 + S *  0.2309699292;
-	local G = L * -1.2684380046 + M *  2.6097574011 + S * -0.3413193965;
-	local B = L * -0.0041960863 + M * -0.7034186147 + S *  1.7076147010;
-
-	R = clamp(255 * hl.linear_to_gamma(R), 0, 255);
-	G = clamp(255 * hl.linear_to_gamma(G), 0, 255);
-	B = clamp(255 * hl.linear_to_gamma(B), 0, 255);
-
-  return R, G, B;
-
-  ---|fE
-end
-
 ------------------------------------------------------------------------------
 
---- Gets visible foreground color
---- from luminosity.
----@param lumen number
----@return number
----@return number
----@return number
-hl.visible_fg = function (lumen)
+--- Creates a highlight group options by inheriting options from `from`.
+---@param from string
+---@param with vim.api.keyset.highlight
+---@param properties? string[]
+---@return vim.api.keyset.highlight
+highlights.inherit = function (from, with, properties)
 	---|fS
 
-	local BL, BA, BB = hl.rgb_to_oklab(
-		hl.num_to_rgb(
-			hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-		)
-	);
+	local _from = vim.api.nvim_get_hl(0, { name = from, link = false, create = false }) or {};
+	local output = {};
 
-	local FL, FA, FB = hl.rgb_to_oklab(
-		hl.num_to_rgb(
-			hl.get_attr("fg", { "Normal" }) or hl.choice(5001065, 13489908)
-		)
-	);
-
-	if lumen < 0.5 then
-		if BL > FL then
-			return BL, BA, BB;
-		else
-			return FL, FA, FB;
+	if properties and vim.islist(properties) then
+		for _, property in ipairs(properties) do
+			output[property] = _from[property];
 		end
 	else
-		if BL < FL then
-			return BL, BA, BB;
-		else
-			return FL, FA, FB;
-		end
+		output = _from;
 	end
+
+	return vim.tbl_extend("force", output, with);
 
 	---|fE
 end
 
-local Y = 0.15;
-local D = 0.25;
+--- Creates highlight groups for code block icons.
+---@param n integer
+---@return vim.api.keyset.highlight
+highlights.icon_hl = function (n)
+	return highlights.inherit(
+		"MarkviewCode",
+		{
+			fg = vim.api.nvim_get_hl(0, {
+				name = string.format("MarkviewPalette%d", n),
+				link = false, create = false
+			}).fg
+		}
+	);
+end
 
----@type table<string, fun(): table[]>
-hl.groups = {
-	faded_bg = function ()
+
+---@type table<string, config.hl>
+highlights.groups = {
+	FadedBg = function ()
 		---|fS
 
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
+		local bg = highlights.srgb_to_oklab(
+			highlights.get_property("fg", { "Normal" }, "#EFF1F5", "#1E1E2E")
 		);
+		local alpha = vim.g.faded_alpha or (vim.o.background == "light" and 0.25 or 0.5);
 
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, 0.4);
+		---@type config.hl.Lab
+		local faded = {
+			L = bg.L * alpha,
+			a = bg.a,
+			b = bg.b
+		};
 
 		return {
-			{
-				group_name = "FadedBg",
-				value = {
-					-- fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			}
+			bg = highlights.rgb_to_hex(
+				highlights.oklab_to_srgb(faded)
+			)
 		};
 
 		---|fE
 	end,
 
-	qf = function ()
-		---|fS "style: Quickfix diagnostic groups."
-
-		local iR, iG, iB = hl.num_to_rgb(
-			hl.get_attr("bg", { "DiagnosticVirtualTextInfo" }) or hl.choice(14281459, 2633792)
-		);
-
-		local hR, hG, hB = hl.num_to_rgb(
-			hl.get_attr("bg", { "DiagnosticVirtualTextHint" }) or hl.choice(14346476, 2699582)
-		);
-
-		local wR, wG, wB = hl.num_to_rgb(
-			hl.get_attr("bg", { "DiagnosticVirtualTextWarn" }) or hl.choice(15591648, 3354938)
-		);
-
-		local eR, eG, eB = hl.num_to_rgb(
-			hl.get_attr("bg", { "DiagnosticVirtualTextError" }) or hl.choice(15523043, 3287098)
-		);
-
-		return {
-			{
-				group_name = "QuickfixRangeInfo",
-				value = { bg = string.format("#%02x%02x%02x", iR, iG, iB) }
-			},
-			{
-				group_name = "QuickfixRangeHint",
-				value = { bg = string.format("#%02x%02x%02x", hR, hG, hB) }
-			},
-			{
-				group_name = "QuickfixRangeWarn",
-				value = { bg = string.format("#%02x%02x%02x", wR, wG, wB) }
-			},
-			{
-				group_name = "QuickfixRangeError",
-				value = { bg = string.format("#%02x%02x%02x", eR, eG, eB) }
-			}
-		};
-
-		---|fE
-	end,
-
-	["@lsp.type"] = function ()
-		return {
-			{
-				group_name = "@lsp.type.comment.lua",
-				value = {}
-			}
-		};
-	end,
-
-	---|fS "style: Highlight groups for Diagnostic"
-
-	err = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticError", "Error" }) or hl.choice(13766457, 15961000)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
-
-		return {
-			{
-				group_name = "DgError",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
-				},
-			},
-			{
-				group_name = "DgErrorDisabled",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-			{
-				group_name = "DgErrorDisabledIcon",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	hnt = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticHint" }) or hl.choice(1544857, 9757397)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
-
-		return {
-			{
-				group_name = "DgHint",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
-				},
-			},
-			{
-				group_name = "DgHintDisabled",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-			{
-				group_name = "DgHintDisabledIcon",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	inf = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticInfo" }) or hl.choice(1544857, 9757397)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
-
-		return {
-			{
-				group_name = "DgInfo",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
-				},
-			},
-			{
-				group_name = "DgInfoDisabled",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-			{
-				group_name = "DgInfoDisabledIcon",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	wrn = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticWarn" }) or hl.choice(14650909, 16376495)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local SL, SA, SB = hl.interpolate(BL, BA, BB, FL, FA, FB, D);
-
-		return {
-			{
-				group_name = "DgWarn",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB))
-				},
-			},
-			{
-				group_name = "DgWarnDisabled",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(BL, BA, BB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-			{
-				group_name = "DgWarnDisabledIcon",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(FL, FA, FB)),
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(SL, SA, SB))
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	---|fE
-
-	---|fS "style: Highlight group for completions"
-
-	completion_default = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionDefault",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionDefaultBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_function = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@function" }) or hl.choice(992437, 9024762)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionFunction",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionFunctionBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_const = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@constant" }) or hl.choice(16671755, 16429959)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionConst",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionConstBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_interface = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@define" }) or hl.choice(15365835, 16106215)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionInterface",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionInterfaceBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_method = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@function" }) or hl.choice(992437, 9024762)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionMethod",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionMethodBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_constructor = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@constructor" }) or hl.choice(2138037, 7353356)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionConstructor",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionConstructorBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_field = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@field" }) or hl.choice(7505917, 11845374)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionField",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionFieldBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_variable = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@variable" }) or hl.choice(5001065, 13489908)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionVariable",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionVariableBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_class = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@function" }) or hl.choice(992437, 9024762)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionClass",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionClassBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_module = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@module" }) or hl.choice(7505917, 11845374)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionModule",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionModuleBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_property = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@property" }) or hl.choice(7505917, 11845374)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionProperty",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionPropertyBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_unit = function ()
+	Modified = function ()
 		---|fS
 
 		return {
 			{
-				group_name = "CompletionUnit",
-				value = {
-					link = "CompletionConst"
-				}
-			},
-			{
-				group_name = "CompletionUnitBg",
-				value = {
-					link = "CompletionConstBg"
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_value = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@constant" }) or hl.choice(16671755, 16429959)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionValue",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionValueBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_enum = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@keyword.type" }) or hl.choice(8927727, 13346551)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionEnum",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionEnumBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_keyword = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@keyword" }) or hl.choice(8927727, 13346551)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionKeyword",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionKeywordBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_snippet = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionSnippet",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionSnippetBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_color = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@string" }) or hl.choice(4235307, 10937249)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionColor",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionColorBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_file = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@keyword.import" }) or hl.choice(8927727, 13346551)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionFile",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionFileBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_reference = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@string.special.url" }) or hl.choice(14453368, 16113884)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionReference",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionReferenceBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_folder = function ()
-		---|fS
-
-		return {
-			{
-				group_name = "CompletionFolder",
-				value = {
-					link = "CompletionFile"
-				}
-			},
-			{
-				group_name = "CompletionFolderBg",
-				value = {
-					link = "CompletionFileBg"
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_struct = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@variable.member" }) or hl.choice(7505917, 11845374)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionStruct",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionStructBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_operator = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@keyword.operator" }) or hl.choice(304613, 9034987)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionOperator",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionOperatorBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	completion_type = function ()
-		---|fS
-
-		local bL, bA, bB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@type" }) or hl.choice(14650909, 16376495)
-			)
-		);
-
-		local fL, fA, fB = hl.visible_fg(bL);
-
-		return {
-			{
-				group_name = "CompletionType",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(fL, fA, fB)),
-				}
-			},
-			{
-				group_name = "CompletionTypeBg",
-				value = {
-					fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(bL, bA, bB)),
-				}
-			}
-		};
-
-		---|fE
-	end,
-
-	---|fE
-
-	---|fS "style: Highlight group for inspect-tree"
-
-	injection_0 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@comment" }) or hl.choice(8159123, 9673138)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection0",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
+				name = "@lsp.type.comment.lua",
+				value = {},
 			},
 		};
 
 		---|fE
 	end,
-
-	injection_1 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticError", "Error" }) or hl.choice(13766457, 15961000)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection1",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	injection_2 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@constant", "Constant" }) or hl.choice(16671755, 16429959)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection2",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	injection_3 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticWarn" }) or hl.choice(14650909, 16376495)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection3",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	injection_4 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "DiagnosticOk" }) or hl.choice(4235307, 10937249)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection4",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	injection_5 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@function", "Function" }) or hl.choice(1992437, 9024762)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection5",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	injection_6 = function ()
-		---|fS
-
-		---@type number, number, number Background color.
-		local BL, BA, BB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("bg", { "Normal" }) or hl.choice(15725045, 1973806)
-			)
-		);
-
-		---@type number, number, number Background color.
-		local FL, FA, FB = hl.rgb_to_oklab(
-			hl.num_to_rgb(
-				hl.get_attr("fg", { "@module", "@property" }) or hl.choice(7505917, 11845374)
-			)
-		);
-
-		return {
-			{
-				group_name = "Injection6",
-				value = {
-					bg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(
-							hl.interpolate(BL, BA, BB, FL, FA, FB, Y)
-						)
-					)
-				},
-			},
-		};
-
-		---|fE
-	end,
-
-	---|fE
 };
 
-hl.setup = function ()
-	for _, entry in pairs(hl.groups) do
-		---@type boolean, table[]?
-		local can_call, val = pcall(entry);
-
-		if can_call and val then
-			for _, _hl in ipairs(val) do
-				assert(
-					pcall(vim.api.nvim_set_hl, 0, _hl.group_name, _hl.value)
-				);
-			end
-		end
+---@param opt? table<string, config.hl>
+highlights.setup = function (opt)
+	if type(opt) == "table" then
+		highlights.groups = vim.tbl_extend("force", highlights.groups, opt);
 	end
+
+	highlights.create(highlights.groups);
 end
 
-return hl;
+return highlights;

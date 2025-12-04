@@ -245,9 +245,9 @@ vim.g.__completion_kinds = {
 	},
 	constant = {
 		icon = "  ",
-		hl = "CompletionConst",
+		hl = "CompletionConstant",
 
-		border_hl = "CompletionConstBg"
+		border_hl = "CompletionConstantBg"
 	},
 	struct = {
 		icon = " 󰐫 ",
@@ -257,9 +257,9 @@ vim.g.__completion_kinds = {
 	},
 	event = {
 		icon = " 󰔎 ",
-		hl = "CompletionConst",
+		hl = "CompletionConstant",
 
-		border_hl = "CompletionConstBg"
+		border_hl = "CompletionConstantBg"
 	},
 	operator = {
 		icon = " 󰙴 ",

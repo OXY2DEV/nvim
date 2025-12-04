@@ -165,18 +165,18 @@ highlights.set_hl = function (name, value)
 	local success, err = pcall(vim.api.nvim_set_hl, 0, name, value);
 
 	if success == false and err then
-		require("config.health").print({
-			kind = "hl",
-
-			from = "highlights.lua",
-			fn = "set_hl() -> " .. tostring(name),
-
-			name = name,
-			value = value,
-			message = {
-				{ tostring(err), "DiagnosticError" }
-			}
-		});
+		-- require("config.health").print({
+		-- 	kind = "hl",
+		--
+		-- 	from = "highlights.lua",
+		-- 	fn = "set_hl() -> " .. tostring(name),
+		--
+		-- 	name = name,
+		-- 	value = value,
+		-- 	message = {
+		-- 		{ tostring(err), "DiagnosticError" }
+		-- 	}
+		-- });
 	end
 
 	---|fE
@@ -350,6 +350,214 @@ highlights.groups = {
 
 		---|fE
 	end,
+
+	Diagnostic = function ()
+		---|fS
+
+		local bg = highlights.srgb_to_oklab(
+			highlights.get_property("bg", { "Normal" }, "#EFF1F5", "#1E1E2E")
+		);
+		local alpha = vim.g.diagnostic_alpha or 0.25;
+
+		local output = {};
+
+		--- Handles a specific diagnostic kind.
+		---@param kind "Default" | "Info" | "Hint" | "Warn" | "Error"
+		local function handle_kind (kind)
+			---|fS
+
+			local color_map = {
+				Default = { "#7C7F93", "#9399B2" },
+
+				Info = { "#179299", "#94E2D5" },
+				Hint = { "#179299", "#94E2D5" },
+				Warn = { "#DF8E1D", "#F9E2AF" },
+				Error = { "#D20F39", "#F38BA8" },
+			};
+			local this_color = color_map[kind] or color_map.Default;
+
+			local fg = highlights.srgb_to_oklab(
+				highlights.get_property("fg", {
+					kind == "Default" and "@comment" or string.format("Diagnostic%s", kind),
+				}, this_color[1], this_color[2])
+			);
+			local new_bg = highlights.mix(fg, bg, alpha, 1 - alpha);
+
+			table.insert(output, {
+				group_name = string.format("FancyDiagnostic%s", kind),
+				value = {
+					bg = highlights.rgb_to_hex(
+						highlights.oklab_to_srgb(new_bg)
+					),
+					fg = highlights.rgb_to_hex(
+						highlights.oklab_to_srgb(fg)
+					),
+				}
+			});
+			table.insert(output, {
+				group_name = string.format("FancyDiagnostic%sIcon", kind),
+				value = {
+					bg = highlights.rgb_to_hex(
+						highlights.oklab_to_srgb(fg)
+					),
+					fg = highlights.rgb_to_hex(
+						highlights.oklab_to_srgb(bg)
+					),
+				}
+			});
+
+			---|fE
+		end
+
+		handle_kind("Default");
+		handle_kind("Info");
+		handle_kind("Hint");
+		handle_kind("Warn");
+		handle_kind("Error");
+
+		return output;
+
+		---|fE
+	end,
+
+	InspectTree = function ()
+		---|fS
+
+		local bg = highlights.srgb_to_oklab(
+			highlights.get_property("bg", { "Normal" }, "#EFF1F5", "#1E1E2E")
+		);
+		local alpha = vim.g.diagnostic_alpha or 0.25;
+
+		local output = {};
+
+		local function handle_level (n)
+			---|fS
+
+			local color_map = {
+				[0] = { "#9CA0B0", "#6C7086" },
+
+				[1] = { "#D20F39", "#F38BA8" },
+				[2] = { "#FAB387", "#FE640B" },
+				[3] = { "#DF8E1D", "#F9E2AF" },
+				[4] = { "#40A02B", "#A6E3A1" },
+				[5] = { "#209FB5", "#74C7EC" },
+				[6] = { "#7287FD", "#B4BEFE" },
+			};
+			local this_color = color_map[n] or color_map[1];
+
+			local fg = highlights.srgb_to_oklab(
+				highlights.get_property("fg", {
+					n == 0 and "@comment" or string.format("@markup.heading.%d.markdown", n),
+				}, this_color[1], this_color[2])
+			);
+			local new_bg = highlights.mix(fg, bg, alpha, 1 - alpha);
+
+			table.insert(output, {
+				group_name = string.format("Injection%s", n),
+				value = {
+					bg = highlights.rgb_to_hex(
+						highlights.oklab_to_srgb(new_bg)
+					),
+				}
+			});
+
+			---|fE
+		end
+
+		handle_level(0);
+		handle_level(1);
+		handle_level(2);
+		handle_level(3);
+		handle_level(4);
+		handle_level(5);
+		handle_level(6);
+
+		return output;
+
+		---|fE
+	end,
+
+	Completion = function ()
+		---|fS
+
+		local bg = highlights.get_property("bg", { "Normal" }, "#EFF1F5", "#1E1E2E");
+		local output = {};
+
+		---@param kind string
+		---@param src string[]
+		---@param light any
+		---@param dark any
+		local function handle_kind (kind, src, light, dark)
+			---|fS
+
+			local fg = highlights.get_property("fg", src, light, dark);
+
+			table.insert(output, {
+				group_name = string.format("Completion%s", kind),
+				value = {
+					bg = highlights.rgb_to_hex(fg),
+					fg = highlights.rgb_to_hex(bg)
+				}
+			});
+			table.insert(output, {
+				group_name = string.format("Completion%sBg", kind),
+				value = {
+					fg = highlights.rgb_to_hex(fg),
+				}
+			});
+
+			---|fE
+		end
+
+		---@param from string
+		---@param to string
+		local function libk (from, to)
+			---|fS
+
+			table.insert(output, {
+				group_name = string.format("Completion%s", from),
+				value = {
+					link = string.format("Completion%s", to)
+				}
+			});
+			table.insert(output, {
+				group_name = string.format("Completion%sBg", from),
+				value = {
+					link = string.format("Completion%sBg", to)
+				}
+			});
+
+			---|fE
+		end
+
+		handle_kind("Class", { "@function" }, "#0F24B5", "#89B4FA");
+		handle_kind("Color", { "@string" }, "#40A02B", "#A6E3A1");
+		handle_kind("Constant", { "@constant" }, "#FE640B", "#FAB387");
+		handle_kind("Constructor", { "@constructor" }, "#209FB5", "#70340C");
+		handle_kind("Default", { "@comment" }, "#7C7F93", "#9399B2");
+		handle_kind("Enum", { "@keyword.type" }, "#8839EF", "#CBA6F7");
+		handle_kind("Field", { "@field" }, "#7287FD", "#B4BEFE");
+		handle_kind("File", { "@keyword.import" }, "#8839EF", "#CBA6F7");
+		handle_kind("Interface", { "@define" }, "#EA76CB", "#F5C2E7");
+		handle_kind("Keyword", { "@keyword" }, "#8839EF", "#CBA6F7");
+		handle_kind("Module", { "@module" }, "#7287FD", "#B4BEFE");
+		handle_kind("Operator", { "@keyword.operator" }, "#04A5E5", "#89DCEB");
+		handle_kind("Property", { "@property" }, "#7287FD", "#B4BEFE");
+		handle_kind("Reference", { "@string.special.url" }, "#DC8A78", "#F5E0DC");
+		handle_kind("Struct", { "@variable.member" }, "#7287FD", "#B4BEFE");
+		handle_kind("Type", { "@type" }, "#DF8E1D", "#F9E2AF");
+		handle_kind("Variable", { "@variable" }, "#4C4F69", "#CDD6F4");
+		libk("Folder", "File");
+		libk("Function", "Class");
+		libk("Method", "Class");
+		libk("Snippet", "Default");
+		libk("Unit", "Constant");
+		libk("Value", "Constant");
+
+		return output;
+
+		---|fE
+	end
 };
 
 ---@param opt? table<string, config.hl>

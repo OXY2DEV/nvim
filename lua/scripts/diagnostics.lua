@@ -110,6 +110,8 @@ diagnostics.config = {
 	end,
 
 	beacon = {
+		---|fS
+
 		default = {
 			from = function ()
 				local fg = vim.api.nvim_get_hl(0, { name = "@comment", link = false }).fg;
@@ -126,28 +128,30 @@ diagnostics.config = {
 
 		[vim.diagnostic.severity.INFO] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgInfoDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticInfoDisabledIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#94e2d5";
 			end
 		},
 		[vim.diagnostic.severity.HINT] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgHintDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticHintDisabledIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#94e2d5";
 			end
 		},
 		[vim.diagnostic.severity.WARN] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgWarnDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticWarnDisabledIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#f9e2af";
 			end
 		},
 		[vim.diagnostic.severity.ERROR] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "DgErrorDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticErrorDisabledIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#f38ba8";
 			end
 		},
+
+		---|fE
 	},
 
 	decorations = {

@@ -1,45 +1,41 @@
----|fS "doc: Type definitions"
+--[[
+*Fancy* diagnostics for `Neovim`.
 
---- Configuration for diagnostics.
----@class diagnostics.config
----
----@field map string Key to map.
----
----@field width integer | fun(items: table[]): integer Width for the diagnostics window.
----@field decoration_width integer Width of the decorations.
----
----@field max_height integer | fun(items: table[]): integer Maximum height for the diagnostics window.
----
----@field decorations table<integer, diagnostics.decorations> Decorations for each diagnostic severity.
+## Usage
 
+```lua
+require("diagnostics").setup();
+```
 
----@class diagnostics.decorations
----
----@field width integer Width of the decoration.
----
----@field line_hl_group? string | fun(item: table, current: boolean): string Highlight group for the line.
----
----@field icon diagnostics.decoration_fragment[] | fun(item: table, current: boolean): diagnostics.decoration_fragment[] Decoration for the start line.
----@field padding? diagnostics.decoration_fragment[] | fun(item: table, current: boolean): diagnostics.decoration_fragment[] Decoration for the other line(s).
+You can then hit `D` to show diagnostics for the current line.
 
+## Highlight groups
 
----@class diagnostics.decorations__static
----
----@field width integer Width of the decoration.
----
----@field line_hl_group? string Highlight group for the line.
----@field icon diagnostics.decoration_fragment[] Decoration for the start line.
----@field padding? diagnostics.decoration_fragment[] Decoration for the other line(s).
+This script uses highlight groups provided by [highlights.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/highlights.lua).
 
+The used groups are,
+- `FancyDiagnostic`, Default group for diagnostics.
+- `FancyDiagnosticIcon`, Default group for the icons of diagnostics.
+- `FancyDiagnosticInfo`, Group for `information` diagnostics.
+- `FancyDiagnosticInfoIcon`, Group for the icons of `information` diagnostics.
+- `FancyDiagnosticHint`, Group for `hint` diagnostics.
+- `FancyDiagnosticHintIcon`, Group for the icons of `hint` diagnostics.
+- `FancyDiagnosticWarn`, Group for `warning` diagnostics.
+- `FancyDiagnosticWarnIcon`, Group for the icons of `warning` diagnostics.
+- `FancyDiagnosticError`, Group for `error` diagnostics.
+- `FancyDiagnosticErrorIcon`, Group for the icons of `error` diagnostics.
 
----@class diagnostics.decoration_fragment Virtual text fragment.
----
----@field [1] string
----@field [2] string?
+## Dependencies
 
----|fE
+- [beacon.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/beacon.lua), For highlighting cursor.
+- [highlights.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/highlights.lua), For highlight groups.
+- [types/diagnostics.lua](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/types/diagnostics.lua), For type definition.
 
-------------------------------------------------------------------------------
+## Configuration
+
+Use `setup()` for setting configuration. See [types/diagnostics.lua#diagnostics.config](https://github.com/OXY2DEV/nvim/blob/main/lua/scripts/types/diagnostics.lua#L3-L19) for the type definition.
+]]
+local diagnostics = {};
 
 ---@param level string
 ---@param icon string
@@ -78,32 +74,28 @@ local function handle_diagnostic_level (level, icon)
 	---|fE
 end
 
---- Custom diagnostics viewer for Neovim.
-local diagnostics = {};
-
 ---@class diagnostics.config
 diagnostics.config = {
 	---|fS
 
-	map = "D",
+	keymap = "D",
 
+	decoration_width = 4,
 	width = function (items)
-		local max_w = math.floor(vim.o.columns * 0.4);
-		local W = 1
+		local max = math.floor(vim.o.columns * 0.4);
+		local use = 1
 
 		for _, item in ipairs(items) do
 			local width = vim.fn.strdisplaywidth(item.message or "");
 
-			if width >= max_w then
-				return max_w;
-			else
-				W = math.max(W, width);
-			end
+			use = math.min(
+				math.max(width, 0),
+				max
+			);
 		end
 
-		return W;
+		return use;
 	end,
-	decoration_width = 4,
 
 	max_height = function ()
 		return math.floor(vim.o.lines * 0.4);
@@ -128,25 +120,25 @@ diagnostics.config = {
 
 		[vim.diagnostic.severity.INFO] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticInfoDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticInfoIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#94e2d5";
 			end
 		},
 		[vim.diagnostic.severity.HINT] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticHintDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticHintIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#94e2d5";
 			end
 		},
 		[vim.diagnostic.severity.WARN] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticWarnDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticWarnIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#f9e2af";
 			end
 		},
 		[vim.diagnostic.severity.ERROR] = {
 			from = function ()
-				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticErrorDisabledIcon", link = false }).fg;
+				local fg = vim.api.nvim_get_hl(0, { name = "FancyDiagnosticErrorIcon", link = false }).fg;
 				return fg and string.format("#%06x", fg) or "#f38ba8";
 			end
 		},
@@ -229,7 +221,7 @@ local function get_beacon_config (level, ...)
 end
 
 --[[ Turns given **virtual text** into **format string** for the statusline. ]]
----@param virt_text [ string, string? ][] Virtual text.
+---@param virt_text diagnostics.decoration_fragment[] Virtual text.
 ---@return string sign Virtual text as a sign(use in `statuscolumn`, `statusline`, `tabline` or `winbar`)
 local function virt_text_to_sign (virt_text)
 	---|fS
@@ -257,13 +249,16 @@ diagnostics.ns = vim.api.nvim_create_namespace("fancy_diagnostics");
 ---@type integer, integer Diagnostics buffer & window.
 diagnostics.buffer, diagnostics.window = nil, nil;
 
----@type integer
-diagnostics.scratch_buffer = nil
-
----@type "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
+--[[ Which *quadrant* the diagnostics window is currently using? ]]
+---@type
+---| "top_left"
+---| "top_right"
+---| "bottom_left"
+---| "bottom_right"
+---| "center"
 diagnostics.quad = nil;
 
---- Information regarding signs.
+---@type diagnostics.signs.entry[]
 diagnostics.sign_data = {};
 
 --[[ Prepares the buffer for the diagnostics window. ]]
@@ -274,27 +269,23 @@ diagnostics.__prepare = function ()
 		diagnostics.buffer = vim.api.nvim_create_buf(false, true);
 	end
 
-	if not diagnostics.scratch_buffer or not vim.api.nvim_buf_is_valid(diagnostics.scratch_buffer) then
-		diagnostics.scratch_buffer = vim.api.nvim_create_buf(false, true);
-	end
-
 	---|fE
 end
 
---[[ Updates the state of the quadrants. ]]
----@param quad "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center"
+--[[ Updates the *quadrant* which is being used by the diagnostics window. ]]
+---@param quad
+---| "top_left"
+---| "top_right"
+---| "bottom_left"
+---| "bottom_right"
+---| "center"
 ---@param state boolean
 diagnostics.update_quad = function (quad, state)
 	---|fS
 
 	if not _G.__used_quads then
-		_G.__used_quads = {
-			top_left = false,
-			top_right = false,
-
-			bottom_left = false,
-			bottom_right = false
-		};
+		-- NIT: Should this set a default state value?
+		return;
 	end
 
 	_G.__used_quads[quad] = state;
@@ -306,7 +297,7 @@ end
 ---@param window integer Window ID.
 ---@param w integer Window width.
 ---@param h integer Window height.
----@return  string | string[] border Window border.
+---@return string | string[] border Window border.
 ---@return "editor" | "cursor" relative Relative position for floating window.
 ---@return "NE" | "NW" | "SE" | "SW" anchor Anchor position.
 ---@return integer row Window position in Y-axis.
@@ -419,9 +410,7 @@ diagnostics.__win_args = function (window, w, h)
 	for _, pref in ipairs(quad_pref) do
 		if _G.__used_quads and _G.__used_quads[pref] == true then
 			goto continue;
-		end
-
-		if not quads[pref] then
+		elseif not quads[pref] then
 			goto continue;
 		end
 
@@ -437,6 +426,7 @@ diagnostics.__win_args = function (window, w, h)
 	end
 
 	diagnostics.quad = "center";
+
 	local fallback = quads.center;
 	return fallback.border, fallback.cursor, fallback.anchor, fallback.row, fallback.col;
 
@@ -446,7 +436,7 @@ end
 ------------------------------------------------------------------------------
 
 --[[ Closes diagnostics window. ]]
-diagnostics.__close = function ()
+diagnostics.close = function ()
 	---|fS
 
 	if diagnostics.window and vim.api.nvim_win_is_valid(diagnostics.window) then
@@ -462,7 +452,7 @@ diagnostics.__close = function ()
 	---|fE
 end
 
----@type beacon.instance
+---@type beacon.instance Beacon instance to use for the Cursor.
 diagnostics.__beacon = nil;
 
 --[[ External integrations. ]]
@@ -501,7 +491,7 @@ end
 
 --- Custom statuscolumn.
 ---@return string
-_G.__diagnostics_statuscolumn = function ()
+_G.fancy_diagnostics_statuscolumn = function ()
 	---|fS
 
 	if vim.tbl_isempty(diagnostics.sign_data) then
@@ -543,7 +533,7 @@ diagnostics.hover = function (window)
 
 	if #items == 0 then
 		-- No diagnostics available.
-		diagnostics.__close();
+		diagnostics.close();
 		vim.api.nvim_echo({
 			{ " 󰾕 diagnostics.lua ", "DiagnosticVirtualTextWarn" },
 			{ ": ", "@comment" },
@@ -556,8 +546,7 @@ diagnostics.hover = function (window)
 	end
 
 	if diagnostics.quad then
-		-- If the old quadrant wasn't freed, we
-		-- free it here.
+		-- If the old window's quadrant wasn't freed, we free it here.
 		diagnostics.update_quad(diagnostics.quad, false)
 	end
 
@@ -685,7 +674,7 @@ diagnostics.hover = function (window)
 
 	-- Set necessary options.
 	vim.wo[diagnostics.window].signcolumn = "no";
-	vim.wo[diagnostics.window].statuscolumn = "%!v:lua.__diagnostics_statuscolumn()";
+	vim.wo[diagnostics.window].statuscolumn = "%!v:lua.fancy_diagnostics_statuscolumn()";
 
 	vim.wo[diagnostics.window].conceallevel = 3;
 	vim.wo[diagnostics.window].concealcursor = "ncv";
@@ -713,7 +702,7 @@ diagnostics.hover = function (window)
 				vim.api.nvim_win_set_cursor(window, location);
 				vim.api.nvim_set_current_win(window);
 
-				diagnostics.__close();
+				diagnostics.close();
 			end
 
 			---|fE
@@ -724,7 +713,7 @@ diagnostics.hover = function (window)
 		desc = "Exit diagnostics window",
 		callback = function ()
 			pcall(vim.api.nvim_set_current_win, window);
-			diagnostics.__close();
+			diagnostics.close();
 		end
 	});
 
@@ -742,8 +731,8 @@ diagnostics.setup = function (config)
 		diagnostics.config = vim.tbl_extend("force", diagnostics.config, config);
 	end
 
-	if diagnostics.config.map then
-		vim.api.nvim_set_keymap("n", diagnostics.config.map, "", {
+	if diagnostics.config.keymap then
+		vim.api.nvim_set_keymap("n", diagnostics.config.keymap, "", {
 			callback = diagnostics.hover
 		});
 	end
@@ -755,7 +744,7 @@ diagnostics.setup = function (config)
 			local win = vim.api.nvim_get_current_win();
 
 			if diagnostics.window and win ~= diagnostics.window then
-				diagnostics.__close();
+				diagnostics.close();
 
 				if diagnostics.quad then
 					diagnostics.update_quad(diagnostics.quad, false);

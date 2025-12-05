@@ -1,10 +1,10 @@
 --[[
-*Dynamic* highlights for `config.nvim` to match the current `colorscheme`.
+*Dynamic* highlights for `Neovim` to match the current `colorscheme`.
 
 Usage,
 
 ```lua
-require("config.highlights").setup();
+require("highlights").setup();
 ```
 ]]
 local highlights = {};
@@ -343,7 +343,7 @@ highlights.groups = {
 
 		return {
 			{
-				name = "@lsp.type.comment.lua",
+				group_name = "@lsp.type.comment.lua",
 				value = {},
 			},
 		};
@@ -357,7 +357,7 @@ highlights.groups = {
 		local bg = highlights.srgb_to_oklab(
 			highlights.get_property("bg", { "Normal" }, "#EFF1F5", "#1E1E2E")
 		);
-		local alpha = vim.g.diagnostic_alpha or 0.25;
+		local alpha = vim.g.diagnostic_alpha or 0.1;
 
 		local output = {};
 

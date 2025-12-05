@@ -41,6 +41,43 @@
 
 ------------------------------------------------------------------------------
 
+---@param level string
+---@param icon string
+---@return table
+local function handle_diagnostic_level (level, icon)
+	---|fS
+
+	local default = string.format("FancyDiagnostic%s", "Default");
+	local default_icon_hl = string.format("FancyDiagnostic%sIcon", "Default");
+
+	local bg = string.format("FancyDiagnostic%s", level);
+	local icon_hl = string.format("FancyDiagnostic%sIcon", level);
+
+	return {
+		width = 3,
+
+		line_hl_group = function (_, current)
+			return current and bg or default;
+		end,
+		icon = function (_, current)
+			return {
+				{ "▌", current and icon_hl or default_icon_hl },
+				{ icon, current and icon_hl or default_icon_hl },
+				{ " ", current and bg or default },
+			}
+		end,
+		padding = function (_, current)
+			return {
+				{ "▌", current and icon_hl or default_icon_hl },
+				{ "  ", current and icon_hl or default_icon_hl },
+				{ " ", current and bg or default },
+			}
+		end
+	};
+
+	---|fE
+end
+
 --- Custom diagnostics viewer for Neovim.
 local diagnostics = {};
 
@@ -116,90 +153,10 @@ diagnostics.config = {
 	decorations = {
 		---|fS
 
-		[vim.diagnostic.severity.INFO] = {
-			width = 3,
-
-			line_hl_group = function (_, current)
-				return current and "DiagnosticInfo" or "@comment";
-			end,
-			icon = function (_, current)
-				return {
-					{ "▌", current and "DgInfo" or "DgInfoDisabled" },
-					{ "󰀨 ", current and "DgInfo" or "DgInfoDisabledIcon" },
-					{ " " },
-				}
-			end,
-			padding = function (_, current)
-				return {
-					{ "▌",  current and "DgInfo" or "DgInfoDisabled" },
-					{ "  ", current and "DgInfo" or "DgInfoDisabled" },
-					{ " " },
-				}
-			end
-		},
-		[vim.diagnostic.severity.HINT] = {
-			width = 3,
-
-			line_hl_group = function (_, current)
-				return current and "DiagnosticHint" or "@comment";
-			end,
-			icon = function (_, current)
-				return {
-					{ "▌", current and "DgHint" or "DgHintDisabled" },
-					{ "󰁨 ", current and "DgHint" or "DgHintDisabledIcon" },
-					{ " " },
-				}
-			end,
-			padding = function (_, current)
-				return {
-					{ "▌",  current and "DgHint" or "DgHintDisabled" },
-					{ "  ", current and "DgHint" or "DgHintDisabled" },
-					{ " " },
-				}
-			end
-		},
-		[vim.diagnostic.severity.WARN] = {
-			width = 3,
-
-			line_hl_group = function (_, current)
-				return current and "DiagnosticWarn" or "@comment";
-			end,
-			icon = function (_, current)
-				return {
-					{ "▌", current and "DgWarn" or "DgWarnDisabled" },
-					{ " ", current and "DgWarn" or "DgWarnDisabledIcon" },
-					{ " " },
-				}
-			end,
-			padding = function (_, current)
-				return {
-					{ "▌",  current and "DgWarn" or "DgWarnDisabled" },
-					{ "  ", current and "DgWarn" or "DgWarnDisabled" },
-					{ " " },
-				}
-			end
-		},
-		[vim.diagnostic.severity.ERROR] = {
-			width = 3,
-
-			line_hl_group = function (_, current)
-				return current and "DiagnosticError" or "@comment";
-			end,
-			icon = function (_, current)
-				return {
-					{ "▌", current and "DgError" or "DgErrorDisabled" },
-					{ "󰅙 ", current and "DgError" or "DgErrorDisabledIcon" },
-					{ " " },
-				}
-			end,
-			padding = function (_, current)
-				return {
-					{ "▌",  current and "DgError" or "DgErrorDisabled" },
-					{ "  ", current and "DgError" or "DgErrorDisabled" },
-					{ " " },
-				}
-			end
-		},
+		[vim.diagnostic.severity.INFO] = handle_diagnostic_level("Info", "󰀨 "),
+		[vim.diagnostic.severity.HINT] = handle_diagnostic_level("Hint", "󰁨 "),
+		[vim.diagnostic.severity.WARN] = handle_diagnostic_level("Warn", " "),
+		[vim.diagnostic.severity.ERROR] = handle_diagnostic_level("Error", "󰅙 "),
 
 		---|fE
 	},
@@ -515,6 +472,12 @@ diagnostics.__integration = function (window, beacon_config)
 		package.loaded["markview"].render(diagnostics.buffer, {
 			enable = true,
 			hybrid_mode = false
+		}, {
+			markdown_inline = {
+				inline_codes = {
+					virtual = true
+				}
+			}
 		});
 	end
 

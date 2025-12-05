@@ -50,17 +50,27 @@ local function get_fg (r, g, b)
 	local fg;
 
 	if package.loaded["scripts.highlights"] then
-		local hl = require("scripts.highlights");
-		---@type { [1]: integer, [2]: integer, [3]: integer } Foreground color in `OKLab`.
-		local tmp = {
-			hl.visible_fg(
-				hl.rgb_to_oklab(
-					r, g, b
-				)
-			)
-		};
+		local highlights = require("scripts.highlights");
 
-		fg = string.format("#%02x%02x%02x", hl.oklab_to_rgb(tmp[1], tmp[2], tmp[3]));
+		local this = highlights.srgb_to_oklab({
+			r = r,
+			g = g,
+			b = b
+		});
+
+		local _bg = highlights.srgb_to_oklab(
+			highlights.get_property("bg", { "Normal" }, "#CDD6F4", "#1E1E2E")
+		);
+
+		local _fg = highlights.get_property("fg", { "Normal" }, "#1E1E2E", "#CDD6F4");
+
+		if this.L >= _bg.L then
+			return highlights.rgb_to_hex(
+				highlights.oklab_to_srgb(_bg)
+			);
+		else
+			return highlights.rgb_to_hex(_fg);
+		end
 	else
 		local normal = vim.api.nvim_get_hl(0, { name = "Normal" });
 		local brightness = ( (r * 299) + (g * 587) + (b * 114) ) / 1000;

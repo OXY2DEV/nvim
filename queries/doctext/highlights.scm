@@ -15,6 +15,7 @@
 (url) @string.special.url
 (autolink) @markup.link.url
 
+(taglink) @markup.link
 
 [
   (punctuation)

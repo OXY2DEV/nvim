@@ -31,11 +31,14 @@ return {
 		---|fS "config: Parser info"
 
 		local update_stack = {};
+		local disable = {};
 
 		---@class parser_register_opts
 		---
 		---@field language string Language name.
 		---@field parser_name? string Custom name of parser `directory` or `repository`.
+		---
+		---@field disable? boolean When `true`, gets rid of the parser config.
 
 		---@param opts parser_register_opts
 		local function register_parser (opts)
@@ -53,7 +56,11 @@ return {
 					},
 				};
 
-				update_stack[opts.language] = config;
+				if opts.disable then
+					table.insert(disable, opts.language);
+				else
+					update_stack[opts.language] = config;
+				end
 			else
 				local config = {
 					install_info = {
@@ -67,7 +74,11 @@ return {
 					filetype = opts.language
 				};
 
-				require("nvim-treesitter.parsers").get_parser_configs()[opts.language] = config;
+				if opts.disable then
+					require("nvim-treesitter.parsers").get_parser_configs()[opts.language] = nil;
+				else
+					require("nvim-treesitter.parsers").get_parser_configs()[opts.language] = config;
+				end
 			end
 
 			if opts.parser_name and opts.parser_name ~= opts.language then
@@ -77,8 +88,7 @@ return {
 			---|fE
 		end
 
-		register_parser({ language = "doctext" });
-		register_parser({ language = "comment", parser_name = "doctext" });
+		register_parser({ language = "comment" });
 		register_parser({ language = "lua_patterns" });
 		register_parser({ language = "vhs" });
 		register_parser({ language = "qf" });
@@ -113,6 +123,10 @@ return {
 				callback = function ()
 					for k, v in pairs(update_stack) do
 						require("nvim-treesitter.parsers")[k] = v;
+					end
+
+					for _, lang in ipairs(disable) do
+						require("nvim-treesitter.parsers")[lang] = nil;
 					end
 				end
 			});

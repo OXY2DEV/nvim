@@ -204,5 +204,5 @@
 (comment
   content: (_) @injection.content
   (#match? @injection.content "^[^%-@\|]")
-  (#set! injection.language "doctext"))
+  (#set! injection.language "comment"))
 

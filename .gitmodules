@@ -32,7 +32,7 @@
 	path = parsers/tree-sitter-qf
 	url = ../tree-sitter-qf.git
 [submodule "parsers/tree-sitter-doctext"]
-	path = parsers/tree-sitter-doctext
+	path = parsers/tree-sitter-comment
 	url = ../tree-sitter-doctext.git
 [submodule "parsers/tree-sitter-kitty"]
 	path = parsers/tree-sitter-kitty

@@ -101,7 +101,7 @@ return {
 
 			"vimdoc",
 			"luadoc",
-			"doctext",
+			"comment",
 
 			"lua_patterns",
 			"regex",

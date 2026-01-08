@@ -1,3 +1,3 @@
-; LuaDoc comments should be using `doctext`.
+; LuaDoc comments should be using `comment`.
 ((comment) @injection.content
-	(#set! injection.language "doctext"))
+	(#set! injection.language "comment"))

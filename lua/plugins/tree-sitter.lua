@@ -9,7 +9,7 @@ return {
 		--- Gets the path(or URL) for the parser.
 		---@param path string
 		---@param url string
-		---@return string
+		---@return string, "path" | "url"
 		local function get_path(path, url)
 			---|fS
 
@@ -17,12 +17,12 @@ return {
 			local stat = vim.uv.fs_stat(vim.fn.stdpath("config") .. path);
 			local parsers = require("nvim-treesitter.parsers");
 
-			if type(parsers.get_parser_configs) ~= "function" then
-				return url;
-			elseif stat and stat.type == "directory" then
-				return vim.fn.stdpath("config") .. path;
+			if stat and stat.type == "directory" then
+				return vim.fn.stdpath("config") .. path, "path";
+			elseif type(parsers.get_parser_configs) ~= "function" then
+				return url, "url";
 			else
-				return url;
+				return url, "url";
 			end
 
 			---|fE
@@ -38,6 +38,12 @@ return {
 		---@field language string Language name.
 		---@field parser_name? string Custom name of parser `directory` or `repository`.
 		---
+		---@field url? string Custom URL for the parser.
+		---@field path? string Custom path for the parser.
+		---@field location? string Custom parser sub-directory.
+		---@field requires? string[] Parser dependencies.
+		---@field queries? string Query path.
+		---
 		---@field disable? boolean When `true`, gets rid of the parser config.
 
 		---@param opts parser_register_opts
@@ -45,14 +51,20 @@ return {
 			---|fS
 
 			local parsers = require("nvim-treesitter.parsers");
+			local path, _type = get_path(
+				opts.path or ( vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. (opts.parser_name or opts.language) ),
+				opts.url or ( "https://github.com/OXY2DEV/tree-sitter-" .. (opts.parser_name or opts.language) )
+			);
 
 			if type(parsers.get_parser_configs) ~= "function" then
 				local config = {
 					install_info = {
-						url = "https://github.com/OXY2DEV/tree-sitter-" .. (opts.parser_name or opts.language),
-						path = vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. (opts.parser_name or opts.language),
+						url = _type == "url" and path or nil,
+						path = _type == "path" and path or nil,
 
-						queries = "queries/"
+						revision = "v0.6.0",
+						location = opts.location,
+						queries = opts.queries,
 					},
 				};
 
@@ -64,11 +76,9 @@ return {
 			else
 				local config = {
 					install_info = {
-						url = get_path(
-							"https://github.com/OXY2DEV/" .. (opts.parser_name or opts.language),
-							vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. (opts.parser_name or opts.language)
-						),
+						url = path,
 
+						location = opts.location,
 						queries = "queries/"
 					},
 					filetype = opts.language
@@ -88,6 +98,23 @@ return {
 			---|fE
 		end
 
+		register_parser({
+			language = "asciidoc_inline",
+
+			url = "https://github.com/cathaysia/tree-sitter-asciidoc",
+			location = "tree-sitter-asciidoc_inline",
+
+			queries = "tree-sitter-asciidoc_inline/queries",
+		});
+		register_parser({
+			language = "asciidoc",
+
+			url = "https://github.com/cathaysia/tree-sitter-asciidoc",
+			location = "tree-sitter-asciidoc",
+
+			queries = "tree-sitter-asciidoc/queries",
+			requires = { "asciidoc_inline" }
+		});
 		register_parser({ language = "comment" });
 		register_parser({ language = "lua_patterns" });
 		register_parser({ language = "vhs" });

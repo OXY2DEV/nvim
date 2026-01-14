@@ -1,3 +1,101 @@
+local update = {};
+
+---@class treesitter.parser.opts
+---
+---@field name? string
+---@field owner? string
+---
+---@field path? string
+---@field url? string
+---
+---@field maintainers? string[]
+---@field requires? string[]
+---
+---@field revision? string
+---@field branch? string
+---
+---@field location? string
+---@field queries? string
+---
+---@field register? boolean
+---@field filetype? string
+
+---@param name string
+---@param owner string
+---@return string
+---@return "path" | "url"
+local function path_or_url(name, owner)
+	---|fS
+
+	local path = vim.fs.joinpath(
+		vim.fn.stdpath("config"),
+		"parsers",
+		string.format("tree-sitter-%s", name)
+	);
+	local url = string.format(
+		"https://github.com/%s/tree-sitter-%s",
+		owner or "OXY2DEV",
+		name
+	);
+
+	---@diagnostic disable-next-line: undefined-field
+	local path_stat = vim.uv.fs_stat(path);
+
+	if path_stat and path_stat.type == "directory" then
+		return path, "path";
+	else
+		return url, "url";
+	end
+
+	---|fE
+end
+
+---@param language string
+---@param opts treesitter.parser.opts
+local function new_parser(language, opts)
+	---|fS
+
+	local parsers = require("nvim-treesitter.parsers");
+
+	local path, path_type = path_or_url(
+		opts.name or language,
+		opts.owner
+	);
+
+	if type(parsers.get_parser_configs) ~= "function" then
+		-- `main` branch
+		update[language] = {
+			install_info = {
+				url = path_type == "url" and path or nil,
+				path = path_type == "path" and path or nil,
+
+				requires = opts.requires,
+
+				revision = opts.revision,
+				location = opts.location,
+				queries = opts.queries or "queries/",
+			},
+		};
+	else
+		require("nvim-treesitter.parsers").get_parser_configs()[language] = {
+			install_info = {
+				url = path,
+
+				location = opts.location,
+				queries = opts.queries or "queries/"
+			},
+			filetype = language
+		};
+	end
+
+	if opts.register then
+		vim.treesitter.language.register(opts.filetype, language);
+	end
+
+	---|fE
+end
+
+
 return {
 	"nvim-treesitter/nvim-treesitter",
 	build = ":TSUpdate",
@@ -6,120 +104,21 @@ return {
 	branch = "main",
 
 	config = function ()
-		--- Gets the path(or URL) for the parser.
-		---@param path string
-		---@param url string
-		---@return string, "path" | "url"
-		local function get_path(path, url)
-			---|fS
-
-			---@type table Path stat.
-			local stat = vim.uv.fs_stat(vim.fn.stdpath("config") .. path);
-			local parsers = require("nvim-treesitter.parsers");
-
-			if stat and stat.type == "directory" then
-				return vim.fn.stdpath("config") .. path, "path";
-			elseif type(parsers.get_parser_configs) ~= "function" then
-				return url, "url";
-			else
-				return url, "url";
-			end
-
-			---|fE
-		end
-
 		---|fS "config: Parser info"
 
-		local update_stack = {};
-		local disable = {};
+		new_parser("comment", {});
+		new_parser("lua_patterns", {});
+		new_parser("vhs", {});
+		new_parser("qf", {});
+		new_parser("kitty", {});
 
-		---@class parser_register_opts
-		---
-		---@field language string Language name.
-		---@field parser_name? string Custom name of parser `directory` or `repository`.
-		---
-		---@field url? string Custom URL for the parser.
-		---@field path? string Custom path for the parser.
-		---@field location? string Custom parser sub-directory.
-		---@field requires? string[] Parser dependencies.
-		---@field queries? string Query path.
-		---
-		---@field disable? boolean When `true`, gets rid of the parser config.
-
-		---@param opts parser_register_opts
-		local function register_parser (opts)
-			---|fS
-
-			local parsers = require("nvim-treesitter.parsers");
-			local path, _type = get_path(
-				opts.path or ( vim.fn.stdpath("config") .. "/parsers/tree-sitter-" .. (opts.parser_name or opts.language) ),
-				opts.url or ( "https://github.com/OXY2DEV/tree-sitter-" .. (opts.parser_name or opts.language) )
-			);
-
-			if type(parsers.get_parser_configs) ~= "function" then
-				local config = {
-					install_info = {
-						url = _type == "url" and path or nil,
-						path = _type == "path" and path or nil,
-
-						revision = "v0.6.0",
-						location = opts.location,
-						queries = opts.queries,
-					},
-				};
-
-				if opts.disable then
-					table.insert(disable, opts.language);
-				else
-					update_stack[opts.language] = config;
-				end
-			else
-				local config = {
-					install_info = {
-						url = path,
-
-						location = opts.location,
-						queries = "queries/"
-					},
-					filetype = opts.language
-				};
-
-				if opts.disable then
-					require("nvim-treesitter.parsers").get_parser_configs()[opts.language] = nil;
-				else
-					require("nvim-treesitter.parsers").get_parser_configs()[opts.language] = config;
-				end
-			end
-
-			if opts.parser_name and opts.parser_name ~= opts.language then
-				vim.treesitter.language.register(opts.parser_name, opts.language);
-			end
-
-			---|fE
-		end
-
-		register_parser({
-			language = "asciidoc_inline",
-
-			url = "https://github.com/cathaysia/tree-sitter-asciidoc",
-			location = "tree-sitter-asciidoc_inline",
-
-			queries = "tree-sitter-asciidoc_inline/queries",
+		new_parser("asciidoc", {
+			owner = "cathaysia",
+			requires = { "asciidox_inline" },
 		});
-		register_parser({
-			language = "asciidoc",
-
-			url = "https://github.com/cathaysia/tree-sitter-asciidoc",
-			location = "tree-sitter-asciidoc",
-
-			queries = "tree-sitter-asciidoc/queries",
-			requires = { "asciidoc_inline" }
+		new_parser("asciidoc_inline", {
+			owner = "cathaysia",
 		});
-		register_parser({ language = "comment" });
-		register_parser({ language = "lua_patterns" });
-		register_parser({ language = "vhs" });
-		register_parser({ language = "qf" });
-		register_parser({ language = "kitty" });
 
 		---@type string[]
 		local use_parsers = {
@@ -148,12 +147,8 @@ return {
 			vim.api.nvim_create_autocmd("User", {
 				pattern = "TSUpdate",
 				callback = function ()
-					for k, v in pairs(update_stack) do
+					for k, v in pairs(update) do
 						require("nvim-treesitter.parsers")[k] = v;
-					end
-
-					for _, lang in ipairs(disable) do
-						require("nvim-treesitter.parsers")[lang] = nil;
 					end
 				end
 			});

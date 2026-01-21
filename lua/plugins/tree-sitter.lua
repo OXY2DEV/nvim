@@ -69,6 +69,7 @@ local function new_parser(language, opts)
 				url = path_type == "url" and path or nil,
 				path = path_type == "path" and path or nil,
 
+				branch = opts.branch,
 				requires = opts.requires,
 
 				revision = opts.revision,
@@ -114,10 +115,21 @@ return {
 
 		new_parser("asciidoc", {
 			owner = "cathaysia",
-			requires = { "asciidox_inline" },
+			branch = "master",
+
+			location = "tree-sitter-asciidoc",
+			queries = "queries/asciidoc/",
+
+			requires = { "asciidoc_inline" },
 		});
 		new_parser("asciidoc_inline", {
+			name = "asciidoc",
+
 			owner = "cathaysia",
+			branch = "master",
+
+			location = "tree-sitter-asciidoc_inline",
+			queries = "queries/asciidoc_inline",
 		});
 
 		---@type string[]

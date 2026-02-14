@@ -414,10 +414,15 @@ hover.hover = function (window)
 		vim.wo[hover.window].conceallevel = 3;
 		vim.wo[hover.window].concealcursor = "ncv";
 
-		H = math.min(
-			vim.api.nvim_win_text_height(hover.window, { start_row = 0, end_row = -1 }).all,
-			H,
-			math.floor(vim.o.lines * 0.5)
+		vim.wo[hover.window].foldmethod = "manual";
+
+		H = math.max(
+			1,
+			math.min(
+				vim.api.nvim_win_text_height(hover.window, { start_row = 0, end_row = -1 }).all,
+				H,
+				math.floor(vim.o.lines * 0.5)
+			)
 		);
 
 		-- Reset old text, otherwise it may break syntax highlighting.

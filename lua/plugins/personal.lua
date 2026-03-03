@@ -18,7 +18,7 @@ return {
 		dir = vim.fn.stdpath("config") .. "/lua/custom_plugins/bars.nvim",
 		name = "bars",
 		priority = 500,
-		lazy = false,
+		event = "VimEnter",
 
 		dependencies = {
 			{

@@ -88,8 +88,8 @@ diagnostics.config = {
 		for _, item in ipairs(items) do
 			local width = vim.fn.strdisplaywidth(item.message or "");
 
-			use = math.min(
-				math.max(width, 0),
+			use = math.max(
+				math.max(width, 1),
 				max
 			);
 		end
@@ -565,7 +565,7 @@ diagnostics.hover = function (window)
 		relative = "editor",
 
 		row = 0, col = 1,
-		width = W - D, height = 2,
+		width = math.max(10, W - D), height = 2,
 
 		style = "minimal",
 		hide = true,
